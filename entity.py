@@ -8,10 +8,15 @@ class Entity:
         self.strength_score = strength_score
         self.strength_modifier = strength_modifier
         self.dexterity_score = dexterity_score
+        self.dexterity_modifier = dexterity_modifier
         self.constitution_score = constitution_score
+        self.constitution_modifier = constitution_modifier
         self.intelligence_score = intelligence_score
+        self.intelligence_modifier = intelligence_modifier
         self.wisdom_score = wisdom_score
+        self.wisdom_modifier = wisdom_modifier
         self.charisma_score = charisma_score
+        self.charisma_modifier = charisma_modifier
         self.skills = {}
         self.inventory = []
         self.level = 1
@@ -24,18 +29,23 @@ class Entity:
 
     def get_stats(self):
         stats = (
-            f"Name: {self.name}\n"
+            f"Name: {self.name}, a"
             f"Race: {self.race}, "
             f"Class: {self.class_name}\n"
             f"Strength Score: {self.strength_score}, "
-            f"Strength Modifier: {self.strength_modifier}, "
-            f"Dexterity: {self.dexterity_score}\n"
+            f"Strength Modifier: {self.strength_modifier}, \n"
+            f"Dexterity: {self.dexterity_score}, "
+            f"Dexterity Modifier: {self.dexterity_modifier}, \n"
             f"Constitution: {self.constitution_score}, "
-            f"Intelligence: {self.intelligence_score}\n"
+            f"Constitution Modifier: {self.constitution_modifier},\n"
+            f"Intelligence: {self.intelligence_score}, "
+            f"Intelligence Modifier: {self.intelligence_modifier}, \n"
             f"Wisdom: {self.wisdom_score}, "
-            f"Charisma: {self.charisma_score}\n"
+            f"Wisdom Modifier: {self.wisdom_modifier}, \n"
+            f"Charisma: {self.charisma_score}, "
+            f"Charisma Modifier: {self.charisma_modifier},\n"
             f"Skills: {self.skills}, "
-            f"Inventory: {[item.name for item in self.inventory]}\n"
+            f"Inventory: {[item.name for item in self.inventory]}"
             f"Level: {self.level}, "
             f"Experience Points: {self.xp}\n"
             f"Hit Points: {self.current_hit_points}/{self.max_hit_points}\n"
