@@ -25,19 +25,6 @@ class Character(Entity):
         self.wisdom_score = wisdom_score
         self.charisma_score = charisma_score
 
-    def calculate_dexterity_modifier(self):
-        """Calculate the Dexterity modifier using D&D 5e rules"""
-        return (self.dexterity_score - 10) // 2
-
-    def calculate_total_ac(self):
-        """Calculate total AC including base AC and dexterity modifier"""
-        ac = self.base_ac
-        # Add dexterity modifier to AC
-        ac += self.calculate_dexterity_modifier()
-        # If character has armor equipped, that would be calculated here
-        # For now, we'll just use base + dex modifier
-        return ac
-
     def update_ac(self):
         """Update AC when dexterity or equipment changes"""
         self.armor_class = self.calculate_total_ac()

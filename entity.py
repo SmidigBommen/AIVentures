@@ -29,7 +29,7 @@ class Entity:
 
     def get_stats(self):
         stats = (
-            f"Name: {self.name}, a"
+            f"Name: {self.name}, "
             f"Race: {self.race}, "
             f"Class: {self.class_name}\n"
             f"Strength Score: {self.strength_score}, "
@@ -62,6 +62,14 @@ class Entity:
         actual_damage = max(0, amount - self.damage_reduction)
         self.current_hit_points = max(0, self.current_hit_points - actual_damage)
         return actual_damage
+    
+    def calculate_total_ac(self):
+        """Calculate total AC including base AC and dexterity modifier"""
+        ac = self.base_ac
+        ac += self.dexterity_modifier
+        # If character has armor equipped, that would be calculated here
+        # For now, we'll just use base + dex modifier
+        return ac
 
     def is_alive(self):
         return self.current_hit_points > 0

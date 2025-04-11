@@ -112,16 +112,5 @@
             "stealth_disadvantage": true,
             "description": "Plate consists of shaped, interlocking metal plates to cover the entire body."
         }
-    },
-    "shields": {
-        "Shield": {
-            "category": "Shield",
-            "base_ac": 2,
-            "cost_gp": 10,
-            "weight": 6,
-            "strength_requirement": 0,
-            "stealth_disadvantage": false,
-            "description": "A shield is made from wood or metal and is carried in one hand."
-        }
     }
 }

@@ -11,15 +11,10 @@ class Monster(Entity):
         self.damage_reduction = damage_reduction
         self.level = monster_level
 
-    def calculate_dexterity_modifier(self):
-        """Calculate the Dexterity modifier using D&D 5e rules"""
-        return (self.dexterity_score - 10) // 2
-
     def calculate_total_ac(self):
         """Calculate total AC including base AC and dexterity modifier"""
         ac = self.base_ac
-        # Add dexterity modifier to AC
-        ac += self.calculate_dexterity_modifier()
+        ac += self.dexterity_modifier
         # If character has armor equipped, that would be calculated here
         # For now, we'll just use base + dex modifier
         return ac
