@@ -1,16 +1,16 @@
 from armor import Armor
 from equipmentType import EquipmentType
 class Entity:
-    def __init__(self, name, race, class_name, strength, dexterity, constitution, intelligence, wisdom, charisma):
+    def __init__(self, name, race, class_name, strength_score, strength_modifier, dexterity_score, dexterity_modifier, constitution_score, constitution_modifier, intelligence_score, intelligence_modifier, wisdom_score, wisdom_modifier, charisma_score, charisma_modifier):
         self.name = name
         self.race = race
         self.class_name = class_name
-        self.strength = strength
-        self.dexterity = dexterity
-        self.constitution = constitution
-        self.intelligence = intelligence
-        self.wisdom = wisdom
-        self.charisma = charisma
+        self.strength = strength_score
+        self.dexterity = dexterity_score
+        self.constitution = constitution_score
+        self.intelligence = intelligence_score
+        self.wisdom = wisdom_score
+        self.charisma = charisma_score
         self.skills = {}
         self.inventory = []
         self.level = 1
@@ -58,13 +58,13 @@ class Entity:
         # Code to roll for stats
         pass
 
-    def assign_stats(self, strength, dexterity, constitution, intelligence, wisdom, charisma):
-        self.strength = strength
-        self.dexterity = dexterity
-        self.constitution = constitution
-        self.intelligence = intelligence
-        self.wisdom = wisdom
-        self.charisma = charisma
+    def assign_stats(self, strength_score, dexterity_score, constitution_score, intelligence_score, wisdom_score, charisma_score):
+        self.strength_score = strength_score
+        self.dexterity_score = dexterity_score
+        self.constitution_score = constitution_score
+        self.intelligence_score = intelligence_score
+        self.wisdom_score = wisdom_score
+        self.charisma_score = charisma_score
 
     def add_skill(self, skill, proficiency):
         self.skills[skill] = proficiency

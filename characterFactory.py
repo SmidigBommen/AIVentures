@@ -22,24 +22,31 @@ class CharacterFactory:
         hit_die = self.classes_properties.get(class_name, {}).get("hit_die", 8)
 
         # Set base attributes
-        strength = race_default_values["strength"] + race_stats["strength_bonus"]
-        dexterity = race_default_values["dexterity"] + race_stats["dexterity_bonus"]
-        constitution = race_default_values["constitution"] + race_stats["constitution_bonus"]
-        intelligence = race_default_values["intelligence"] + race_stats["intelligence_bonus"]
-        wisdom = race_default_values["wisdom"] + race_stats["wisdom_bonus"]
-        charisma = race_default_values["charisma"] + race_stats["charisma_bonus"]
+        strength_score = race_default_values["strength"] + race_stats["strength_bonus"]
+        dexterity_score = race_default_values["dexterity"] + race_stats["dexterity_bonus"]
+        constitution_score = race_default_values["constitution"] + race_stats["constitution_bonus"]
+        intelligence_score = race_default_values["intelligence"] + race_stats["intelligence_bonus"]
+        wisdom_score = race_default_values["wisdom"] + race_stats["wisdom_bonus"]
+        charisma_score = race_default_values["charisma"] + race_stats["charisma_bonus"]
 
         # Create character
         character = Character(
             name=name,
             race=race,
             class_name=class_name,
-            strength=strength,
-            dexterity=dexterity,
-            constitution=constitution,
-            intelligence=intelligence,
-            wisdom=wisdom,
-            charisma=charisma,
+            strength_score= strength_score,
+            strength_modifier= (strength_score - 10) // 2,
+            dexterity_score=dexterity_score,
+            dexterity_modifier= (dexterity_score - 10) // 2,
+            constitution_score=constitution_score,
+            constitution_modifier= (constitution_score - 10) // 2,
+            intelligence_score=intelligence_score,
+            intelligence_modifier= (intelligence_score - 10) // 2,
+            wisdom_score=wisdom_score,
+            wisdom_modifier= (wisdom_score- 10) // 2,
+            charisma_score=charisma_score,
+            charisma_modifier= (charisma_score - 10) // 2,
+
             hit_points=0,  # Will be calculated in initialize_hit_points
             base_ac=race_default_values["base_ac"],
             damage_reduction=0
