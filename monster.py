@@ -13,7 +13,7 @@ class Monster(Entity):
 
     def calculate_dexterity_modifier(self):
         """Calculate the Dexterity modifier using D&D 5e rules"""
-        return (self.dexterity - 10) // 2
+        return (self.dexterity_score - 10) // 2
 
     def calculate_total_ac(self):
         """Calculate total AC including base AC and dexterity modifier"""

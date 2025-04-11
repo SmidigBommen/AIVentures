@@ -27,7 +27,7 @@ class Character(Entity):
 
     def calculate_dexterity_modifier(self):
         """Calculate the Dexterity modifier using D&D 5e rules"""
-        return (self.dexterity - 10) // 2
+        return (self.dexterity_score - 10) // 2
 
     def calculate_total_ac(self):
         """Calculate total AC including base AC and dexterity modifier"""
@@ -122,7 +122,7 @@ class Character(Entity):
             return Dice.roll_d8()
 
     def get_constitution_modifier(self):
-        return (self.constitution - 10) // 2
+        return (self.constitution_score - 10) // 2
 
     def get_stats(self):
         stats = super().get_stats()

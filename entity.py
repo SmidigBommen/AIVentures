@@ -5,12 +5,13 @@ class Entity:
         self.name = name
         self.race = race
         self.class_name = class_name
-        self.strength = strength_score
-        self.dexterity = dexterity_score
-        self.constitution = constitution_score
-        self.intelligence = intelligence_score
-        self.wisdom = wisdom_score
-        self.charisma = charisma_score
+        self.strength_score = strength_score
+        self.strength_modifier = strength_modifier
+        self.dexterity_score = dexterity_score
+        self.constitution_score = constitution_score
+        self.intelligence_score = intelligence_score
+        self.wisdom_score = wisdom_score
+        self.charisma_score = charisma_score
         self.skills = {}
         self.inventory = []
         self.level = 1
@@ -26,12 +27,13 @@ class Entity:
             f"Name: {self.name}\n"
             f"Race: {self.race}, "
             f"Class: {self.class_name}\n"
-            f"Strength: {self.strength}, "
-            f"Dexterity: {self.dexterity}\n"
-            f"Constitution: {self.constitution}, "
-            f"Intelligence: {self.intelligence}\n"
-            f"Wisdom: {self.wisdom}, "
-            f"Charisma: {self.charisma}\n"
+            f"Strength Score: {self.strength_score}, "
+            f"Strength Modifier: {self.strength_modifier}, "
+            f"Dexterity: {self.dexterity_score}\n"
+            f"Constitution: {self.constitution_score}, "
+            f"Intelligence: {self.intelligence_score}\n"
+            f"Wisdom: {self.wisdom_score}, "
+            f"Charisma: {self.charisma_score}\n"
             f"Skills: {self.skills}, "
             f"Inventory: {[item.name for item in self.inventory]}\n"
             f"Level: {self.level}, "
@@ -96,12 +98,12 @@ class Entity:
 
     def update_stats(self, item, equip=True):
         factor = 1 if equip else -1
-        self.strength += factor * item.strength
-        self.dexterity += factor * item.dexterity
-        self.constitution += factor * item.constitution
-        self.intelligence += factor * item.intelligence
-        self.wisdom += factor * item.wisdom
-        self.charisma += factor * item.charisma
+        self.strength_score += factor * item.strength
+        self.dexterity_score += factor * item.dexterity
+        self.constitution_score += factor * item.constitution
+        self.intelligence_score += factor * item.intelligence
+        self.wisdom_score += factor * item.wisdom
+        self.charisma_score += factor * item.charisma
 
     def calculate_armor_class(self):
         ac = 10  # Start with base armor class (AC)

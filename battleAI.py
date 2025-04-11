@@ -11,8 +11,8 @@ class Battle:
 
     def calculate_initiative(self):
         initiative = [
-            (self.character.name, self.character.dexterity + Dice.roll_d20()),
-            (self.monster.name, self.monster.dexterity + Dice.roll_d20())
+            (self.character.name, self.character.dexterity_score + Dice.roll_d20()),
+            (self.monster.name, self.monster.dexterity_score + Dice.roll_d20())
         ]
         result = sorted(initiative, key=lambda x: x[1], reverse=True)
         print("Initiative rolls: ", result)
@@ -69,11 +69,11 @@ class Battle:
             return self.monster_special_ability()
 
     def player_attack(self):
-        attack_roll = self.character.strength + Dice.roll_d20()
+        attack_roll = self.character.strength_modifier + Dice.roll_d20()
         print(f"{self.character.name} rolls {attack_roll} to hit against AC {self.monster.armor_class}")
 
         if attack_roll >= self.monster.armor_class:
-            damage_dealt = max(1, Dice.roll_d6() + ((self.character.strength - 10) // 2)) # Default damage is 1d6 + modifier
+            damage_dealt = max(1, Dice.roll_d6() + (self.character.strength_modifier)) # Default damage is 1d6 + modifier
 
             weapon = self.character.equipment.get(EquipmentType.WEAPON)
             if weapon:
@@ -87,7 +87,7 @@ class Battle:
                     roll = 0
 
 
-            actual_damage = damage_dealt + ((self.character.strength - 10) // 2)
+            actual_damage = damage_dealt + (self.character.strength_modifier)
             self.monster.take_damage(actual_damage)
             print(f"{self.character.name} hit {self.monster.name} for {actual_damage} damage!")
         else:
@@ -96,11 +96,11 @@ class Battle:
         return attack_roll, actual_damage
 
     def monster_attack(self):
-        attack_roll = self.monster.strength + Dice.roll_d20()
+        attack_roll = self.monster.strength_modifier + Dice.roll_d20()
         print(f"{self.monster.name} rolls {attack_roll} to hit against AC {self.character.armor_class}")
 
         if attack_roll >= self.character.armor_class:
-            damage_dealt = max(1, Dice.roll_d4() + (self.monster.strength - 10) // 2)
+            damage_dealt = max(1, Dice.roll_d4() + self.monster.strength_modifier)
 
             actual_damage = self.character.take_damage(damage_dealt)
             print(f"{self.monster.name} hit {self.character.name} for {actual_damage} damage!")

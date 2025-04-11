@@ -59,7 +59,7 @@ class CharacterFactory:
 
     def initialize_hit_points(self, character, hit_die):
         # Calculate constitution modifier
-        con_modifier = (character.constitution - 10) // 2
+        con_modifier = (character.constitution_score - 10) // 2
 
         # First level characters get maximum hit die value + con modifier
         max_hit_die_value = hit_die
