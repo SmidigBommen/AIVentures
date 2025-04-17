@@ -1,6 +1,6 @@
 from random import random
 from dice import Dice
-class Battle:
+class Battle_:
     def __init__(self, character, monster):
         self.character = character
         self.monster = monster
