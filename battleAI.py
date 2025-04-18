@@ -87,7 +87,7 @@ class Battle:
                     roll = 0
 
 
-            actual_damage = damage_dealt + (self.character.strength_modifier)
+            actual_damage = damage_dealt + self.character.strength_modifier
             self.monster.take_damage(actual_damage)
             print(f"{self.character.name} hit {self.monster.name} for {actual_damage} damage!")
         else:
