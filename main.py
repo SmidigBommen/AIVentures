@@ -36,10 +36,6 @@ def main():
     # Setup Campaign
     with open("campaign.json") as f:
         campaign = json.load(f)
-    #    title = campaign["title"]
-    #    current_act = campaign["acts"][0] #starting act 1
-    #    start_location = campaign["startingLocation"]
-
     display_introduction(campaign)
 
     # Create a game state
@@ -50,15 +46,10 @@ def main():
     # Main loop
     playing = True # TODO: Add more states later (CREATOR, IDLE, BATTLE, ENDING
     while playing:
-        print("\n---- Current State ----")
-
         gamestate.monster.level = gamestate.character.level
 
-        print(gamestate.character.get_stats())
-        print(gamestate.monster.get_stats())
-
         # Get user input
-        command = input("\nWhat would you like to do? (a)ttack or (q)uit: ")
+        command = input("\nWhat would you like to do? (a)ttack,(s)tats or (q)uit: ")
 
         # Process input
         if command.lower() == "a":
@@ -76,6 +67,10 @@ def main():
             elif winner == "monster":
                 print(f"Game Over! {gamestate.character.name} has been defeated...")
                 playing = False
+        elif command.lower() == "s":
+            print("\n---- Current State ----")
+            print(gamestate.character.get_stats())
+            print(gamestate.monster.get_stats())
         elif command.lower() == "q":
             print("Goodbye!")
             playing = False
