@@ -49,7 +49,7 @@ def main():
         gamestate.monster.level = gamestate.character.level
 
         # Get user input
-        command = input("\nWhat would you like to do? (a)ttack,(s)tats or (q)uit: ")
+        command = input("\nWhat would you like to do? (a)ttack, view (s)tats or (q)uit: ")
 
         # Process input
         if command.lower() == "a":

@@ -70,7 +70,7 @@ class Battle:
 
     def player_attack(self):
         attack_roll = self.character.strength_modifier + Dice.roll_d20()
-        print(f"{self.character.name} rolls {attack_roll} to hit against AC {self.monster.armor_class}")
+        print(f"\n{self.character.name} rolls {attack_roll} to hit against AC {self.monster.armor_class}")
 
         if attack_roll >= self.monster.armor_class:
             damage_dealt = max(1, Dice.roll_d6() + (self.character.strength_modifier)) # Default damage is 1d6 + modifier
