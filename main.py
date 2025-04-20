@@ -12,9 +12,9 @@ def display_introduction(campaign):
     color_YELLOW = "\033[33m"
     color_WHITE = "\033[97m"
 
-    print("\n" + "=" * 60)
+    print("\n" + "=" * 40)
     print(color_MAGENTA + f"\n{campaign['title'].upper()}" + color_WHITE)
-    print("=" * 60 + "\n")
+    print("=" * 40 + "\n")
 
     # Display the campaign description with better formatting
     print(color_WHITE + campaign["description"] + "\n")
