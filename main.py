@@ -2,24 +2,45 @@ import json
 
 from GameState import GameState
 from battleAI import Battle
-from characterFactory import CharacterFactory
 from monsterFactory import MonsterFactory
 from charactercreator import CharacterCreator
+
+
+def display_introduction(campaign):
+    color_MAGENTA = "\033[35m"
+    color_CYAN = "\033[36m"
+    color_YELLOW = "\033[33m"
+    color_WHITE = "\033[97m"
+
+    print("\n" + "=" * 60)
+    print(color_MAGENTA + f"\n{campaign['title'].upper()}" + color_WHITE)
+    print("=" * 60 + "\n")
+
+    # Display the campaign description with better formatting
+    print(color_WHITE + campaign["description"] + "\n")
+
+    # Add narrative introduction
+    print(color_CYAN + "The sun sets on another day in Eldoria as you arrive in Rivermeet Town.")
+    print("Strange rumors have been circulating about unusual occurrences in the region.")
+    print("The once peaceful kingdom now feels uneasy, as if darkness is growing..." + color_WHITE)
+
+    # Display villain info for context
+    print(color_YELLOW + f"\nDanger lurks in the shadows...")
+    print(f"It is said that {campaign['villain']['name']} plots against the realm.")
+    print(campaign['villain']['description'] + color_WHITE + "\n")
+
+    input("Press Enter to begin your adventure...")
+
 
 def main():
     # Setup Campaign
     with open("campaign.json") as f:
         campaign = json.load(f)
-        title = campaign["title"]
-        current_act = campaign["acts"][0] #starting act 1
-        start_location = campaign["startingLocation"]
+    #    title = campaign["title"]
+    #    current_act = campaign["acts"][0] #starting act 1
+    #    start_location = campaign["startingLocation"]
 
-    color_MAGENTA = "\033[35m"
-    color_WHITE = "\033[97m"
-    print(color_MAGENTA + campaign["title"])
-    print("\n"+ color_WHITE + campaign["description"] +"\n")
-
-
+    display_introduction(campaign)
 
     # Create a game state
     creator = CharacterCreator()
