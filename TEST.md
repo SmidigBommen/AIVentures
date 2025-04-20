@@ -32,7 +32,7 @@ python3 -m unittest discover
 
 To run a specific test:
 ```
-python3 -m unittest tests.test_character_creator
+python3 -m unittest test_character_creator
 ```
 
 ## Future Test Areas
