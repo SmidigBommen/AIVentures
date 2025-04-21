@@ -169,6 +169,16 @@ class Battle:
         if character_won:
             xp_award = self.calculate_xp_award()
             self.character.gain_xp(xp_award)
+            # Calculate and award gold
+            gold_award = self.calculate_gold_award()
+            self.character.gold += gold_award
+
+            # Chance for item drop
+            dropped_item = self.generate_loot()
+            if dropped_item:
+                self.character.add_item(dropped_item)
+                print(f"You found: {dropped_item.name}!")
+
             print(f"{self.character.name} has won the battle and gained {xp_award} experience points!")
             return "player"
         else:
@@ -180,3 +190,16 @@ class Battle:
         base_xp = 100 * self.monster.level
         round_bonus = max(0, 10 * (10 - self.round_count))  # Bonus for quick victories
         return base_xp + round_bonus
+
+    def calculate_gold_award(self):
+        # Base gold based on monster level with some randomness
+        base_gold = self.monster.level * 5
+        return base_gold + Dice.roll_d8()
+
+    def generate_loot(self):
+        # Simple random loot generation (20% chance)
+        if random.random() < 0.2:
+            # For now, just return a healing potion
+            from items import HealingPotion
+            return HealingPotion(f"Healing Potion", 10)
+        return None
