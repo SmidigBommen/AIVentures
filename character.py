@@ -16,6 +16,7 @@ class Character(Entity):
         self.xp = 0
         self.xp_to_next_level = self.calculate_xp_to_next_level()
         self.hit_die = 8  # Default hit die, will be overridden by CharacterFactory
+        self.gold = 0
 
     def assign_stats(self, strength_score, dexterity_score, constitution_score, intelligence_score, wisdom_score, charisma_score):
         self.strength_score = strength_score

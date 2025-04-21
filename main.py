@@ -1,5 +1,5 @@
 import json
-
+from random import random
 from GameState import GameState
 from battleAI import Battle
 from monsterFactory import MonsterFactory
@@ -31,6 +31,32 @@ def display_introduction(campaign):
 
     input("Press Enter to begin your adventure...")
 
+
+def create_monster_for_location(location, character_level):
+    monster_factory = MonsterFactory()
+
+    # Extract encounter level range from location
+    level_range = location.get("encounterLevel", "1-1")
+    min_level, max_level = map(int, level_range.split("-"))
+
+    # Adjust based on character level, but keep within location range
+    monster_level = min(max(character_level, min_level), max_level)
+
+    # Select a monster type based on location
+    if location["type"] == "wilderness":
+        monster_types = [("Goblin", "Ranger"), ("Orc", "Barbarian")]
+    elif location["type"] == "dungeon":
+        monster_types = [("Goblin", "Rogue"), ("Troll", "Fighter")]
+    else:  # town or default
+        monster_types = [("Goblin", "Rogue")]
+
+    monster_race, monster_class = random.choice(monster_types)
+
+    # Generate a random name
+    monster_names = ["Grak", "Thurg", "Zort", "Morg", "Kruzz", "Azgul"]
+    monster_name = random.choice(monster_names)
+
+    return monster_factory.create_monster(monster_name, monster_race, monster_class, monster_level)
 
 def main():
     # Setup Campaign
