@@ -81,10 +81,9 @@ class Battle:
                 damage_dealt = 0
                 damage_roll = 0
                 for _ in range(weapon.damage_dice_count):
-                    damage_dealt += Dice.roll(weapon.damage_die)
-                    print(f"{self.character.name} rolls {damage_dealt} damage")
-
-
+                    damage_roll += Dice.roll(weapon.damage_die)
+                    damage_dealt += damage_roll
+                    print(f"{self.character.name} rolls {damage_roll} damage")
 
             actual_damage = damage_dealt + self.character.strength_modifier
             self.monster.take_damage(actual_damage)

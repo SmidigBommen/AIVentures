@@ -1,9 +1,19 @@
 import json
 import random
+import os
 from GameState import GameState
 from battleAI import Battle
 from monsterFactory import MonsterFactory
 from charactercreator import CharacterCreator
+
+def clear_screen():
+    """Clear the terminal screen."""
+    # For Windows
+    if os.name == 'nt':
+        _ = os.system('cls')
+    # For macOS and Linux
+    else:
+        _ = os.system('clear')
 
 
 def display_introduction(campaign):
@@ -12,6 +22,7 @@ def display_introduction(campaign):
     color_YELLOW = "\033[33m"
     color_WHITE = "\033[97m"
 
+    clear_screen()
     print("\n" + "=" * 40)
     print(color_MAGENTA + f"\n{campaign['title'].upper()}" + color_WHITE)
     print("=" * 40 + "\n")
@@ -72,6 +83,7 @@ def post_battle_menu(gamestate, current_location):
     print("7. Quit game")
 
     choice = input("Enter your choice (1-7): ")
+    clear_screen()
 
     if choice == "1":
         # Continue exploring with chance for encounter
@@ -132,6 +144,8 @@ def post_battle_menu(gamestate, current_location):
     else:
         print("\nInvalid choice. Please try again.")
         return post_battle_menu(gamestate, current_location)
+
+
 
 
 def main():
