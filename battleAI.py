@@ -161,7 +161,7 @@ class Battle:
 
             # Reset temporary defensive bonuses
             #self.character.armor_class = self.character.base_armor_class
-            #self.monster.armor_class = self.monster.base_armor_class
+            self.monster.armor_class = self.monster.base_ac
 
     def end_battle(self, character_won):
         if character_won:

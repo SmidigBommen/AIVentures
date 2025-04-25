@@ -25,6 +25,7 @@ Done | Armor Class (AC) - Does the hit actually land (hit calculation)
 Done | Initial Hit points calculated based on class (con + class modifier)
 Done | Weapons (adds to an damage roll)
 In Progress | Refactor weapons to be a specific variable and not a general item
+Fixed | Bug: Monster attack rolls (defence choice is not cleared) are not being calculated correctly
  x | Monsters have XP cpnnected to them directly
  x | Group (More than one monster)
  x | Character Abilities: Design unique abilities for each character class, such as special attacks or spells. _Implement methods to use these abilities in battles and manage their resource costs (e.g., mana or energy)_
