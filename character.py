@@ -67,6 +67,7 @@ class Character(Entity):
         self.level += 1
         self.xp -= self.xp_to_next_level
         self.xp_to_next_level = self.calculate_xp_to_next_level()
+        print(f"{self.name} has leveled up to level {self.level} \n")
 
         # Update constitution modifier as it might have changed
         con_modifier = self.get_constitution_modifier()
@@ -87,7 +88,7 @@ class Character(Entity):
 
         self.max_hit_points += hit_points_increase
 
-        print(f"{self.name} has leveled up to level {self.level}!")
+
         print(f"Hit Points increased by {hit_points_increase}")
 
 
