@@ -13,7 +13,7 @@ class BattleSmokeTest(unittest.TestCase):
 
         # Create test entities
         self.character = self.character_factory.create_character("Test Hero", "Human", "Fighter")
-        self.monster = self.monster_factory.create_monster("Test Monster", "Goblin", "Ranger", 1)
+        self.monster = self.monster_factory.create_monster("Test Monster", "Goblin", "Ranger", 1, "Shortbow")
 
         # Setup battle
         self.battle = Battle(self.character, self.monster)

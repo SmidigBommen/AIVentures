@@ -125,8 +125,9 @@ class Entity:
 
     def calculate_armor_class(self):
         ac = 10  # Start with base armor class (AC)
-        for equipment in self.equipment.values():
-            if isinstance(equipment, Armor):
-                ac += equipment.get_ac_bonus()
+        ac = self.armor_class
+        # for equipment in self.equipment.values():
+        #     if isinstance(equipment, Armor):
+        #         ac += equipment.get_ac_bonus()
         return ac
 

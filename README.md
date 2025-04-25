@@ -23,7 +23,9 @@ Done | Turns
 Done | Level up (xp + add more stats?)
 Done | Armor Class (AC) - Does the hit actually land (hit calculation)
 Done | Initial Hit points calculated based on class (con + class modifier)
-In Progress | Weapons (adds to an attack roll)
+Done | Weapons (adds to an damage roll)
+In Progress | Refactor weapons to be a specific variable and not a general item
+ x | Monsters have XP cpnnected to them directly
  x | Group (More than one monster)
  x | Character Abilities: Design unique abilities for each character class, such as special attacks or spells. _Implement methods to use these abilities in battles and manage their resource costs (e.g., mana or energy)_
  x | Status Effects: Add conditions that can affect characters during battles, such as poison, paralysis, or buffs/debuffs. _Implement methods to apply, remove, and manage these effects_

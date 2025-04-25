@@ -7,7 +7,8 @@
         "Wisdom": 8,
         "Charisma": 8,
         "base_ac": 11,
-        "hit_die": 8
+        "hit_die": 6,
+        "weapon_name": "Club"
       },
       "Orc": {
         "Strength": 16,
@@ -17,7 +18,8 @@
         "Wisdom": 11,
         "Charisma": 10,
         "base_ac": 10,
-        "hit_die": 10
+        "hit_die": 8,
+        "weapon_name" : "Club"
       },
       "Troll": {
         "Strength": 18,
@@ -27,7 +29,8 @@
         "Wisdom": 9,
         "Charisma": 7,
         "base_ac": 10,
-        "hit_die": 10
+        "hit_die": 10,
+        "weapon_name" : "Club"
       },
       "Blighted Dryad": {
         "Strength": 14,
@@ -37,6 +40,7 @@
         "Wisdom": 16,
         "Charisma": 18,
         "base_ac": 16,
-        "hit_die": 12
+        "hit_die": 12,
+        "weapon_name" : "Quarterstaff"
       }
 }

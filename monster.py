@@ -1,8 +1,12 @@
 from entity import Entity
+from weaponFactory import WeaponFactory
+
 
 class Monster(Entity):
-    def __init__(self, name, race, class_name, strength_score, strength_modifier, dexterity_score, dexterity_modifier, constitution_score, constitution_modifier, intelligence_score, intelligence_modifier, wisdom_score, wisdom_modifier, charisma_score, charisma_modifier,
-                 hit_points, base_ac, damage_reduction, monster_level):
+    def __init__(self, name, race, class_name, strength_score, strength_modifier, dexterity_score, dexterity_modifier,
+                 constitution_score, constitution_modifier, intelligence_score, intelligence_modifier, wisdom_score,
+                 wisdom_modifier, charisma_score, charisma_modifier, hit_points, base_ac, damage_reduction,
+                 monster_level, weapon_name):
         super().__init__(name, race, class_name, strength_score, strength_modifier, dexterity_score, dexterity_modifier, constitution_score, constitution_modifier, intelligence_score, intelligence_modifier, wisdom_score, wisdom_modifier, charisma_score, charisma_modifier)
         self.max_hit_points = hit_points
         self.current_hit_points = hit_points
@@ -10,6 +14,10 @@ class Monster(Entity):
         self.armor_class = self.calculate_total_ac()  # Calculate total AC including dex modifier
         self.damage_reduction = damage_reduction
         self.level = monster_level
+        self.weapon = WeaponFactory().get_weapon_by_name(weapon_name)
+
+    def get_weapon(self):
+        return self.weapon
 
     def calculate_total_ac(self):
         """Calculate total AC including base AC and dexterity modifier"""

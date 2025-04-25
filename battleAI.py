@@ -69,8 +69,9 @@ class Battle:
             return self.monster_special_ability()
 
     def player_attack(self):
+        # To hit roll
         attack_roll = self.character.strength_modifier + Dice.roll_d20()
-        print(f"\n{self.character.name} rolls {attack_roll} to hit against AC {self.monster.armor_class}")
+        print(f"\n{self.character.name} with strength modifier {self.character.strength_modifier} rolls {attack_roll} to hit against AC {self.monster.armor_class}")
 
         if attack_roll >= self.monster.armor_class:
             damage_dealt = max(1, Dice.roll_d6() + (self.character.strength_modifier)) # Default damage is 1d6 + modifier
@@ -80,11 +81,9 @@ class Battle:
                 damage_dealt = 0
                 damage_roll = 0
                 for _ in range(weapon.damage_dice_count):
-                    damage_roll += Dice.roll(weapon.damage_die)
-                    roll = damage_roll
-                    print(f"{self.character.name} rolls {roll} damage")
-                    damage_dealt += roll
-                    roll = 0
+                    damage_dealt += Dice.roll(weapon.damage_die)
+                    print(f"{self.character.name} rolls {damage_dealt} damage")
+
 
 
             actual_damage = damage_dealt + self.character.strength_modifier
@@ -100,8 +99,7 @@ class Battle:
         print(f"{self.monster.name} rolls {attack_roll} to hit against AC {self.character.armor_class}")
 
         if attack_roll >= self.character.armor_class:
-            damage_dealt = max(1, Dice.roll_d4() + self.monster.strength_modifier)
-
+            damage_dealt = max(1, Dice.roll(self.monster.weapon.damage_die) + self.monster.strength_modifier)
             actual_damage = self.character.take_damage(damage_dealt)
             print(f"{self.monster.name} hit {self.character.name} for {actual_damage} damage!")
         else:

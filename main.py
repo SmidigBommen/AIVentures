@@ -56,7 +56,7 @@ def create_monster_for_location(location, character_level):
     monster_names = ["Grak", "Thurg", "Zort", "Morg", "Kruzz", "Azgul"]
     monster_name = random.choice(monster_names)
 
-    return monster_factory.create_monster(monster_name, monster_race, monster_class, monster_level)
+    return monster_factory.create_monster(monster_name, monster_race, monster_class, monster_level, "Club")
 
 
 def post_battle_menu(gamestate, current_location):
@@ -151,7 +151,6 @@ def main():
     # Create a game state
     creator = CharacterCreator()
     player = creator.create_character()
-    # Add gold to character (we'll need to add this property to Character class)
     player.gold = 50  # Starting gold
 
     gamestate = GameState(player, MonsterFactory)
