@@ -59,7 +59,6 @@ class Character(Entity):
 
     def gain_xp(self, xp):
         self.xp += xp
-        print(f"{self.name} gained {xp} XP!")
         while self.xp >= self.xp_to_next_level:
             self.level_up()
 
@@ -87,8 +86,6 @@ class Character(Entity):
             print(f"You took the average: {average} + {con_modifier} (CON mod)")
 
         self.max_hit_points += hit_points_increase
-
-
         print(f"Hit Points increased by {hit_points_increase}")
 
 
