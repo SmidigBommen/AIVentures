@@ -133,7 +133,7 @@ def post_battle_menu(gamestate, current_location):
     elif choice == "6":
         # View character stats
         print("\n--- Character Stats ---")
-        print(gamestate.character.get_stats())
+        print(gamestate.character.get_stats()+"\n")
         return post_battle_menu(gamestate, current_location)
 
     elif choice == "7":

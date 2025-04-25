@@ -45,12 +45,11 @@ class Entity:
             f"Charisma: {self.charisma_score}, "
             f"Charisma Modifier: {self.charisma_modifier},\n"
             f"Skills: {self.skills}, "
-            f"Inventory: {[item.name for item in self.inventory]}"
+            f"Inventory: {[item.name for item in self.inventory]}\n"
             f"Level: {self.level}, "
             f"Experience Points: {self.xp}\n"
-            f"Hit Points: {self.current_hit_points}/{self.max_hit_points}\n"
-            f"Armor Class: {self.armor_class}, "
-            f"Damage Reduction: {self.damage_reduction}\n"
+            f"Hit Points: {self.current_hit_points}/{self.max_hit_points} "
+            f"Armor Class: {self.armor_class}, " f"Damage Reduction: {self.damage_reduction}\n"
         )
         return stats
 

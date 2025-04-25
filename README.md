@@ -12,7 +12,7 @@ add items and more attributes
 _This is an iterative approach so done only means an iteration is done and an initial implementation is in place_
 
 
-Status | Ideas
+Status | Ideas / Feature
 -------| ------
 Done | Dice roll
 Done | Monster creation
@@ -26,6 +26,7 @@ Done | Initial Hit points calculated based on class (con + class modifier)
 Done | Weapons (adds to an damage roll)
 In Progress | Refactor weapons to be a specific variable and not a general item
 Fixed | Bug: Monster attack rolls (defence choice is not cleared) are not being calculated correctly
+ x | Bug?: Inventory - View inventory works, but you cannot use any of the items because the input goes to the main menu. It is only view inventory, but use can only be done in the _battle_ menu.
  x | Monsters have XP cpnnected to them directly
  x | Group (More than one monster)
  x | Character Abilities: Design unique abilities for each character class, such as special attacks or spells. _Implement methods to use these abilities in battles and manage their resource costs (e.g., mana or energy)_
