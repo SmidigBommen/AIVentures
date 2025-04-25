@@ -165,7 +165,9 @@ class Battle:
     def end_battle(self, character_won):
         if character_won:
             xp_award = self.calculate_xp_award()
+            print(f"{self.character.name} has won the battle and gained {xp_award} experience points!")
             self.character.gain_xp(xp_award)
+
             # Calculate and award gold
             gold_award = self.calculate_gold_award()
             self.character.gold += gold_award
@@ -176,7 +178,6 @@ class Battle:
                 self.character.add_item(dropped_item)
                 print(f"You found: {dropped_item.name}!")
 
-            print(f"{self.character.name} has won the battle and gained {xp_award} experience points!")
             return "player"
         else:
             print(f"\033[35m{self.monster.name} has defeated {self.character.name}!")
