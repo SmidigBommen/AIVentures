@@ -70,8 +70,8 @@ class Character(Entity):
 
         # Update constitution modifier as it might have changed
         con_modifier = self.get_constitution_modifier()
-
-        choice = input("Would you like to (r)oll for hit points or take the (a)verage? ").lower()
+        print("Your hit points increases...")
+        choice = input("Would you like to (r)oll for points or take the (a)verage? ").lower()
 
         if choice == 'r':
             # Roll for hit points

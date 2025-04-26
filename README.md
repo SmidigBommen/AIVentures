@@ -24,6 +24,7 @@ Done | Level up (xp + add more stats?)
 Done | Armor Class (AC) - Does the hit actually land (hit calculation)
 Done | Initial Hit points calculated based on class (con + class modifier)
 Done | Weapons (adds to an damage roll)
+Done | Added choice to roll or take average on HP increase at level up.
 In Progress | Refactor weapons to be a specific variable and not a general item
 Fixed | Bug: Monster attack rolls (defence choice is not cleared) are not being calculated correctly
  x | Bug?: Inventory - View inventory works, but you cannot use any of the items because the input goes to the main menu. It is only view inventory, but use can only be done in the _battle_ menu.
