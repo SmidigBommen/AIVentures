@@ -146,8 +146,6 @@ def post_battle_menu(gamestate, current_location):
         return post_battle_menu(gamestate, current_location)
 
 
-
-
 def main():
     # Setup Campaign
     with open("campaign.json") as f:

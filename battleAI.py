@@ -177,10 +177,10 @@ class Battle:
             if dropped_item:
                 self.character.add_item(dropped_item)
                 print(f"You found: {dropped_item.name}!")
-
+            else:
+                print("You found no loot.")
             return "player"
         else:
-            print(f"\033[35m{self.monster.name} has defeated {self.character.name}!")
             return "monster"
 
     def calculate_xp_award(self):
