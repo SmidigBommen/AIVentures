@@ -1,4 +1,6 @@
 import random
+
+from character import WeaponSlot
 from dice import Dice
 from equipmentType import EquipmentType
 
@@ -76,7 +78,7 @@ class Battle:
         if attack_roll >= self.monster.armor_class:
             damage_dealt = max(1, Dice.roll_d6() + (self.character.strength_modifier)) # Default damage is 1d6 + modifier
 
-            weapon = self.character.equipment.get(EquipmentType.WEAPON)
+            weapon = self.character.weapon_slots[WeaponSlot.MAIN_HAND]
             if weapon:
                 damage_dealt = 0
                 damage_roll = 0

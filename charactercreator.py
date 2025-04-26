@@ -24,7 +24,6 @@ class CharacterCreator:
         character.add_item(weapon)
         character.equip_weapon(weapon)
 
-
         return character
 
     def get_character_name(self):
