@@ -66,6 +66,7 @@ class Character(Entity):
         self.level += 1
         self.xp -= self.xp_to_next_level
         self.xp_to_next_level = self.calculate_xp_to_next_level()
+        self.update_proficiency_bonus()
         print(f"{self.name} has leveled up to level {self.level} \n")
 
         # Update constitution modifier as it might have changed
@@ -111,3 +112,4 @@ class Character(Entity):
 
     def is_alive(self):
         return self.current_hit_points > 0
+

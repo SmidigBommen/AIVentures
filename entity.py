@@ -26,6 +26,9 @@ class Entity:
         self.armor_class = 10
         self.damage_reduction = 0
         self.equipment = {eq_type: None for eq_type in EquipmentType}
+        self.skill_proficiencies = set()  
+        self.saving_throw_proficiencies = set()
+        self.proficiency_bonus = 2  # Default proficiency bonus at level 1
 
     def get_stats(self):
         stats = (
