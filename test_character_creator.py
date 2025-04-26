@@ -1,4 +1,6 @@
 import unittest
+
+from character import WeaponSlot
 from characterFactory import CharacterFactory
 from weaponFactory import WeaponFactory
 
@@ -27,9 +29,9 @@ class CharacterCreationSmokeTest(unittest.TestCase):
         # Test equipping weapons
         longsword = self.weapon_factory.get_weapon_by_name("Longsword")
         human_fighter.add_item(longsword)
-        human_fighter.equip(longsword)
+        human_fighter.equip_weapon(longsword)
 
-        self.assertEqual(human_fighter.equipment[longsword.equipment_type], longsword)
+        self.assertEqual(human_fighter.weapon_slots[WeaponSlot.MAIN_HAND], longsword)
 
         print("Character creation smoke test passed!")
 

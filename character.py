@@ -1,7 +1,11 @@
 from dice import Dice
 from entity import Entity
 from items import HealingPotion
+from enum import Enum, auto
 
+class WeaponSlot(Enum):
+    MAIN_HAND = auto()
+    OFF_HAND = auto()
 
 class Character(Entity):
     def __init__(self, name, race, class_name, strength_score, strength_modifier, dexterity_score, dexterity_modifier, constitution_score, constitution_modifier, intelligence_score, intelligence_modifier, wisdom_score, wisdom_modifier, charisma_score, charisma_modifier, hit_points, base_ac, damage_reduction):
@@ -17,6 +21,11 @@ class Character(Entity):
         self.xp_to_next_level = self.calculate_xp_to_next_level()
         self.hit_die = 8  # Default hit die, will be overridden by CharacterFactory
         self.gold = 0
+        # Initialize weapon slots
+        self.weapon_slots = {
+            WeaponSlot.MAIN_HAND: None,
+            WeaponSlot.OFF_HAND: None
+        }
 
     def assign_stats(self, strength_score, dexterity_score, constitution_score, intelligence_score, wisdom_score, charisma_score):
         self.strength_score = strength_score
@@ -32,6 +41,47 @@ class Character(Entity):
 
     def add_skill(self, skill, proficiency):
         self.skills[skill] = proficiency
+
+    def equip_weapon(self, weapon, slot=WeaponSlot.MAIN_HAND):
+        """Equip a weapon to a specific slot."""
+        # Check if the slot is valid
+        if slot not in self.weapon_slots:
+            print(f"Invalid weapon slot: {slot}")
+            return False
+
+        # Unequip any existing weapon in that slot
+        if self.weapon_slots[slot]:
+            self.unequip_weapon(slot)
+
+        # Equip the new weapon
+        self.weapon_slots[slot] = weapon
+
+        # Apply the weapon's bonuses if needed
+        # This depends on how your weapon bonuses work
+
+        # If the weapon was in inventory, remove it
+        if weapon in self.inventory:
+            self.inventory.remove(weapon)
+
+        print(f"{self.name} equipped {weapon.name} in {slot.name}")
+        return True
+
+    def unequip_weapon(self, slot):
+        """Unequip a weapon from a specific slot."""
+        if slot not in self.weapon_slots or not self.weapon_slots[slot]:
+            print(f"No weapon equipped in {slot.name}")
+            return False
+
+        weapon = self.weapon_slots[slot]
+
+        # Add the weapon back to inventory
+        self.inventory.append(weapon)
+
+        # Clear the slot
+        self.weapon_slots[slot] = None
+
+        print(f"{self.name} unequipped {weapon.name}")
+        return True
 
     def add_item(self, item):
         item.is_usable_in_battle = True
@@ -98,7 +148,7 @@ class Character(Entity):
 
     def get_stats(self):
         stats = super().get_stats()
-        stats += f"XP: {self.xp}/{self.xp_to_next_level} "
+        stats += f"XP: {self.xp}/{self.xp_to_next_level} Weapon: {self.weapon_slots[WeaponSlot.MAIN_HAND]}\n"
         stats += f"Hit Die: d{self.hit_die}\n"
         return stats
 

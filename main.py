@@ -98,7 +98,7 @@ def post_battle_menu(gamestate, current_location):
 
     elif choice == "2":
         # Rest and recover some HP
-        recovery = gamestate.character.hit_die // 2 + gamestate.character.constitution_modifier
+        recovery = (gamestate.character.hit_die // 2) + gamestate.character.constitution_modifier
         recovery = max(1, recovery)
         gamestate.character.heal(recovery)
         print(f"\nYou take a short rest and recover {recovery} hit points.")
