@@ -133,27 +133,27 @@ class Entity:
         #         ac += equipment.get_ac_bonus()
         return ac
 
-def add_skill_proficiency(self, skill_name):
-    """Add proficiency in a specific skill"""
-    self.skill_proficiencies.add(skill_name)
+    def add_skill_proficiency(self, skill_name):
+        """Add proficiency in a specific skill"""
+        self.skill_proficiencies.add(skill_name)
 
-def has_skill_proficiency(self, skill_name):
-    """Check if entity is proficient in a skill"""
-    return skill_name in self.skill_proficiencies
+    def has_skill_proficiency(self, skill_name):
+        """Check if entity is proficient in a skill"""
+        return skill_name in self.skill_proficiencies
 
-def add_saving_throw_proficiency(self, ability):
-    """Add proficiency in a saving throw"""
-    self.saving_throw_proficiencies.add(ability)
+    def add_saving_throw_proficiency(self, ability):
+        """Add proficiency in a saving throw"""
+        self.saving_throw_proficiencies.add(ability)
 
-def has_saving_throw_proficiency(self, ability):
-    """Check if entity is proficient in a saving throw"""
-    return ability in self.saving_throw_proficiencies
+    def has_saving_throw_proficiency(self, ability):
+        """Check if entity is proficient in a saving throw"""
+        return ability in self.saving_throw_proficiencies
 
-def update_proficiency_bonus(self):
-    """Update proficiency bonus based on level"""
-    self.proficiency_bonus = 2 + ((self.level - 1) // 4)
+    def update_proficiency_bonus(self):
+        """Update proficiency bonus based on level"""
+        self.proficiency_bonus = 2 + ((self.level - 1) // 4)
 
-def make_skill_check(self, skill_name, difficulty_class=10):
-    """Make a skill check"""
-    from skills import make_skill_check
-    return make_skill_check(self, skill_name, difficulty_class)
+    def make_skill_check(self, skill_name, difficulty_class=10):
+        """Make a skill check"""
+        from skills import make_skill_check
+        return make_skill_check(self, skill_name, difficulty_class)
