@@ -157,3 +157,32 @@ class Entity:
         """Make a skill check"""
         from skills import make_skill_check
         return make_skill_check(self, skill_name, difficulty_class)
+    
+    def make_saving_throw(self, ability, difficulty_class=10):
+        """Make a saving throw"""
+        from dice import Dice
+        
+        # Get ability modifier
+        ability_modifier = getattr(self, f"{ability.lower()}_modifier")
+        
+        # Add proficiency bonus if proficient
+        proficiency_bonus = 0
+        if ability in self.saving_throw_proficiencies:
+            proficiency_bonus = self.proficiency_bonus
+        
+        # Roll the dice
+        roll = Dice.roll_d20()
+        total = roll + ability_modifier + proficiency_bonus
+        
+        success = total >= difficulty_class
+        return {
+            "ability": ability,
+            "roll": roll,
+            "modifier": ability_modifier,
+            "proficiency": proficiency_bonus,
+            "total": total,
+            "dc": difficulty_class,
+            "success": success
+        }
+        
+    
