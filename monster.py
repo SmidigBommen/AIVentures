@@ -16,9 +16,6 @@ class Monster(Entity):
         self.level = monster_level
         self.weapon = WeaponFactory().get_weapon_by_name(weapon_name)
 
-    def get_weapon(self):
-        return self.weapon
-
     def calculate_total_ac(self):
         """Calculate total AC including base AC and dexterity modifier"""
         ac = self.base_ac
@@ -27,19 +24,12 @@ class Monster(Entity):
         # For now, we'll just use base + dex modifier
         return ac
 
-    def update_ac(self):
-        """Update AC when dexterity or equipment changes"""
-        self.armor_class = self.calculate_total_ac()
-
     def take_damage(self, amount):
         self.current_hit_points = max(0, self.current_hit_points - amount)
         return amount
 
     def is_alive(self):
         return self.current_hit_points > 0
-    def roll_stats(self):
-        # Code to roll for stats
-        pass
 
     def assign_stats(self, strength_score, dexterity_score, constitution_score, intelligence_score, wisdom_score, charisma_score):
         self.strength_score = strength_score
@@ -48,9 +38,6 @@ class Monster(Entity):
         self.intelligence_score = intelligence_score
         self.wisdom_score = wisdom_score
         self.charisma_score = charisma_score
-
-    def add_skill(self, skill, proficiency):
-        self.skills[skill] = proficiency
 
     def add_item(self, item):
         self.inventory.append(item)
