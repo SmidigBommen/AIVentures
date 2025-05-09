@@ -1,0 +1,446 @@
+{
+  "class_features": {
+    "action_surge": {
+      "name": "Action Surge",
+      "description": "You can push yourself beyond your normal limits for a moment. On your turn, you can take one additional action.",
+      "type": "special",
+      "uses": {
+        "default": 1,
+        "per_level": false,
+        "increases": [
+          {"level": 17, "uses": 2}
+        ]
+      },
+      "reset_on": "short_rest",
+      "effects": {
+        "extra_action": 1
+      },
+      "associated_classes": ["Fighter"]
+    },
+    "arcane_recovery": {
+      "name": "Arcane Recovery",
+      "description": "You have learned to regain some of your magical energy by studying your spellbook. Once per day when you finish a short rest, you can choose expended spell slots to recover. The spell slots can have a combined level that is equal to or less than half your wizard level (rounded up), and none of the slots can be 6th level or higher.",
+      "type": "special",
+      "uses": 1,
+      "reset_on": "long_rest",
+      "effects": {
+        "recover_spell_slots": "half_level_rounded_up"
+      },
+      "associated_classes": ["Wizard"]
+    },
+    "barbarian_rage": {
+      "name": "Rage",
+      "description": "In battle, you fight with primal ferocity. On your turn, you can enter a rage as a bonus action. While raging, you gain several benefits if you aren't wearing heavy armor: advantage on Strength checks and saving throws, a bonus to melee weapon damage rolls using Strength, and resistance to bludgeoning, piercing, and slashing damage.",
+      "type": "bonus_action",
+      "uses": {
+        "default": 2,
+        "increases": [
+          {"level": 3, "uses": 3},
+          {"level": 6, "uses": 4},
+          {"level": 12, "uses": 5},
+          {"level": 17, "uses": 6},
+          {"level": 20, "uses": "unlimited"}
+        ]
+      },
+      "duration": "1 minute",
+      "ends_early": ["if you are knocked unconscious", "if your turn ends and you haven't attacked a hostile creature or taken damage since your last turn"],
+      "reset_on": "long_rest",
+      "effects": {
+        "advantage_on": ["strength_checks", "strength_saving_throws"],
+        "damage_bonus": {
+          "type": "melee_weapon_with_strength",
+          "amount": {
+            "default": 2,
+            "increases": [
+              {"level": 9, "amount": 3},
+              {"level": 16, "amount": 4}
+            ]
+          }
+        },
+        "resistance": ["bludgeoning", "piercing", "slashing"]
+      },
+      "associated_classes": ["Barbarian"]
+    },
+    "bardic_inspiration": {
+      "name": "Bardic Inspiration",
+      "description": "You can inspire others through stirring words or music. To do so, you use a bonus action on your turn to choose one creature other than yourself within 60 feet of you who can hear you. That creature gains one Bardic Inspiration die, a d6.",
+      "type": "bonus_action",
+      "uses": "charisma_modifier",
+      "reset_on": {
+        "default": "long_rest",
+        "changes": [
+          {"level": 5, "reset_on": "short_rest"}
+        ]
+      },
+      "duration": "10 minutes",
+      "range": "60 feet",
+      "target_restrictions": ["cannot target self", "target must be able to hear you"],
+      "effects": {
+        "inspiration_die": {
+          "default": "d6",
+          "increases": [
+            {"level": 5, "die": "d8"},
+            {"level": 10, "die": "d10"},
+            {"level": 15, "die": "d12"}
+          ]
+        }
+      },
+      "associated_classes": ["Bard"]
+    },
+    "channel_divinity": {
+      "name": "Channel Divinity",
+      "description": "You gain the ability to channel divine energy directly from your deity, using that energy to fuel magical effects.",
+      "type": "special",
+      "uses": {
+        "default": 1,
+        "increases": [
+          {"level": 6, "uses": 2},
+          {"level": 18, "uses": 3}
+        ]
+      },
+      "reset_on": {
+        "default": "short_rest"
+      },
+      "associated_classes": ["Cleric", "Paladin"]
+    },
+    "divine_sense": {
+      "name": "Divine Sense",
+      "description": "You can detect the presence of powerful good and evil forces. As an action, you can open your awareness to detect such forces. Until the end of your next turn, you know the location of any celestial, fiend, or undead within 60 feet of you that is not behind total cover.",
+      "type": "action",
+      "uses": "1 + charisma_modifier",
+      "reset_on": "long_rest",
+      "range": "60 feet",
+      "duration": "until the end of your next turn",
+      "effects": {
+        "detect": ["celestial", "fiend", "undead"]
+      },
+      "associated_classes": ["Paladin"]
+    },
+    "divine_smite": {
+      "name": "Divine Smite",
+      "description": "When you hit a creature with a melee weapon attack, you can expend one spell slot to deal radiant damage to the target, in addition to the weapon's damage. The extra damage is 2d8 for a 1st-level spell slot, plus 1d8 for each spell level higher than 1st, to a maximum of 5d8.",
+      "type": "special",
+      "trigger": "hit with melee weapon attack",
+      "resource_cost": "spell_slot",
+      "effects": {
+        "extra_damage": {
+          "type": "radiant",
+          "amount": "2d8 + 1d8 per spell slot level above 1st (max 5d8)",
+          "bonus_against": {
+            "types": ["undead", "fiend"],
+            "amount": "1d8"
+          }
+        }
+      },
+      "associated_classes": ["Paladin"]
+    },
+    "druidic": {
+      "name": "Druidic",
+      "description": "You know Druidic, the secret language of druids. You can speak the language and use it to leave hidden messages. You and others who know this language automatically spot such a message.",
+      "type": "passive",
+      "effects": {
+        "language": "Druidic"
+      },
+      "associated_classes": ["Druid"]
+    },
+    "expertise": {
+      "name": "Expertise",
+      "description": "Choose two of your skill proficiencies. Your proficiency bonus is doubled for any ability check you make that uses these chosen proficiencies.",
+      "type": "passive",
+      "choices": 2,
+      "choice_type": "skill_proficiency",
+      "effects": {
+        "double_proficiency": "chosen_skills"
+      },
+      "increases": [
+        {"level": 6, "additional_choices": 2}
+      ],
+      "associated_classes": ["Bard", "Rogue"]
+    },
+    "fighting_style": {
+      "name": "Fighting Style",
+      "description": "You adopt a particular style of fighting as your specialty.",
+      "type": "passive",
+      "choices": 1,
+      "choice_options": [
+        {
+          "name": "Archery",
+          "description": "You gain a +2 bonus to attack rolls you make with ranged weapons.",
+          "effects": {
+            "ranged_attack_bonus": 2
+          }
+        },
+        {
+          "name": "Defense",
+          "description": "While you are wearing armor, you gain a +1 bonus to AC.",
+          "effects": {
+            "ac_bonus_with_armor": 1
+          }
+        },
+        {
+          "name": "Dueling",
+          "description": "When you are wielding a melee weapon in one hand and no other weapons, you gain a +2 bonus to damage rolls with that weapon.",
+          "effects": {
+            "one_handed_melee_damage_bonus": 2
+          }
+        },
+        {
+          "name": "Great Weapon Fighting",
+          "description": "When you roll a 1 or 2 on a damage die for an attack you make with a melee weapon that you are wielding with two hands, you can reroll the die and must use the new roll.",
+          "effects": {
+            "reroll_1_2_on_two_handed_damage": true
+          }
+        },
+        {
+          "name": "Protection",
+          "description": "When a creature you can see attacks a target other than you that is within 5 feet of you, you can use your reaction to impose disadvantage on the attack roll.",
+          "effects": {
+            "reaction_impose_disadvantage": true
+          }
+        },
+        {
+          "name": "Two-Weapon Fighting",
+          "description": "When you engage in two-weapon fighting, you can add your ability modifier to the damage of the second attack.",
+          "effects": {
+            "offhand_attack_add_ability_modifier": true
+          }
+        }
+      ],
+      "associated_classes": ["Fighter", "Paladin", "Ranger"]
+    },
+    "extra_attack": {
+      "name": "Extra Attack",
+      "description": "You can attack more than once whenever you take the Attack action on your turn.",
+      "type": "passive",
+      "effects": {
+        "extra_attacks": {
+          "default": 1,
+          "special_cases": [
+            {
+              "class": "Fighter",
+              "increases": [
+                {"level": 11, "extra_attacks": 2},
+                {"level": 20, "extra_attacks": 3}
+              ]
+            }
+          ]
+        }
+      },
+      "associated_classes": ["Barbarian", "Bard", "Fighter", "Monk", "Paladin", "Ranger"]
+    },
+    "lay_on_hands": {
+      "name": "Lay on Hands",
+      "description": "Your blessed touch can heal wounds. You have a pool of healing power that replenishes when you take a long rest. With that pool, you can restore a total number of hit points equal to your paladin level × 5.",
+      "type": "action",
+      "resource_pool": "paladin_level * 5",
+      "reset_on": "long_rest",
+      "range": "touch",
+      "effects": {
+        "heal": "chosen amount from pool",
+        "cure_disease": "costs 5 points per disease"
+      },
+      "associated_classes": ["Paladin"]
+    },
+    "natural_explorer": {
+      "name": "Natural Explorer",
+      "description": "You are particularly familiar with one type of natural environment and are adept at traveling and surviving in such regions.",
+      "type": "passive",
+      "choices": {
+        "default": 1,
+        "increases": [
+          {"level": 6, "choices": 2},
+          {"level": 10, "choices": 3}
+        ]
+      },
+      "choice_type": "terrain_type",
+      "choice_options": [
+        "arctic", "coast", "desert", "forest", "grassland", "mountain", "swamp"
+      ],
+      "effects": {
+        "advantages_in_terrain": [
+          "double_proficiency_bonus_for_intelligence_and_wisdom_checks",
+          "difficult_terrain_doesnt_slow_group",
+          "cant_get_lost_except_by_magic",
+          "always_alert_to_danger",
+          "can_move_stealthily_at_normal_pace",
+          "find_twice_as_much_food_when_foraging",
+          "while_tracking_learn_exact_number_size_and_how_long_ago_they_passed"
+        ]
+      },
+      "associated_classes": ["Ranger"]
+    },
+    "second_wind": {
+      "name": "Second Wind",
+      "description": "You have a limited well of stamina that you can draw on to protect yourself from harm. On your turn, you can use a bonus action to regain hit points equal to 1d10 + your fighter level.",
+      "type": "bonus_action",
+      "uses": 1,
+      "reset_on": "short_rest",
+      "effects": {
+        "heal": "1d10 + fighter_level"
+      },
+      "associated_classes": ["Fighter"]
+    },
+    "sneak_attack": {
+      "name": "Sneak Attack",
+      "description": "You know how to strike subtly and exploit a foe's distraction. Once per turn, you can deal extra damage to one creature you hit with an attack if you have advantage on the attack roll or if another enemy of the target is within 5 feet of it, that enemy isn't incapacitated, and you don't have disadvantage on the attack roll.",
+      "type": "passive",
+      "once_per_turn": true,
+      "requirements": [
+        "advantage on attack roll",
+        "OR another enemy of target within 5 feet of it and not incapacitated",
+        "AND you don't have disadvantage on the attack roll"
+      ],
+      "weapon_restrictions": ["finesse", "ranged"],
+      "effects": {
+        "extra_damage": {
+          "amount": {
+            "level_1": "1d6",
+            "level_3": "2d6",
+            "level_5": "3d6",
+            "level_7": "4d6",
+            "level_9": "5d6",
+            "level_11": "6d6",
+            "level_13": "7d6",
+            "level_15": "8d6",
+            "level_17": "9d6",
+            "level_19": "10d6"
+          }
+        }
+      },
+      "associated_classes": ["Rogue"]
+    },
+    "unarmored_defense_barbarian": {
+      "name": "Unarmored Defense",
+      "description": "While you are not wearing any armor, your Armor Class equals 10 + your Dexterity modifier + your Constitution modifier. You can use a shield and still gain this benefit.",
+      "type": "passive",
+      "requirements": ["no_armor"],
+      "compatible_with_shield": true,
+      "effects": {
+        "ac_calculation": "10 + dexterity_modifier + constitution_modifier"
+      },
+      "associated_classes": ["Barbarian"]
+    },
+    "unarmored_defense_monk": {
+      "name": "Unarmored Defense",
+      "description": "While you are wearing no armor and not wielding a shield, your AC equals 10 + your Dexterity modifier + your Wisdom modifier.",
+      "type": "passive",
+      "requirements": ["no_armor", "no_shield"],
+      "effects": {
+        "ac_calculation": "10 + dexterity_modifier + wisdom_modifier"
+      },
+      "associated_classes": ["Monk"]
+    },
+    "martial_arts": {
+      "name": "Martial Arts",
+      "description": "Your practice of martial arts gives you mastery of combat styles that use unarmed strikes and monk weapons. You gain several benefits while you are unarmed or wielding only monk weapons and you aren't wearing armor or wielding a shield.",
+      "type": "passive",
+      "requirements": [
+        "unarmed or using monk weapons",
+        "no armor",
+        "no shield"
+      ],
+      "effects": {
+        "dexterity_for_attacks": true,
+        "unarmed_strike_damage": {
+          "level_1": "1d4",
+          "level_5": "1d6",
+          "level_11": "1d8",
+          "level_17": "1d10"
+        },
+        "bonus_action_unarmed_strike": true
+      },
+      "associated_classes": ["Monk"]
+    },
+    "ki": {
+      "name": "Ki",
+      "description": "Your training allows you to harness the mystic energy of ki. Your access to this energy is represented by a number of ki points equal to your monk level.",
+      "type": "resource",
+      "resource_pool": "monk_level",
+      "reset_on": "short_rest",
+      "effects": {
+        "ki_options": [
+          {
+            "name": "Flurry of Blows",
+            "cost": 1,
+            "type": "bonus_action",
+            "description": "After taking the Attack action, you can spend 1 ki point to make two unarmed strikes as a bonus action."
+          },
+          {
+            "name": "Patient Defense",
+            "cost": 1,
+            "type": "bonus_action",
+            "description": "You can spend 1 ki point to take the Dodge action as a bonus action on your turn."
+          },
+          {
+            "name": "Step of the Wind",
+            "cost": 1,
+            "type": "bonus_action",
+            "description": "You can spend 1 ki point to take the Disengage or Dash action as a bonus action on your turn, and your jump distance is doubled for the turn."
+          }
+        ]
+      },
+      "associated_classes": ["Monk"]
+    },
+    "cunning_action": {
+      "name": "Cunning Action",
+      "description": "Your quick thinking and agility allow you to move and act quickly. You can take a bonus action on each of your turns to take the Dash, Disengage, or Hide action.",
+      "type": "bonus_action",
+      "effects": {
+        "bonus_action_options": ["Dash", "Disengage", "Hide"]
+      },
+      "associated_classes": ["Rogue"]
+    },
+    "wild_shape": {
+      "name": "Wild Shape",
+      "description": "You can use your action to magically assume the shape of a beast that you have seen before.",
+      "type": "action",
+      "uses": {
+        "default": 2,
+        "per_level": false
+      },
+      "reset_on": "short_rest",
+      "duration": {
+        "level_2": "hours equal to half your druid level (rounded down)",
+        "level_20": "unlimited"
+      },
+      "restrictions": {
+        "level_2": {
+          "max_cr": "1/4",
+          "no_flying_speed": true,
+          "no_swimming_speed": true
+        },
+        "level_4": {
+          "max_cr": "1/2",
+          "no_flying_speed": true
+        },
+        "level_8": {
+          "max_cr": 1
+        }
+      },
+      "associated_classes": ["Druid"]
+    },
+    "favored_enemy": {
+      "name": "Favored Enemy",
+      "description": "You have significant experience studying, tracking, hunting, and even talking to a certain type of enemy.",
+      "type": "passive",
+      "choices": {
+        "default": 1,
+        "increases": [
+          {"level": 6, "choices": 2},
+          {"level": 14, "choices": 3}
+        ]
+      },
+      "choice_options": [
+        "aberrations", "beasts", "celestials", "constructs", "dragons", "elementals", "fey", "fiends", "giants", "monstrosities", "oozes", "plants", "undead", 
+        "or two races of humanoid (such as gnolls and orcs)"
+      ],
+      "effects": {
+        "advantage_on_intelligence_checks": true,
+        "advantage_on_wisdom_checks": true,
+        "advantage_on_tracking": true,
+        "language": "one associated with your favored enemy, if any"
+      },
+      "associated_classes": ["Ranger"]
+    }
+  }
+}
