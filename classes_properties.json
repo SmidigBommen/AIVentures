@@ -5,7 +5,8 @@
         "saving_throw_proficiencies": ["Strength", "Constitution"],
         "skill_proficiency_choices": ["Acrobatics", "Animal Handling", "Athletics", "History", "Insight", "Intimidation", "Perception", "Survival"],
         "num_skill_choices": 2,
-        "armor_training": ["Light", "Medium", "Heavy", "Shields"]
+        "armor_training": ["Light", "Medium", "Heavy", "Shields"],
+        "weapon_proficiencies": ["Simple", "Martial"]
     },
     "Wizard": {
         "hit_die": 6,
@@ -13,7 +14,8 @@
         "saving_throw_proficiencies": ["Intelligence", "Wisdom"],
         "skill_proficiency_choices": ["Arcana", "History", "Insight", "Investigation", "Medicine", "Religion"],
         "num_skill_choices": 2,
-        "armor_training": []
+        "armor_training": [],
+        "weapon_proficiencies": ["Dagger", "Dart", "Sling", "Quarterstaff", "Light Crossbow"]
     },
     "Rogue": {
         "hit_die": 8,
@@ -21,7 +23,8 @@
         "saving_throw_proficiencies": ["Dexterity", "Intelligence"],
         "skill_proficiency_choices": ["Acrobatics", "Athletics", "Deception", "Insight", "Intimidation", "Investigation", "Perception", "Performance", "Persuasion", "Sleight of Hand", "Stealth"],
         "num_skill_choices": 4,
-        "armor_training": ["Light"]
+        "armor_training": ["Light"],
+        "weapon_proficiencies": ["Simple", "Hand Crossbow", "Longsword", "Rapier", "Shortsword"]
     },
     "Cleric": {
         "hit_die": 8,
@@ -29,7 +32,8 @@
         "saving_throw_proficiencies": ["Wisdom", "Charisma"],
         "skill_proficiency_choices": ["History", "Insight", "Medicine", "Persuasion", "Religion"],
         "num_skill_choices": 2,
-        "armor_training": ["Light", "Medium", "Shields"]
+        "armor_training": ["Light", "Medium", "Shields"],
+        "weapon_proficiencies": ["Simple"]
     },
     "Paladin": {
         "hit_die": 10,
@@ -37,7 +41,8 @@
         "saving_throw_proficiencies": ["Wisdom", "Charisma"],
         "skill_proficiency_choices": ["Athletics", "Insight", "Intimidation", "Medicine", "Persuasion", "Religion"],
         "num_skill_choices": 2,
-        "armor_training": ["Light", "Medium", "Heavy", "Shields"]
+        "armor_training": ["Light", "Medium", "Heavy", "Shields"],
+        "weapon_proficiencies": ["Simple", "Martial"]
     },
     "Ranger": {
         "hit_die": 10,
@@ -45,7 +50,8 @@
         "saving_throw_proficiencies": ["Strength", "Dexterity"],
         "skill_proficiency_choices": ["Animal Handling", "Athletics", "Insight", "Investigation", "Nature", "Perception", "Stealth", "Survival"],
         "num_skill_choices": 3,
-        "armor_training": ["Light", "Medium", "Shields"]
+        "armor_training": ["Light", "Medium", "Shields"],
+        "weapon_proficiencies": ["Simple", "Martial"]
     },
     "Barbarian": {
         "hit_die": 12,
@@ -53,7 +59,8 @@
         "saving_throw_proficiencies": ["Strength", "Constitution"],
         "skill_proficiency_choices": ["Animal Handling", "Athletics", "Intimidation", "Nature", "Perception", "Survival"],
         "num_skill_choices": 2,
-        "armor_training": ["Light", "Medium", "Shields"]
+        "armor_training": ["Light", "Medium", "Shields"],
+        "weapon_proficiencies": ["Simple", "Martial"]
     },
     "Bard": {
         "hit_die": 8,
@@ -61,7 +68,8 @@
         "saving_throw_proficiencies": ["Dexterity", "Charisma"],
         "skill_proficiency_choices": ["Acrobatics", "Animal Handling", "Arcana", "Athletics", "Deception", "History", "Insight", "Intimidation", "Investigation", "Medicine", "Nature", "Perception", "Performance", "Persuasion", "Religion", "Sleight of Hand", "Stealth", "Survival"],
         "num_skill_choices": 3,
-        "armor_training": ["Light"]
+        "armor_training": ["Light"],
+        "weapon_proficiencies": ["Simple", "Hand Crossbow", "Longsword", "Rapier", "Shortsword"]
     },
     "Druid": {
         "hit_die": 8,
@@ -69,7 +77,8 @@
         "saving_throw_proficiencies": ["Intelligence", "Wisdom"],
         "skill_proficiency_choices": ["Arcana", "Animal Handling", "Insight", "Medicine", "Nature", "Perception", "Religion", "Survival"],
         "num_skill_choices": 2,
-        "armor_training": ["Light", "Medium", "Shields"]
+        "armor_training": ["Light", "Medium", "Shields"],
+        "weapon_proficiencies": ["Club", "Dagger", "Dart", "Javelin", "Mace", "Quarterstaff", "Scimitar", "Sickle", "Sling", "Spear"]
     },
     "Monk": {
         "hit_die": 8,
@@ -77,7 +86,8 @@
         "saving_throw_proficiencies": ["Strength", "Dexterity"],
         "skill_proficiency_choices": ["Acrobatics", "Athletics", "History", "Insight", "Religion", "Stealth"],
         "num_skill_choices": 2,
-        "armor_training": []
+        "armor_training": [],
+        "weapon_proficiencies": ["Simple", "Shortsword"]
     },
     "Sorcerer": {
         "hit_die": 6,
@@ -85,7 +95,8 @@
         "saving_throw_proficiencies": ["Constitution", "Charisma"],
         "skill_proficiency_choices": ["Arcana", "Deception", "Insight", "Intimidation", "Persuasion", "Religion"],
         "num_skill_choices": 2,
-        "armor_training": []
+        "armor_training": [],
+        "weapon_proficiencies": ["Dagger", "Dart", "Sling", "Quarterstaff", "Light Crossbow"]
     },
     "Warlock": {
         "hit_die": 8,
@@ -93,6 +104,7 @@
         "saving_throw_proficiencies": ["Wisdom", "Charisma"],
         "skill_proficiency_choices": ["Arcana", "Deception", "History", "Intimidation", "Investigation", "Nature", "Religion"],
         "num_skill_choices": 2,
-        "armor_training": ["Light"]
+        "armor_training": ["Light"],
+        "weapon_proficiencies": ["Simple"]
     }
 }
