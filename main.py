@@ -5,6 +5,8 @@ from GameState import GameState
 from battleAI import Battle
 from monsterFactory import MonsterFactory
 from charactercreator import CharacterCreator
+from shop import Shop
+from shopUI import ShopUI
 
 def clear_screen():
     """Clear the terminal screen."""
@@ -124,8 +126,8 @@ def post_battle_menu(gamestate, current_location):
         # Visit shop (if in a town)
         if current_location["type"] == "town":
             print("\nVisiting the shop...")
-            # We'll implement shop functionality later
-            return "shop"
+            game_state = "shop"
+            return game_state
         else:
             print("\nThere are no shops in this area. You must be in a town to visit shops.")
             return post_battle_menu(gamestate, current_location)
@@ -165,6 +167,9 @@ def main():
     player = creator.create_character()
     player.gold = 50  # Starting gold
 
+    town_shop = Shop("Rivermeet General Store")
+    shop_ui = ShopUI(town_shop)
+
     gamestate = GameState(player, MonsterFactory)
     # Main game loop
     game_state = "explore"  # Initial state
@@ -194,7 +199,8 @@ def main():
 
         elif game_state == "shop":
             # We'll implement shop functionality in a future step
-            print("Shop functionality coming soon!")
+            print("You enter the local shop...")
+            shop_ui.show_shop_menu(gamestate.character)
             game_state = "explore"
 
 if __name__ == "__main__":
