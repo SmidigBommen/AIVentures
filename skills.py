@@ -44,7 +44,8 @@ def get_ability_for_skill(skill_name):
     return SKILLS.get(skill_name)
 
 def get_skills_for_ability(ability):
-    return [skill for skill, skill_ability in SKILLS.items() if skill_ability == ability]
+    skills = [skill for skill, skill_ability in SKILLS.items() if skill_ability == ability]
+    return skills
 
 def calculate_skill_modifier(character, skill_name):
     ability = get_ability_for_skill(skill_name)

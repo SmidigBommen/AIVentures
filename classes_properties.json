@@ -2,61 +2,85 @@
     "Fighter": {
         "hit_die": 10,
         "primary_ability": "Strength",
-        "saving_throw_proficiencies": ["Strength", "Constitution"]
+        "saving_throw_proficiencies": ["Strength", "Constitution"],
+        "skill_proficiency_choices": ["Acrobatics", "Animal Handling", "Athletics", "History", "Insight", "Intimidation", "Perception", "Survival"],
+        "num_skill_choices": 2
     },
     "Wizard": {
         "hit_die": 6,
         "primary_ability": "Intelligence",
-        "saving_throw_proficiencies": ["Intelligence", "Wisdom"]
+        "saving_throw_proficiencies": ["Intelligence", "Wisdom"],
+        "skill_proficiency_choices": ["Arcana", "History", "Insight", "Investigation", "Medicine", "Religion"],
+        "num_skill_choices": 2
     },
     "Rogue": {
         "hit_die": 8,
         "primary_ability": "Dexterity",
-        "saving_throw_proficiencies": ["Dexterity", "Intelligence"]
+        "saving_throw_proficiencies": ["Dexterity", "Intelligence"],
+        "skill_proficiency_choices": ["Acrobatics", "Athletics", "Deception", "Insight", "Intimidation", "Investigation", "Perception", "Performance", "Persuasion", "Sleight of Hand", "Stealth"],
+        "num_skill_choices": 4
     },
     "Cleric": {
         "hit_die": 8,
         "primary_ability": "Wisdom",
-        "saving_throw_proficiencies": ["Wisdom", "Charisma"]
+        "saving_throw_proficiencies": ["Wisdom", "Charisma"],
+        "skill_proficiency_choices": ["History", "Insight", "Medicine", "Persuasion", "Religion"],
+        "num_skill_choices": 2
     },
     "Paladin": {
         "hit_die": 10,
         "primary_ability": "Strength",
-        "saving_throw_proficiencies": ["Wisdom", "Charisma"]
+        "saving_throw_proficiencies": ["Wisdom", "Charisma"],
+        "skill_proficiency_choices": ["Athletics", "Insight", "Intimidation", "Medicine", "Persuasion", "Religion"],
+        "num_skill_choices": 2
     },
     "Ranger": {
         "hit_die": 10,
         "primary_ability": "Dexterity",
-        "saving_throw_proficiencies": ["Strength", "Dexterity"]
+        "saving_throw_proficiencies": ["Strength", "Dexterity"],
+        "skill_proficiency_choices": ["Animal Handling", "Athletics", "Insight", "Investigation", "Nature", "Perception", "Stealth", "Survival"],
+        "num_skill_choices": 3
     },
     "Barbarian": {
         "hit_die": 12,
         "primary_ability": "Strength",
-        "saving_throw_proficiencies": ["Strength", "Constitution"]
+        "saving_throw_proficiencies": ["Strength", "Constitution"],
+        "skill_proficiency_choices": ["Animal Handling", "Athletics", "Intimidation", "Nature", "Perception", "Survival"],
+        "num_skill_choices": 2
     },
     "Bard": {
         "hit_die": 8,
         "primary_ability": "Charisma",
-        "saving_throw_proficiencies": ["Dexterity", "Charisma"]
+        "saving_throw_proficiencies": ["Dexterity", "Charisma"],
+        "skill_proficiency_choices": ["Acrobatics", "Animal Handling", "Arcana", "Athletics", "Deception", "History", "Insight", "Intimidation", "Investigation", "Medicine", "Nature", "Perception", "Performance", "Persuasion", "Religion", "Sleight of Hand", "Stealth", "Survival"],
+        "num_skill_choices": 3
     },
     "Druid": {
         "hit_die": 8,
         "primary_ability": "Wisdom",
-        "saving_throw_proficiencies": ["Intelligence", "Wisdom"]
+        "saving_throw_proficiencies": ["Intelligence", "Wisdom"],
+        "skill_proficiency_choices": ["Arcana", "Animal Handling", "Insight", "Medicine", "Nature", "Perception", "Religion", "Survival"],
+        "num_skill_choices": 2
     },
     "Monk": {
         "hit_die": 8,
         "primary_ability": "Dexterity",
-        "saving_throw_proficiencies": ["Strength", "Dexterity"]
+        "saving_throw_proficiencies": ["Strength", "Dexterity"],
+        "skill_proficiency_choices": ["Acrobatics", "Athletics", "History", "Insight", "Religion", "Stealth"],
+        "num_skill_choices": 2
     },
     "Sorcerer": {
         "hit_die": 6,
         "primary_ability": "Charisma",
-        "saving_throw_proficiencies": ["Constitution", "Charisma"]
+        "saving_throw_proficiencies": ["Constitution", "Charisma"],
+        "skill_proficiency_choices": ["Arcana", "Deception", "Insight", "Intimidation", "Persuasion", "Religion"],
+        "num_skill_choices": 2
     },
     "Warlock": {
         "hit_die": 8,
         "primary_ability": "Charisma",
-        "saving_throw_proficiencies": ["Wisdom", "Charisma"]
+        "saving_throw_proficiencies": ["Wisdom", "Charisma"],
+        "skill_proficiency_choices": ["Arcana", "Deception", "History", "Intimidation", "Investigation", "Nature", "Religion"],
+        "num_skill_choices": 2
     }
 }

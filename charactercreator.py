@@ -100,44 +100,24 @@ class CharacterCreator:
             except ValueError:
                 print("Please enter a valid number.")
 
+    def get_all_skills(self):
+        """Get list of all skills from the skills module."""
+        from skills import SKILLS
+        return SKILLS.keys()
+
     def choose_skill_proficiencies(self, class_name):
         """Let the player choose skill proficiencies based on their class."""
 
-        # Define number of skill proficiencies and available skills by class
-        class_skills = {
-            "Fighter": {
-                "count": 2,
-                "skills": ["Acrobatics", "Animal Handling", "Athletics", "History",
-                           "Insight", "Intimidation", "Perception", "Survival"]
-            },
-            "Wizard": {
-                "count": 2,
-                "skills": ["Arcana", "History", "Insight", "Investigation",
-                           "Medicine", "Religion"]
-            },
-            "Rogue": {
-                "count": 4,
-                "skills": ["Acrobatics", "Athletics", "Deception", "Insight",
-                           "Intimidation", "Investigation", "Perception",
-                           "Performance", "Persuasion", "Sleight of Hand", "Stealth"]
-            },
-            "Cleric": {
-                "count": 2,
-                "skills": ["History", "Insight", "Medicine", "Persuasion", "Religion"]
-            },
-            # Add more classes as needed
-        }
-
-        # Default case if class not found
-        if class_name not in class_skills:
-            class_skills[class_name] = {
-                "count": 2,
-                "skills": list(self.get_all_skills())[:4]  # Just use first 4 skills as default
-            }
-
-        skill_config = class_skills[class_name]
-        available_skills = skill_config["skills"]
-        num_to_choose = skill_config["count"]
+        # Get skill proficiency choices from classes_properties.json
+        if class_name in self.classes_properties:
+            class_data = self.classes_properties[class_name]
+            available_skills = class_data.get("skill_proficiency_choices", [])
+            num_to_choose = class_data.get("num_skill_choices", 2)
+        else:
+            # Fallback for classes not in the config
+            available_skills = list(self.get_all_skills())[:4]  # Just use first 4 skills as default
+            num_to_choose = 2
+            print(f"Warning: Class '{class_name}' not found in configuration. Using default skills.")
 
         print(f"\nChoose {num_to_choose} skill proficiencies:")
         for i, skill in enumerate(available_skills, 1):
@@ -163,8 +143,3 @@ class CharacterCreator:
                 print("Please enter a valid number.")
 
         return chosen_skills
-
-    def get_all_skills(self):
-        """Get list of all skills from the skills module."""
-        from skills import SKILLS
-        return SKILLS.keys()
