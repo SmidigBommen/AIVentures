@@ -27,7 +27,8 @@ Done | Weapons (adds to an damage roll)
 Done | Added choice to roll or take average on HP increase at level up.
 In Progress | Refactor weapons to be a specific variable and not a general item
 Fixed | Bug: Monster attack rolls (defence choice is not cleared) are not being calculated correctly
- x | Bug?: Barbarian does not get correct skills. This can be becasue the class is a DEX class in the setup, book says strength..
+Fixed | Bug: Barbarian does not get correct skills. This can be becasue the class is a DEX class in the setup, book says strength..
+ x | Improvement: Battle (end_battle) should maybe not handle the level up logic.
  x | Bug?: Inventory - View inventory works, but you cannot use any of the items because the input goes to the main menu. It is only view inventory, but use can only be done in the _battle_ menu.
  x | Monsters have XP cpnnected to them directly
  x | Group (More than one monster)
