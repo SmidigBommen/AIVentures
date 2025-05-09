@@ -78,13 +78,12 @@ def post_battle_menu(gamestate, current_location):
     print("What would you like to do next?")
     print("1. Continue exploring (chance for another encounter)")
     print("2. Rest and recover (restore some HP)")
-    print("3. View inventory")
-    print("4. Move to a different location")
-    print("5. Visit the shop (if in a town)")
-    print("6. View character stats")
-    print("7. Quit game")
+    print("3. Return to idle (safe state)")
+    print("4. View inventory")
+    print("5. View character stats")
+    print("6. Quit game")
 
-    choice = input("Enter your choice (1-7): ")
+    choice = input("Enter your choice (1-6): ")
     clear_screen()
 
     if choice == "1":
@@ -96,7 +95,7 @@ def post_battle_menu(gamestate, current_location):
             return "battle"
         else:
             print("\nYou explore the area but find nothing of interest.")
-            return post_battle_menu(gamestate, current_location)
+            return "idle"  # Return to idle instead of recursively calling post_battle_menu
 
     elif choice == "2":
         # Rest and recover some HP
@@ -105,9 +104,13 @@ def post_battle_menu(gamestate, current_location):
         gamestate.character.heal(recovery)
         print(f"\nYou take a short rest and recover {recovery} hit points.")
         print(f"Current HP: {gamestate.character.current_hit_points}/{gamestate.character.max_hit_points}")
-        return "explore"
+        return "idle"  # Return to idle
 
     elif choice == "3":
+        # Return to idle state
+        return "idle"
+
+    elif choice == "4":
         # View inventory
         print("\n--- Inventory ---")
         if not gamestate.character.inventory:
@@ -117,28 +120,13 @@ def post_battle_menu(gamestate, current_location):
                 print(f"{i + 1}. {item.name} - {item.description}")
         return post_battle_menu(gamestate, current_location)
 
-    elif choice == "4":
-        # Move to a different location - We'll implement this next
-        print("\nMoving to a different location...")
-        return "change_location"
-
     elif choice == "5":
-        # Visit shop (if in a town)
-        if current_location["type"] == "town":
-            print("\nVisiting the shop...")
-            game_state = "shop"
-            return game_state
-        else:
-            print("\nThere are no shops in this area. You must be in a town to visit shops.")
-            return post_battle_menu(gamestate, current_location)
-
-    elif choice == "6":
         # View character stats
         print("\n--- Character Stats ---")
-        print(gamestate.character.get_stats()+"\n")
+        print(gamestate.character.get_stats() + "\n")
         return post_battle_menu(gamestate, current_location)
 
-    elif choice == "7":
+    elif choice == "6":
         # Quit game
         print("\nThank you for playing!")
         return "quit"
@@ -171,10 +159,14 @@ def main():
     shop_ui = ShopUI(town_shop)
 
     gamestate = GameState(player, MonsterFactory)
+
+    game_state = "idle"  # Initial state
     # Main game loop
-    game_state = "explore"  # Initial state
     while game_state != "quit":
-        if game_state == "explore":
+        if game_state == "idle":
+            game_state = idle_menu(gamestate, current_location)
+
+        elif game_state == "explore":
             print(f"\n--- {current_location['name']} ---")
             print(current_location['description'])
 
@@ -194,14 +186,90 @@ def main():
                 game_state = "quit"
 
         elif game_state == "change_location":
-            # We'll implement location changing in the next step
-            game_state = "explore"
+            # Implement location changing here
+            # For now, just go back to idle in the same location
+            print("Location changing not implemented yet.")
+            game_state = "idle"
 
         elif game_state == "shop":
-            # We'll implement shop functionality in a future step
             print("You enter the local shop...")
             shop_ui.show_shop_menu(gamestate.character)
-            game_state = "explore"
+            game_state = "idle"  # Return to idle state after shopping
+
+def idle_menu(gamestate, current_location):
+        """Display options when the player is idle in any location"""
+        print("\n" + "=" * 50)
+        print(f"You are in {current_location['name']}.")
+        print(f"Location type: {current_location['type']}")
+        print("What would you like to do?")
+        print("1. Explore the area (chance for an encounter)")
+
+        # Only show shop option in towns
+        if current_location["type"] == "town":
+            print("2. Visit the shop")
+            print("3. Rest at the inn (restore full HP for 5 gold)")
+        else:
+            print("2. Set up camp (restore some HP)")
+
+        print("4. View inventory")
+        print("5. View character stats")
+        print("6. Travel to another location")
+        print("7. Quit game")
+
+        choice = input("Enter your choice: ")
+        clear_screen()
+
+        if choice == "1":
+            return "explore"
+        elif choice == "2":
+            if current_location["type"] == "town":
+                return "shop"
+            else:
+                # Camp rest - restore some HP
+                recovery = (gamestate.character.hit_die // 2) + gamestate.character.constitution_modifier
+                recovery = max(1, recovery)
+                gamestate.character.heal(recovery)
+                print(f"\nYou set up camp and recover {recovery} hit points.")
+                print(f"Current HP: {gamestate.character.current_hit_points}/{gamestate.character.max_hit_points}")
+                return "idle"
+        elif choice == "3" and current_location["type"] == "town":
+            # Inn rest - restore full HP for gold
+            cost = 5  # Gold cost to rest
+            if gamestate.character.gold >= cost:
+                gamestate.character.gold -= cost
+                gamestate.character.current_hit_points = gamestate.character.max_hit_points
+                print(f"\nYou rest at the inn for {cost} gold and recover fully.")
+                print(f"Current HP: {gamestate.character.current_hit_points}/{gamestate.character.max_hit_points}")
+            else:
+                print(f"\nYou don't have enough gold to rest at the inn. You need {cost} gold.")
+            return "idle"
+        elif choice == "4":
+            # View inventory
+            print("\n--- Inventory ---")
+            if not gamestate.character.inventory:
+                print("Your inventory is empty.")
+            else:
+                for i, item in enumerate(gamestate.character.inventory):
+                    print(f"{i + 1}. {item.name} - {item.description}")
+            return idle_menu(gamestate, current_location)  # Return to idle menu
+        elif choice == "5":
+            # View character stats
+            print("\n--- Character Stats ---")
+            print(gamestate.character.get_stats() + "\n")
+            return idle_menu(gamestate, current_location)  # Return to idle menu
+        elif choice == "6":
+            # Travel to another location
+            return "change_location"
+        elif choice == "7":
+            # Quit game
+            print("\nThank you for playing!")
+            return "quit"
+        else:
+            print("\nInvalid choice. Please try again.")
+            return idle_menu(gamestate, current_location)
+
+
+
 
 if __name__ == "__main__":
     main()
