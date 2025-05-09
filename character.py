@@ -150,6 +150,7 @@ class Character(Entity):
         stats = super().get_stats()
         stats += f"XP: {self.xp}/{self.xp_to_next_level} Weapon: {self.weapon_slots[WeaponSlot.MAIN_HAND]}\n"
         stats += f"Hit Die: d{self.hit_die}\n"
+        stats += f"Skills: {self.skill_proficiencies}\n"
         return stats
 
     def heal(self, amount):
