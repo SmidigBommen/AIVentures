@@ -138,7 +138,7 @@ def post_battle_menu(gamestate, current_location):
 
 def main():
     # Setup Campaign
-    with open("campaign.json") as f:
+    with open("json/campaign.json") as f:
         campaign = json.load(f)
     display_introduction(campaign)
     # Find the starting location data

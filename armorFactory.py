@@ -3,7 +3,7 @@ from armor import Armor
 
 class ArmorFactory:
     def __init__(self):
-        with open("armor_catalog.json") as f:
+        with open("json/armor_catalog.json") as f:
             self.armor_catalog = json.load(f)
 
         # Combine all armors into a single dictionary for easy access

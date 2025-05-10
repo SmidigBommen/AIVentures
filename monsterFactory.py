@@ -4,7 +4,7 @@ from monster import Monster
 
 class MonsterFactory:
     def __init__(self):
-        with open("monster_default_values.json") as f:
+        with open("json/monster_default_values.json") as f:
             self.races = json.load(f)
 
     def create_monster(self, name, race, class_name, monster_level, weapon_name):

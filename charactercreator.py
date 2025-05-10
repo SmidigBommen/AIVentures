@@ -8,10 +8,10 @@ class CharacterCreator:
         self.character_factory = CharacterFactory()
         self.weapon_factory = WeaponFactory()
 
-        with open("races.json") as jsonfile:
+        with open("json/races.json") as jsonfile:
             self.races = json.load(jsonfile)
 
-        with open("classes_properties.json") as jsonfile:
+        with open("json/classes_properties.json") as jsonfile:
             self.classes_properties = json.load(jsonfile)
 
     def create_character(self):

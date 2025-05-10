@@ -5,13 +5,13 @@ from dice import Dice
 
 class CharacterFactory:
     def __init__(self):
-        with open("races.json") as f:
+        with open("json/races.json") as f:
             self.races = json.load(f)
 
-        with open("races_default_values.json") as default_values_file:
+        with open("json/races_default_values.json") as default_values_file:
             self.races_defaults = json.load(default_values_file)
 
-        with open("classes_properties.json") as classes_file:
+        with open("json/classes_properties.json") as classes_file:
             self.classes_properties = json.load(classes_file)
 
     def create_character(self, name, race, class_name):
