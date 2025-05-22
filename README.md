@@ -22,10 +22,11 @@ Done | Armor (minus vs an attack roll)
 Done | Turns
 Done | Level up (xp + add more stats?)
 Done | Armor Class (AC) - Does the hit actually land (hit calculation)
-Done | Initial Hit points calculated based on class (con + class modifier)
+Done | Initial Hit points on player calculated based on class (con + class modifier)
 Done | Weapons (adds to an damage roll)
 Done | Added choice to roll or take average on HP increase at level up.
-In Progress | Refactor weapons to be a specific variable and not a general item
+Done | Refactor weapons to be a specific variable and not a general item
+x | Monster initial hit points based on CR or dice rolls at creation
 Fixed | Bug: Monster attack rolls (defence choice is not cleared) are not being calculated correctly
 Fixed | Bug: Barbarian does not get correct skills. This can be becasue the class is a DEX class in the setup, book says strength..
  x | Improvement: Add starting equipment according to class (D&D 5e Player Handbook 2024 : Example of Core Fighter Traits, page 91)

@@ -78,7 +78,7 @@ def post_battle_menu(gamestate, current_location):
     print("What would you like to do next?")
     print("1. Continue exploring (chance for another encounter)")
     print("2. Rest and recover (restore some HP)")
-    print("3. Return to idle (safe state)")
+    print("3. Return to the safety of the town")
     print("4. View inventory")
     print("5. View character stats")
     print("6. Quit game")
@@ -153,7 +153,7 @@ def main():
     # Create a game state
     creator = CharacterCreator()
     player = creator.create_character()
-    player.gold = 50  # Starting gold
+
 
     town_shop = Shop("Rivermeet General Store")
     shop_ui = ShopUI(town_shop)

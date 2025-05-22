@@ -29,10 +29,10 @@ class CharacterCreator:
             for ability in self.classes_properties[class_name]["saving_throw_proficiencies"]:
                 character.add_saving_throw_proficiency(ability)
 
-        # Weapon
         weapon = self.choose_weapon()
         character.add_item(weapon)
         character.equip_weapon(weapon)
+        character.gold = 25  # Starting gold, this could also be from the player handbook (per class) in the future
 
         return character
 
