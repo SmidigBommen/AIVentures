@@ -1,5 +1,6 @@
 import json
 from monster import Monster
+from dice import Dice
 
 
 class MonsterFactory:
@@ -8,12 +9,23 @@ class MonsterFactory:
             self.races = json.load(f)
 
     def create_monster(self, name, race, class_name, monster_level, weapon_name):
-        race_stats = self.races[race]
+        self.race_stats = self.races[race]
 
-        m = Monster(name, race, class_name, race_stats["Strength"], (race_stats["Strength"] - 10) // 2,
-                    race_stats["Dexterity"], (race_stats["Dexterity"] - 10) // 2, race_stats["Constitution"],
-                    (race_stats["Constitution"] - 10) // 2, race_stats["Intelligence"],
-                    (race_stats["Intelligence"] - 10) // 2, race_stats["Wisdom"], (race_stats["Wisdom"] - 10) // 2,
-                    race_stats["Charisma"], (race_stats["Charisma"] - 10) // 2, hit_points=10,
-                    base_ac=race_stats["base_ac"], damage_reduction=0, monster_level=monster_level, weapon_name=weapon_name)
+        m = Monster(name, race, class_name, self.race_stats["Strength"], (self.race_stats["Strength"] - 10) // 2,
+                    self.race_stats["Dexterity"], (self.race_stats["Dexterity"] - 10) // 2, self.race_stats["Constitution"],
+                    (self.race_stats["Constitution"] - 10) // 2, self.race_stats["Intelligence"],
+                    (self.race_stats["Intelligence"] - 10) // 2, self.race_stats["Wisdom"], (self.race_stats["Wisdom"] - 10) // 2,
+                    self.race_stats["Charisma"], (self.race_stats["Charisma"] - 10) // 2, self.calculate_max_hit_points(race, monster_level),
+                    base_ac=self.race_stats["base_ac"], damage_reduction=0, monster_level=monster_level, weapon_name=weapon_name)
         return m
+
+    def calculate_max_hit_points(self, monster_race, monster_level):
+        if monster_race == "Goblin":
+            return monster_level + Dice.roll_d6() + Dice.roll_d6() + ((self.race_stats["Constitution"] - 10) // 2)
+        elif monster_race == "Orc":
+            return monster_level + Dice.roll_d8() + Dice.roll_d8() + ((self.race_stats["Constitution"] - 10) // 2)
+        elif monster_race == "Troll":
+            return monster_level + Dice.roll_d10() + Dice.roll_d10() + ((self.race_stats["Constitution"] - 10) // 2)
+        elif monster_race == "Blighted Dryad":
+            return monster_level + Dice.roll_d20() + Dice.roll_d20() + ((self.race_stats["Constitution"] - 10) // 2)
+        return 10
