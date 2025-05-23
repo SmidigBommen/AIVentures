@@ -8,7 +8,7 @@ class Monster(Entity):
                  wisdom_modifier, charisma_score, charisma_modifier, hit_points, base_ac, damage_reduction,
                  monster_level, weapon_name):
         super().__init__(name, race, class_name, strength_score, strength_modifier, dexterity_score, dexterity_modifier, constitution_score, constitution_modifier, intelligence_score, intelligence_modifier, wisdom_score, wisdom_modifier, charisma_score, charisma_modifier)
-        self.max_hit_points = hit_points # TODO: This should be calculated based on monster race or CR
+        self.max_hit_points = hit_points
         self.current_hit_points = hit_points
         self.base_ac = base_ac  # Store the base AC from race
         self.armor_class = self.calculate_total_ac()  # Calculate total AC including dex modifier
@@ -21,7 +21,6 @@ class Monster(Entity):
         ac = self.base_ac
         ac += self.dexterity_modifier
         # If character has armor equipped, that would be calculated here
-        # For now, we'll just use base + dex modifier
         return ac
 
     def take_damage(self, amount):

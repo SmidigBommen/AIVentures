@@ -11,7 +11,6 @@ add items and more attributes
 ## Worklist items ##
 _This is an iterative approach so done only means an iteration is done and an initial implementation is in place_
 
-
 Status | Ideas / Feature
 -------| ------
 Done | Dice roll
@@ -26,9 +25,10 @@ Done | Initial Hit points on player calculated based on class (con + class modif
 Done | Weapons (adds to an damage roll)
 Done | Added choice to roll or take average on HP increase at level up.
 Done | Refactor weapons to be a specific variable and not a general item
-x | Monster initial hit points based on CR or dice rolls at creation
+Done | Monster initial hit points based on level and dice rolls at creation including CON modifier
 Fixed | Bug: Monster attack rolls (defence choice is not cleared) are not being calculated correctly
 Fixed | Bug: Barbarian does not get correct skills. This can be becasue the class is a DEX class in the setup, book says strength..
+x | Locations: add more locations and implement the transitions between them
  x | Improvement: Add starting equipment according to class (D&D 5e Player Handbook 2024 : Example of Core Fighter Traits, page 91)
  x | Improvement: Battle (end_battle) should maybe not handle the XP logic.
  x | Bug?: Inventory - View inventory works, but you cannot use any of the items because the input goes to the main menu. It is only view inventory, but use can only be done in the _battle_ menu.
@@ -46,7 +46,6 @@ Fixed | Bug: Barbarian does not get correct skills. This can be becasue the clas
 * Implement error handling for unexpected inputs or exceptions in various methods.
 * Refactor repetitive code into separate methods for better readability and maintainability.
 Done | Create a text based interface for playing the game
-
 
 ### Implementing Additional Game Mechanics ###
 * Armor Class (AC) - Does the hit actually land
