@@ -139,7 +139,7 @@ class Battle:
             return None
 
     def run_battle(self):
-        print(f"\033[35mBattle begins:\033[97m {self.character.name} vs {self.monster.name}")
+        print(f"\033[35mBattle begins:\033[97m {self.character.name} ({self.character.level}) vs {self.monster.name} ({self.monster.level})")
         initiative = self.calculate_initiative()
 
         while True:
