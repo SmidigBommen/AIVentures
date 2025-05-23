@@ -139,7 +139,7 @@ class Battle:
             return None
 
     def run_battle(self):
-        print(f"\033[35mBattle begins:\033[97m {self.character.name} ({self.character.level}) vs {self.monster.name} ({self.monster.level})")
+        print(f"\033[35mBattle begins:\033[97m {self.character.name} ({self.character.level}) vs {self.monster.name} {self.monster.race} ({self.monster.level})")
         initiative = self.calculate_initiative()
 
         while True:
@@ -167,7 +167,7 @@ class Battle:
     def end_battle(self, character_won):
         if character_won:
             xp_award = self.calculate_xp_award()
-            print(f"{self.character.name} has won the battle and gained {xp_award} experience points!")
+            print(f"\033[35m {self.character.name} has won the battle and gained {xp_award} experience points!\033[97m")
             self.character.gain_xp(xp_award)
 
             # Calculate and award gold
