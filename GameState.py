@@ -1,17 +1,23 @@
 from items import HealingPotion
 
 class GameState:
-    def __init__(self, character, MonsterFactory):
-        # Setup: Use the provided character and create a monster
-        monster_factory = MonsterFactory()
-        self.monster_kills = 0
+    state = "idle"
+    act = ""
+    current_location = None
+    monster_kills = 0
+    character = None
+    monster_factory = None
 
-        self.character = character
+    def add_player(self, player):
+        self.character = player
         # Add initial items to the character's inventory
         self.character.add_item(HealingPotion("Small Healing Potion", 10))
         self.character.add_item(HealingPotion("Medium Healing Potion", 25))
 
-    def check_skill(self, skill_name, difficulty_class=10):
+
+
+
+    def check_skill(self,skill_name, difficulty_class=10):
         result = self.character.make_skill_check(skill_name, difficulty_class)
         print(f"{self.character.name} rolled {result['roll']} for {skill_name} and got a {result['total']} total.")
 
