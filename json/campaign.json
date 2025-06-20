@@ -17,21 +17,51 @@
           "description": "A small trading post at the confluence of two rivers, now experiencing crop failures and growing tensions between residents.",
           "type": "town",
           "isHub": true,
-          "encounterLevel": "1-3"
+          "encounterLevel": "1-3",
+          "areas": [],
+          "starting_area": "town"
         },
         {
           "name": "Whispering Woods",
           "description": "An ancient forest where trees speak in hushed tones and the first crown shard is hidden in a forgotten grove.",
           "type": "wilderness",
           "isHub": false,
-          "encounterLevel": "2-4"
+          "encounterLevel": "2-4",
+          "areas": [
+          {
+            "id": "entrance",
+            "name": "Forest Entrance",
+            "description": "A well-worn path leads into the shadowy woods.",
+            "encounters": ["low"],
+            "connections": ["clearing", "path"]
+          },
+          {
+            "id": "clearing",
+            "name": "Ancient Clearing",
+            "description": "A circular clearing with strange runes carved into the trees.",
+            "encounters": ["medium"],
+            "connections": ["entrance", "grove"],
+            "special": "crown_shard_location"
+          },
+          {
+            "id": "grove",
+            "name": "Corrupted Grove",
+            "description": "The trees here are twisted and dark.",
+            "encounters": ["high"],
+            "connections": ["clearing"],
+            "boss": "Shard Guardian"
+          }
+        ],
+        "starting_area": "entrance"
         },
         {
           "name": "Abandoned Watchtower",
           "description": "Once a border outpost, now home to monsters drawn to the forest's growing corruption.",
           "type": "dungeon",
           "isHub": false,
-          "encounterLevel": "3-5"
+          "encounterLevel": "3-5",
+          "areas": [],
+          "starting_area": "entrance"
         }
       ],
       "bosses": [
