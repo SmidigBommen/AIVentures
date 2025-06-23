@@ -177,8 +177,7 @@ def main():
         elif gamestate.state == "explore":
             print(f"\n--- {gamestate.current_location['name']} ---")
             print(gamestate.current_location['description'])
-            # display_areas()
-
+            # TODO: Add something with areas in that location...
             # Generate a monster encounter based on location
             gamestate.monster = create_monster_for_location(gamestate.current_location, gamestate.character.level)
             gamestate.state = "battle"
@@ -239,7 +238,7 @@ def idle_menu():
     print("\n" + "=" * 50)
     print(f"You are in {gamestate.current_location['name']}.")
     print(f"Location type: {gamestate.current_location['type']}")
-    print("What would you like to do?")
+    print("\nWhat would you like to do?")
     print("1. Explore the area (chance for an encounter)")
 
     # Only show shop option in towns

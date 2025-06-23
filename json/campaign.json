@@ -18,8 +18,57 @@
           "type": "town",
           "isHub": true,
           "encounterLevel": "1-3",
-          "areas": [],
-          "starting_area": "town"
+          "areas": [
+            {
+              "id": "town_square",
+              "name": "Town Square",
+              "description": "The heart of Rivermeet, where merchants hawk their wares and townsfolk gather to exchange news and gossip.",
+              "encounters": 0,
+              "connections": ["tavern", "market", "docks"],
+              "special": "town_center"
+            },
+            {
+              "id": "tavern",
+              "name": "The Flowing Tankard",
+              "description": "A cozy inn where travelers rest and locals share rumors over ale.",
+              "encounters": 0,
+              "connections": ["town_square", "inn_rooms"],
+              "special": "rest_location"
+            },
+            {
+              "id": "inn_rooms",
+              "name": "Inn Rooms",
+              "description": "Simple but clean rooms where weary travelers can find respite.",
+              "encounters": 0,
+              "connections": ["tavern"],
+              "special": "private_rest"
+            },
+            {
+              "id": "market",
+              "name": "Riverside Market",
+              "description": "A bustling marketplace where goods from distant lands are traded.",
+              "encounters": 0,
+              "connections": ["town_square", "docks"],
+              "special": "shop_location"
+            },
+            {
+              "id": "docks",
+              "name": "River Docks",
+              "description": "Wooden piers where riverboats dock and fishermen mend their nets.",
+              "encounters": 1,
+              "connections": ["town_square", "market", "bridge"],
+              "special": "water_access"
+            },
+            {
+              "id": "bridge",
+              "name": "Stone Bridge",
+              "description": "An ancient stone bridge spanning the confluence, with strange runes carved into its supports.",
+              "encounters": 1,
+              "connections": ["docks"],
+              "special": "mysterious_runes"
+            }
+          ],
+          "starting_area": "town_square"
         },
         {
           "name": "Whispering Woods",
@@ -28,31 +77,31 @@
           "isHub": false,
           "encounterLevel": "2-4",
           "areas": [
-          {
-            "id": "entrance",
-            "name": "Forest Entrance",
-            "description": "A well-worn path leads into the shadowy woods.",
-            "encounters": 1,
-            "connections": ["clearing"]
-          },
-          {
-            "id": "clearing",
-            "name": "Ancient Clearing",
-            "description": "A circular clearing with strange runes carved into the trees.",
-            "encounters": 2,
-            "connections": ["entrance", "grove"],
-            "special": "crown_shard_location"
-          },
-          {
-            "id": "grove",
-            "name": "Corrupted Grove",
-            "description": "The trees here are twisted and dark.",
-            "encounters": 3,
-            "connections": ["clearing"],
-            "boss": "Shard Guardian"
-          }
-        ],
-        "starting_area": "entrance"
+            {
+              "id": "entrance",
+              "name": "Forest Entrance",
+              "description": "A well-worn path leads into the shadowy woods.",
+              "encounters": 1,
+              "connections": ["clearing"]
+            },
+            {
+              "id": "clearing",
+              "name": "Ancient Clearing",
+              "description": "A circular clearing with strange runes carved into the trees.",
+              "encounters": 2,
+              "connections": ["entrance", "grove"],
+              "special": "crown_shard_location"
+            },
+            {
+              "id": "grove",
+              "name": "Corrupted Grove",
+              "description": "The trees here are twisted and dark.",
+              "encounters": 3,
+              "connections": ["clearing"],
+              "boss": "Shard Guardian"
+            }
+          ],
+          "starting_area": "entrance"
         },
         {
           "name": "Abandoned Watchtower",
@@ -60,8 +109,61 @@
           "type": "dungeon",
           "isHub": false,
           "encounterLevel": "3-5",
-          "areas": [],
-          "starting_area": "entrance"
+          "areas": [
+            {
+              "id": "approach",
+              "name": "Watchtower Approach",
+              "description": "A crumbling stone path leads to the abandoned structure.",
+              "encounters": 1,
+              "connections": ["courtyard"]
+            },
+            {
+              "id": "courtyard",
+              "name": "Overgrown Courtyard",
+              "description": "Weeds and vines have overtaken what was once a well-maintained training ground.",
+              "encounters": 2,
+              "connections": ["approach", "ground_floor", "stable"]
+            },
+            {
+              "id": "stable",
+              "name": "Ruined Stables",
+              "description": "The collapsed remains of horse stables, now home to scavenging creatures.",
+              "encounters": 2,
+              "connections": ["courtyard"]
+            },
+            {
+              "id": "ground_floor",
+              "name": "Guard Barracks",
+              "description": "The main floor where guards once lived, now filled with debris and shadows.",
+              "encounters": 3,
+              "connections": ["courtyard", "upper_floor", "basement"]
+            },
+            {
+              "id": "basement",
+              "name": "Storage Cellar",
+              "description": "A dank cellar where supplies were once stored, now harboring darker secrets.",
+              "encounters": 3,
+              "connections": ["ground_floor"],
+              "special": "hidden_treasure"
+            },
+            {
+              "id": "upper_floor",
+              "name": "Watch Room",
+              "description": "The observation deck with commanding views of the surrounding area.",
+              "encounters": 2,
+              "connections": ["ground_floor", "tower_top"]
+            },
+            {
+              "id": "tower_top",
+              "name": "Tower Peak",
+              "description": "The highest point of the watchtower, where the beacon once burned.",
+              "encounters": 4,
+              "connections": ["upper_floor"],
+              "boss": "Corrupted Captain",
+              "special": "vantage_point"
+            }
+          ],
+          "starting_area": "approach"
         }
       ],
       "bosses": [
@@ -70,6 +172,12 @@
           "description": "A once-benevolent forest spirit corrupted by the crown shard's chaotic energy.",
           "level": 5,
           "type": "Blighted Dryad"
+        },
+        {
+          "name": "Corrupted Captain",
+          "description": "The undead remains of the watchtower's former commander, driven mad by dark magic.",
+          "level": 6,
+          "type": "Undead Warrior"
         }
       ]
     },
@@ -84,28 +192,236 @@
           "description": "Home to dwarven mines and volcanic activity, where the fire shard is guarded by salamander cultists.",
           "type": "wilderness",
           "isHub": false,
-          "encounterLevel": "5-7"
+          "encounterLevel": "5-7",
+          "areas": [
+            {
+              "id": "mountain_pass",
+              "name": "Treacherous Pass",
+              "description": "A narrow mountain trail with steep drops and loose rocks.",
+              "encounters": 2,
+              "connections": ["mining_camp"]
+            },
+            {
+              "id": "mining_camp",
+              "name": "Abandoned Mining Camp",
+              "description": "A deserted dwarven camp with tools scattered about and strange heat emanating from the ground.",
+              "encounters": 3,
+              "connections": ["mountain_pass", "mine_entrance", "forge_ruins"]
+            },
+            {
+              "id": "forge_ruins",
+              "name": "Ruined Forge",
+              "description": "The remains of a great dwarven forge, still glowing with residual heat.",
+              "encounters": 2,
+              "connections": ["mining_camp"],
+              "special": "magical_forge"
+            },
+            {
+              "id": "mine_entrance",
+              "name": "Mine Entrance",
+              "description": "The mouth of the mine glows with an eerie red light from deep within.",
+              "encounters": 3,
+              "connections": ["mining_camp", "mine_tunnels"]
+            },
+            {
+              "id": "mine_tunnels",
+              "name": "Scorching Tunnels",
+              "description": "Deep underground passages where the air shimmers with heat.",
+              "encounters": 4,
+              "connections": ["mine_entrance", "salamander_lair"]
+            },
+            {
+              "id": "salamander_lair",
+              "name": "Salamander Temple",
+              "description": "A carved chamber where fire cultists worship around a pool of lava.",
+              "encounters": 5,
+              "connections": ["mine_tunnels"],
+              "boss": "Flame Cultist Leader",
+              "special": "fire_shard_location"
+            }
+          ],
+          "starting_area": "mountain_pass"
         },
         {
           "name": "Sunken Temple of Dariel",
           "description": "An ancient temple dedicated to the sea god, now partially submerged and home to the water shard.",
           "type": "dungeon",
           "isHub": false,
-          "encounterLevel": "7-9"
+          "encounterLevel": "7-9",
+          "areas": [
+            {
+              "id": "coastal_approach",
+              "name": "Rocky Coastline",
+              "description": "Jagged rocks and crashing waves guard the approach to the sunken temple.",
+              "encounters": 2,
+              "connections": ["temple_entrance"]
+            },
+            {
+              "id": "temple_entrance",
+              "name": "Flooded Entrance",
+              "description": "The temple's grand entrance is half-submerged, requiring careful navigation.",
+              "encounters": 3,
+              "connections": ["coastal_approach", "prayer_hall", "side_chamber"]
+            },
+            {
+              "id": "side_chamber",
+              "name": "Priests' Quarters",
+              "description": "Former living quarters now home to aquatic creatures.",
+              "encounters": 3,
+              "connections": ["temple_entrance"],
+              "special": "hidden_passage"
+            },
+            {
+              "id": "prayer_hall",
+              "name": "Great Prayer Hall",
+              "description": "A vast chamber with towering pillars, partially filled with seawater.",
+              "encounters": 4,
+              "connections": ["temple_entrance", "inner_sanctum", "underwater_passage"]
+            },
+            {
+              "id": "underwater_passage",
+              "name": "Submerged Corridor",
+              "description": "A completely flooded passage that requires swimming to navigate.",
+              "encounters": 4,
+              "connections": ["prayer_hall", "treasure_chamber"]
+            },
+            {
+              "id": "treasure_chamber",
+              "name": "Drowned Treasury",
+              "description": "The temple's treasury, now an underwater cave filled with ancient treasures.",
+              "encounters": 3,
+              "connections": ["underwater_passage"],
+              "special": "ancient_treasures"
+            },
+            {
+              "id": "inner_sanctum",
+              "name": "Sanctum of Dariel",
+              "description": "The holiest chamber, where the water shard pulses with oceanic power.",
+              "encounters": 5,
+              "connections": ["prayer_hall"],
+              "boss": "Corrupted High Priest",
+              "special": "water_shard_location"
+            }
+          ],
+          "starting_area": "coastal_approach"
         },
         {
           "name": "Windswept Plains",
           "description": "Rolling grasslands where nomadic tribes guard ancient burial mounds containing the air shard.",
           "type": "wilderness",
           "isHub": false,
-          "encounterLevel": "9-11"
+          "encounterLevel": "9-11",
+          "areas": [
+            {
+              "id": "plains_edge",
+              "name": "Edge of the Plains",
+              "description": "Where the forest meets endless grasslands under an expansive sky.",
+              "encounters": 2,
+              "connections": ["nomad_camp"]
+            },
+            {
+              "id": "nomad_camp",
+              "name": "Tribal Encampment",
+              "description": "Colorful tents and banners mark the temporary home of the wind riders.",
+              "encounters": 3,
+              "connections": ["plains_edge", "hunting_grounds", "burial_grounds"]
+            },
+            {
+              "id": "hunting_grounds",
+              "name": "Hunting Grounds",
+              "description": "Sacred grounds where the tribes hunt the great buffalo of the plains.",
+              "encounters": 4,
+              "connections": ["nomad_camp", "wind_altar"]
+            },
+            {
+              "id": "wind_altar",
+              "name": "Altar of the Four Winds",
+              "description": "An ancient stone circle where the wind never stops howling.",
+              "encounters": 3,
+              "connections": ["hunting_grounds"],
+              "special": "wind_blessing"
+            },
+            {
+              "id": "burial_grounds",
+              "name": "Sacred Burial Grounds",
+              "description": "Ancient mounds where the greatest wind riders of old were laid to rest.",
+              "encounters": 4,
+              "connections": ["nomad_camp", "great_mound"]
+            },
+            {
+              "id": "great_mound",
+              "name": "The Great Mound",
+              "description": "The largest burial mound, where the first wind rider sleeps with the air shard.",
+              "encounters": 5,
+              "connections": ["burial_grounds"],
+              "boss": "Ancient Wind Rider",
+              "special": "air_shard_location"
+            }
+          ],
+          "starting_area": "plains_edge"
         },
         {
           "name": "The Crystalline Caves",
           "description": "A network of glittering caverns where reality itself seems to bend, hiding the earth shard.",
           "type": "dungeon",
           "isHub": false,
-          "encounterLevel": "11-13"
+          "encounterLevel": "11-13",
+          "areas": [
+            {
+              "id": "cave_mouth",
+              "name": "Crystal Cave Entrance",
+              "description": "The entrance glitters with embedded crystals that seem to pulse with inner light.",
+              "encounters": 3,
+              "connections": ["reflecting_chamber"]
+            },
+            {
+              "id": "reflecting_chamber",
+              "name": "Chamber of Reflections",
+              "description": "Mirrors and crystals create infinite reflections, making navigation disorienting.",
+              "encounters": 4,
+              "connections": ["cave_mouth", "maze_tunnels", "meditation_grove"]
+            },
+            {
+              "id": "meditation_grove",
+              "name": "Underground Grove",
+              "description": "An impossible grove of crystal trees growing in the heart of the mountain.",
+              "encounters": 3,
+              "connections": ["reflecting_chamber"],
+              "special": "crystal_forest"
+            },
+            {
+              "id": "maze_tunnels",
+              "name": "Labyrinthine Tunnels",
+              "description": "Twisting passages that seem to shift and change when you're not looking.",
+              "encounters": 5,
+              "connections": ["reflecting_chamber", "reality_rift", "gem_chamber"]
+            },
+            {
+              "id": "gem_chamber",
+              "name": "Geode Chamber",
+              "description": "A massive geode with walls lined in precious gems and crystals.",
+              "encounters": 4,
+              "connections": ["maze_tunnels"],
+              "special": "precious_gems"
+            },
+            {
+              "id": "reality_rift",
+              "name": "Rift in Reality",
+              "description": "A tear in space itself, where the laws of physics bend and warp.",
+              "encounters": 6,
+              "connections": ["maze_tunnels", "earth_core"]
+            },
+            {
+              "id": "earth_core",
+              "name": "Core of the Earth",
+              "description": "The deepest chamber, where the earth shard pulses with the planet's heartbeat.",
+              "encounters": 6,
+              "connections": ["reality_rift"],
+              "boss": "Primordial Earth Elemental",
+              "special": "earth_shard_location"
+            }
+          ],
+          "starting_area": "cave_mouth"
         }
       ],
       "bosses": [
@@ -114,6 +430,30 @@
           "description": "Malachar's cunning lieutenant who pursues the heroes throughout their journey.",
           "level": 10,
           "type": "Shadow Sorceress"
+        },
+        {
+          "name": "Flame Cultist Leader",
+          "description": "A salamander priest who guards the fire shard with fanatical devotion.",
+          "level": 8,
+          "type": "Fire Cultist"
+        },
+        {
+          "name": "Corrupted High Priest",
+          "description": "Once a holy man of Dariel, now twisted by the water shard's corrupting influence.",
+          "level": 9,
+          "type": "Corrupted Cleric"
+        },
+        {
+          "name": "Ancient Wind Rider",
+          "description": "The undead spirit of the greatest nomad warrior, bound to protect the air shard.",
+          "level": 11,
+          "type": "Undead Nomad"
+        },
+        {
+          "name": "Primordial Earth Elemental",
+          "description": "An ancient being of stone and crystal, guardian of the earth shard.",
+          "level": 13,
+          "type": "Earth Elemental"
         }
       ]
     },
@@ -128,7 +468,79 @@
           "description": "Malachar's imposing fortress built at the intersection of magical ley lines, where the veil between worlds grows thin.",
           "type": "dungeon",
           "isHub": false,
-          "encounterLevel": "13-15"
+          "encounterLevel": "13-15",
+          "areas": [
+            {
+              "id": "outer_walls",
+              "name": "Fortress Walls",
+              "description": "Massive walls of black stone that seem to absorb light itself.",
+              "encounters": 4,
+              "connections": ["main_gate"]
+            },
+            {
+              "id": "main_gate",
+              "name": "Gate of Shadows",
+              "description": "A towering gate wreathed in dark energy and guarded by shadow creatures.",
+              "encounters": 5,
+              "connections": ["outer_walls", "courtyard", "guard_towers"]
+            },
+            {
+              "id": "guard_towers",
+              "name": "Shadow Towers",
+              "description": "Twin towers flanking the gate, filled with Malachar's elite guards.",
+              "encounters": 5,
+              "connections": ["main_gate"],
+              "special": "tactical_advantage"
+            },
+            {
+              "id": "courtyard",
+              "name": "Courtyard of Whispers",
+              "description": "An open space where the very air seems to whisper with malevolent voices.",
+              "encounters": 6,
+              "connections": ["main_gate", "great_hall", "dungeons", "laboratory"]
+            },
+            {
+              "id": "dungeons",
+              "name": "Shadow Dungeons",
+              "description": "Prison cells where captured heroes and spirits are held in eternal torment.",
+              "encounters": 5,
+              "connections": ["courtyard"],
+              "special": "prisoner_rescue"
+            },
+            {
+              "id": "laboratory",
+              "name": "Alchemical Laboratory",
+              "description": "Where Malachar conducts his dark experiments on the crown shards.",
+              "encounters": 6,
+              "connections": ["courtyard", "ritual_chamber"],
+              "special": "magical_research"
+            },
+            {
+              "id": "great_hall",
+              "name": "Hall of Conquest",
+              "description": "A grand hall displaying Malachar's victories and the suffering he has caused.",
+              "encounters": 6,
+              "connections": ["courtyard", "throne_room"]
+            },
+            {
+              "id": "throne_room",
+              "name": "Throne of Shadows",
+              "description": "Malachar's seat of power, where he rules over his dark domain.",
+              "encounters": 7,
+              "connections": ["great_hall", "ritual_chamber"],
+              "boss": "Lady Vex (Final Battle)"
+            },
+            {
+              "id": "ritual_chamber",
+              "name": "The Convergence Chamber",
+              "description": "The heart of the fortress, where Malachar performs the ritual to merge the planes.",
+              "encounters": 8,
+              "connections": ["laboratory", "throne_room"],
+              "boss": "Malachar the Void-touched",
+              "special": "final_ritual_site"
+            }
+          ],
+          "starting_area": "outer_walls"
         }
       ],
       "bosses": [
@@ -137,6 +549,12 @@
           "description": "The master sorcerer, now transformed by shadow magic and wielding powers from beyond the mortal realm.",
           "level": 15,
           "type": "Corrupted Mage"
+        },
+        {
+          "name": "Lady Vex (Final Battle)",
+          "description": "Malachar's lieutenant makes her final stand to protect her master's ritual.",
+          "level": 12,
+          "type": "Shadow Sorceress"
         }
       ]
     }
