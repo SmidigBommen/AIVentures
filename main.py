@@ -147,10 +147,17 @@ def display_locations():
     print("\n" + "=" * 50)
     print("Available Locations:")
     for i, location in enumerate(gamestate.act["locations"], 1):
-        print(f"{i}. {location['name']}")
+        print(f"{i}. {location['name']} - {location['description']}")
+
+def display_areas():
+    print("\n" + "=" * 50)
+    print("You explore your surroundings and find:")
+    for i, area in enumerate(gamestate.current_location["areas"], 1):
+        print(f"{i}. {area['name']} - {area['description']}")
 
 
 
+## ----------    Main    ----------
 def main():
     # Setup Campaign
     global gamestate
@@ -162,7 +169,7 @@ def main():
     gamestate.add_player(creator.create_character())
 
     gamestate.state = "idle"  # Initial state
-    # Main game loop
+
     while gamestate.state != "quit":
         if gamestate.state == "idle":
             gamestate.state = idle_menu()
@@ -170,7 +177,7 @@ def main():
         elif gamestate.state == "explore":
             print(f"\n--- {gamestate.current_location['name']} ---")
             print(gamestate.current_location['description'])
-
+            # display_areas()
 
             # Generate a monster encounter based on location
             gamestate.monster = create_monster_for_location(gamestate.current_location, gamestate.character.level)
@@ -188,7 +195,6 @@ def main():
                 gamestate.state = "quit"
 
         elif gamestate.state == "change_location":
-            # Implement location changing here
             display_locations()
             travel_location = input("Enter your choice: ")
             clear_screen()
@@ -205,15 +211,13 @@ def main():
                 print("Invalid choice. Please try again.")
                 gamestate.state = "change_location"
 
-            # For now, just go back to idle in the same location
-            #print("Location changing not implemented yet.")
             gamestate.state = "idle"
 
         elif gamestate.state == "shop":
             print("You enter the local shop...")
             shop_ui.show_shop_menu(gamestate.character)
             gamestate.state = "idle"  # Return to idle state after shopping
-
+## ------------------------------------
 
 def setup_campaign():
     with open("json/campaign.json") as f:
@@ -232,7 +236,6 @@ def setup_campaign():
 
 
 def idle_menu():
-    """Display options when the player is idle in any location"""
     print("\n" + "=" * 50)
     print(f"You are in {gamestate.current_location['name']}.")
     print(f"Location type: {gamestate.current_location['type']}")

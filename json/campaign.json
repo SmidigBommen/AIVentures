@@ -33,7 +33,7 @@
             "name": "Forest Entrance",
             "description": "A well-worn path leads into the shadowy woods.",
             "encounters": ["low"],
-            "connections": ["clearing", "path"]
+            "connections": ["clearing"]
           },
           {
             "id": "clearing",
