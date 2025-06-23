@@ -32,14 +32,14 @@
             "id": "entrance",
             "name": "Forest Entrance",
             "description": "A well-worn path leads into the shadowy woods.",
-            "encounters": ["low"],
+            "encounters": 1,
             "connections": ["clearing"]
           },
           {
             "id": "clearing",
             "name": "Ancient Clearing",
             "description": "A circular clearing with strange runes carved into the trees.",
-            "encounters": ["medium"],
+            "encounters": 2,
             "connections": ["entrance", "grove"],
             "special": "crown_shard_location"
           },
@@ -47,7 +47,7 @@
             "id": "grove",
             "name": "Corrupted Grove",
             "description": "The trees here are twisted and dark.",
-            "encounters": ["high"],
+            "encounters": 3,
             "connections": ["clearing"],
             "boss": "Shard Guardian"
           }
