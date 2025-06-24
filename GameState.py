@@ -2,6 +2,7 @@ from items import HealingPotion
 
 class GameState:
     state = "idle"
+    campaign = None
     act = ""
     current_location = None
     monster_kills = 0
