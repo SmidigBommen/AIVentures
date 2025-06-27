@@ -79,10 +79,10 @@ def post_battle_menu():
     print("What would you like to do next?")
     print("1. Continue exploring (chance for another encounter)")
     print("2. Rest and recover (restore some HP)")
-    print("3. Return to the safety of the town")
-    print("4. View inventory")
-    print("5. View character stats")
-    print("6. Quit game")
+    # print("3. Return to the safety of the town")
+    print("3. View inventory")
+    print("4. View character stats")
+    print("Q. Quit game")
 
     choice = input("Enter your choice (1-6): ")
     clear_screen()
@@ -108,16 +108,6 @@ def post_battle_menu():
         return "idle"  # Return to idle
 
     elif choice == "3":
-        # Return to idle state in town location
-        gamestate.current_location = gamestate.act["locations"][0]
-        for location in gamestate.act["locations"]:
-            ## move the player back to town
-            if location["type"] == "town":
-                gamestate.current_location = location
-                return "idle"
-        return "idle"
-
-    elif choice == "4":
         # View inventory
         print("\n--- Inventory ---")
         if not gamestate.character.inventory:
@@ -127,13 +117,13 @@ def post_battle_menu():
                 print(f"{i + 1}. {item.name} - {item.description}")
         return post_battle_menu()
 
-    elif choice == "5":
+    elif choice == "4":
         # View character stats
         print("\n--- Character Stats ---")
         print(gamestate.character.get_stats() + "\n")
         return post_battle_menu()
 
-    elif choice == "6":
+    elif choice == "q" or choice == "Q":
         # Quit game
         print("\nThank you for playing!")
         return "quit"
@@ -173,10 +163,7 @@ def main():
             gamestate.state = idle_menu()
 
         elif gamestate.state == "enter_areas":
-            print(f"\n--- {gamestate.current_location['name']} ---")
-            print(gamestate.current_location['description'])
-            print(f"The area you are in is the {gamestate.current_area['name']}")
-
+            print(f"You are in the {gamestate.current_area['name']}, {gamestate.current_area['description']} ")
             # Initialize area exploration
             if not gamestate.current_area:
                 # Set starting area for the location
@@ -194,7 +181,7 @@ def main():
 
             if winner == "player":
                 print(f"Victory! You defeated {gamestate.monster.name}!")
-                gamestate.state = post_battle_menu()
+                gamestate.state = idle_menu()
             elif winner == "monster":
                 print(f"Game Over! {gamestate.character.name} has been defeated...")
                 gamestate.state = "quit"
@@ -250,9 +237,12 @@ def setup_campaign():
 
 def idle_menu():
     print("\n" + "=" * 50)
-    print(f"You are in {gamestate.current_location['name']} - {gamestate.current_location['type']} ")
+    print(f"You are in {gamestate.current_location['name']} and you can go to:")
+    for connections in gamestate.current_area["connections"]:
+        print(f"{connections}")
     print("\nWhat would you like to do?")
-    print("1. Explore the area (chance for an encounter)")
+    encounter_chance = gamestate.current_area.get('encounters')
+    print(f"1. Explore the area ({encounter_chance}0% chance for an encounter)")
 
     # Only show shop option in towns
     if gamestate.current_location["type"] == "town":
@@ -341,11 +331,9 @@ def explore_area():
 
 def area_menu():
     """Menu for actions within a specific area"""
-    area = gamestate.current_area
-    print(f"\n--- {area['name']} ---")
-    print(area['description'])
     print("\nWhat would you like to do?")
-    print("1. Explore this area (chance for encounter)")
+    encounter_chance = gamestate.current_area.get('encounters')
+    print(f"1. Explore the area ({encounter_chance}0% chance for an encounter)")
     print("2. Move to a connected area")
     print("3. Return to location overview")
     print("4. View character stats")

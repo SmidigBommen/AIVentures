@@ -30,6 +30,7 @@ Fixed | Bug: Monster attack rolls (defence choice is not cleared) are not being 
 Fixed | Bug: Barbarian does not get correct skills. This can be becasue the class is a DEX class in the setup, book says strength..
 Done | Locations: add more locations and implement the transitions between them
 Done | Locations: Areas in each locations is implemented with connection to eachother
+ x | Bug: transition out of area after combat does not seem to work correctly when you have changed location
  x | Special: Some areas have special attribute with some hidden element. Implement interaction these specials with skill rolls
  x | Improvement: Add starting equipment according to class (D&D 5e Player Handbook 2024 : Example of Core Fighter Traits, page 91)
  x | Improvement: Battle (end_battle) should maybe not handle the XP logic.
