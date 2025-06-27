@@ -89,8 +89,7 @@
               "name": "Ancient Clearing",
               "description": "A circular clearing with strange runes carved into the trees.",
               "encounters": 2,
-              "connections": ["entrance", "grove"],
-              "special": "crown_shard_location"
+              "connections": ["entrance", "grove"]
             },
             {
               "id": "grove",
@@ -98,6 +97,7 @@
               "description": "The trees here are twisted and dark.",
               "encounters": 3,
               "connections": ["clearing"],
+              "special": "crown_shard_location",
               "boss": "Shard Guardian"
             }
           ],

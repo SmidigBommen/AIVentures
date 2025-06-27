@@ -164,10 +164,8 @@ def main():
     current_campaign = setup_campaign()
     town_shop = Shop("Rivermeet General Store")
     shop_ui = ShopUI(town_shop)
-
     creator = CharacterCreator()
     gamestate.add_player(creator.create_character())
-
     gamestate.state = "idle"  # Initial state
 
     while gamestate.state != "quit":
@@ -177,18 +175,18 @@ def main():
         elif gamestate.state == "enter_areas":
             print(f"\n--- {gamestate.current_location['name']} ---")
             print(gamestate.current_location['description'])
+            print(f"The area you are in is the {gamestate.current_area['name']}")
+
             # Initialize area exploration
             if not gamestate.current_area:
                 # Set starting area for the location
-                starting_area_id = gamestate.current_location.get("starting_area", gamestate.current_location["areas"][0]["id"])
+                starting_area_id = gamestate.current_location.get("starting_area")
                 gamestate.set_current_area(starting_area_id)
             gamestate.state = "area_menu"
 
         elif gamestate.state == "area_menu":
             gamestate.state = area_menu()
-            # Generate a monster encounter based on location
-            #gamestate.monster = create_monster_for_location(gamestate.current_location, gamestate.character.level)
-            #gamestate.state = "battle"
+
 
         elif gamestate.state == "battle":
             battle = Battle(gamestate.character, gamestate.monster)
@@ -205,14 +203,18 @@ def main():
             display_locations()
             travel_location = input("Enter your choice: ")
             clear_screen()
+            # TODO: Make this more generic to handle any location transitions
             if travel_location == "1":
                 gamestate.current_location = gamestate.act["locations"][0]
+                gamestate.set_current_area(gamestate.current_location["starting_area"])
                 gamestate.state = "idle"
             elif travel_location == "2":
                 gamestate.current_location = gamestate.act["locations"][1]
+                gamestate.set_current_area(gamestate.current_location["starting_area"])
                 gamestate.state = "idle"
             elif travel_location == "3":
                 gamestate.current_location = gamestate.act["locations"][2]
+                gamestate.set_current_area(gamestate.current_location["starting_area"])
                 gamestate.state = "idle"
             else:
                 print("Invalid choice. Please try again.")
@@ -238,7 +240,11 @@ def setup_campaign():
     for location in current_act["locations"]:
         if location["name"] == start_location_name:
             gamestate.current_location = location
+            starting_area_id = location.get("starting_area")
+            if starting_area_id:
+                gamestate.set_current_area(starting_area_id)
             break
+
     return campaign
 
 
@@ -257,8 +263,9 @@ def idle_menu():
 
     print("4. View inventory")
     print("5. View character stats")
-    print("6. Travel to another location")
-    print("7. Quit game")
+    if gamestate.current_area["id"] == gamestate.current_location["starting_area"]:
+        print("6. Travel to another location")
+    print("Q. Quit game")
 
     choice = input("Enter your choice: ")
     clear_screen()
@@ -294,13 +301,12 @@ def idle_menu():
     elif choice == "5":
         # View character stats
         print("\n--- Character Stats ---")
-        print(f"{gamestate.character}")
         print(gamestate.character.get_stats() + "\n")
         return idle_menu()  # Return to idle menu
     elif choice == "6":
         # Travel to another location
         return "change_location"
-    elif choice == "7":
+    elif choice == "q" or choice == "Q":
         # Quit game
         print("\nThank you for playing!")
         return "quit"

@@ -23,7 +23,15 @@ class GameState:
                 if area["id"] == area_id:
                     self.current_area = area
                     return True
+        self.current_area = None
         return False
+
+    def get_area_by_id(self, area_id):
+        if self.current_location and "areas" in self.current_location:
+            for area in self.current_location["areas"]:
+                if area["id"] == area_id:
+                    return area
+        return None
 
 
     def check_skill(self,skill_name, difficulty_class=10):
