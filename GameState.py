@@ -8,6 +8,7 @@ class GameState:
     monster_kills = 0
     character = None
     monster_factory = None
+    current_area = None
 
     def add_player(self, player):
         self.character = player
@@ -15,7 +16,14 @@ class GameState:
         self.character.add_item(HealingPotion("Small Healing Potion", 10))
         self.character.add_item(HealingPotion("Medium Healing Potion", 25))
 
-
+    def set_current_area(self, area_id):
+        """Set the current area within the current location"""
+        if self.current_location and "areas" in self.current_location:
+            for area in self.current_location["areas"]:
+                if area["id"] == area_id:
+                    self.current_area = area
+                    return True
+        return False
 
 
     def check_skill(self,skill_name, difficulty_class=10):

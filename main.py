@@ -174,13 +174,21 @@ def main():
         if gamestate.state == "idle":
             gamestate.state = idle_menu()
 
-        elif gamestate.state == "explore":
+        elif gamestate.state == "enter_areas":
             print(f"\n--- {gamestate.current_location['name']} ---")
             print(gamestate.current_location['description'])
-            # TODO: Add something with areas in that location...
+            # Initialize area exploration
+            if not gamestate.current_area:
+                # Set starting area for the location
+                starting_area_id = gamestate.current_location.get("starting_area", gamestate.current_location["areas"][0]["id"])
+                gamestate.set_current_area(starting_area_id)
+            gamestate.state = "area_menu"
+
+        elif gamestate.state == "area_menu":
+            gamestate.state = area_menu()
             # Generate a monster encounter based on location
-            gamestate.monster = create_monster_for_location(gamestate.current_location, gamestate.character.level)
-            gamestate.state = "battle"
+            #gamestate.monster = create_monster_for_location(gamestate.current_location, gamestate.character.level)
+            #gamestate.state = "battle"
 
         elif gamestate.state == "battle":
             battle = Battle(gamestate.character, gamestate.monster)
@@ -236,8 +244,7 @@ def setup_campaign():
 
 def idle_menu():
     print("\n" + "=" * 50)
-    print(f"You are in {gamestate.current_location['name']}.")
-    print(f"Location type: {gamestate.current_location['type']}")
+    print(f"You are in {gamestate.current_location['name']} - {gamestate.current_location['type']} ")
     print("\nWhat would you like to do?")
     print("1. Explore the area (chance for an encounter)")
 
@@ -257,17 +264,12 @@ def idle_menu():
     clear_screen()
 
     if choice == "1":
-        return "explore"
+        return "enter_areas"
     elif choice == "2":
         if gamestate.current_location["type"] == "town":
             return "shop"
         else:
-            # Camp rest - restore some HP
-            recovery = (gamestate.character.hit_die // 2) + gamestate.character.constitution_modifier
-            recovery = max(1, recovery)
-            gamestate.character.heal(recovery)
-            print(f"\nYou set up camp and recover {recovery} hit points.")
-            print(f"Current HP: {gamestate.character.current_hit_points}/{gamestate.character.max_hit_points}")
+            resting()
             return "idle"
     elif choice == "3" and gamestate.current_location["type"] == "town":
         # Inn rest - restore full HP for gold
@@ -304,9 +306,125 @@ def idle_menu():
         return "quit"
     else:
         print("\nInvalid choice. Please try again.")
-        return idle_menu(gamestate.current_location)
+        return idle_menu()
 
 
+def explore_area():
+    """Handle exploration within the current area"""
+    if not gamestate.current_area:
+        print("No area to explore!")
+        return "idle"
+
+    area = gamestate.current_area
+    print(f"\n--- Exploring {area['name']} ---")
+    print(area['description'])
+
+    # Check if this area has encounters
+    encounter_chance = area.get('encounters', 0)
+    if encounter_chance > 0:
+        # Roll for encounter based on area's encounter level
+        import random
+        if random.random() < (encounter_chance * 0.2):  # 20% per encounter level
+            print(f"\nYou encounter danger in {area['name']}!")
+            gamestate.monster = create_monster_for_location(gamestate.current_location, gamestate.character.level)
+            return "battle"
+
+    print(f"\nYou explore {area['name']} but find nothing threatening.")
+    return "area_menu"
+
+
+def area_menu():
+    """Menu for actions within a specific area"""
+    area = gamestate.current_area
+    print(f"\n--- {area['name']} ---")
+    print(area['description'])
+    print("\nWhat would you like to do?")
+    print("1. Explore this area (chance for encounter)")
+    print("2. Move to a connected area")
+    print("3. Return to location overview")
+    print("4. View character stats")
+
+    choice = input("Enter your choice: ")
+    clear_screen()
+
+    if choice == "1":
+        return explore_area()
+    elif choice == "2":
+        return navigate_to_connected_area()
+    elif choice == "3":
+        return "idle"
+    elif choice == "4":
+        print("\n--- Character Stats ---")
+        print(gamestate.character.get_stats())
+        return area_menu()
+    else:
+        print("Invalid choice. Please try again.")
+        return area_menu()
+
+
+def navigate_to_connected_area():
+    """Allow player to move to areas connected to the current area"""
+    current_area = gamestate.current_area
+
+    if not current_area or not current_area.get('connections'):
+        print("There are no connected areas to move to.")
+        return area_menu()
+
+    # Get all areas in the current location for lookup
+    areas_by_id = {area["id"]: area for area in gamestate.current_location["areas"]}
+
+    print(f"\nFrom {current_area['name']}, you can move to:")
+    connected_areas = []
+
+    for i, connection_id in enumerate(current_area['connections'], 1):
+        if connection_id in areas_by_id:
+            connected_area = areas_by_id[connection_id]
+            connected_areas.append(connected_area)
+            print(f"{i}. {connected_area['name']} - {connected_area['description']}")
+        else:
+            print(f"Warning: Connection {connection_id} not found!")
+
+    if not connected_areas:
+        print("No valid connections found.")
+        return area_menu()
+
+    print(f"{len(connected_areas) + 1}. Stay in {current_area['name']}")
+
+    while True:
+        try:
+            choice = int(input(f"\nWhere would you like to go? (1-{len(connected_areas) + 1}): "))
+
+            if choice == len(connected_areas) + 1:
+                # Stay in current area
+                return area_menu()
+            elif 1 <= choice <= len(connected_areas):
+                # Move to selected area
+                selected_area = connected_areas[choice - 1]
+                gamestate.current_area = selected_area
+                print(f"\nYou move to {selected_area['name']}.")
+
+                # Check for automatic encounters when entering certain areas
+                if selected_area.get('encounters', 0) >= 4:  # High encounter areas
+                    import random
+                    if random.random() < 0.3:  # 30% chance for immediate encounter
+                        print("As you enter, you're immediately confronted by danger!")
+                        gamestate.monster = create_monster_for_location(gamestate.current_location,
+                                                                        gamestate.character.level)
+                        return "battle"
+
+                return area_menu()
+            else:
+                print(f"Please enter a number between 1 and {len(connected_areas) + 1}.")
+        except ValueError:
+            print("Please enter a valid number.")
+
+def resting():
+    # Camp rest - restore some HP
+    recovery = (gamestate.character.hit_die // 2) + gamestate.character.constitution_modifier
+    recovery = max(1, recovery)
+    gamestate.character.heal(recovery)
+    print(f"\nYou set up camp and recover {recovery} hit points.")
+    print(f"Current HP: {gamestate.character.current_hit_points}/{gamestate.character.max_hit_points}")
 
 
 if __name__ == "__main__":
