@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="character-creation">
+    <div class="breadcrumb">
+        <span class="completed">Race: {{ race }}</span>
+        <span class="separator">></span>
+        <span class="completed">Class: {{ class_name }}</span>
+        <span class="separator">></span>
+        <span class="current">Details</span>
+    </div>
+
+    <h1>Character Details</h1>
+    <p class="subtitle">Name your character and choose your starting equipment.</p>
+
+    <form action="/character/create" method="post" id="details-form">
+        <div class="form-section">
+            <h2>Character Name</h2>
+            <div class="form-group">
+                <label for="name">Enter your character's name:</label>
+                <input type="text" id="name" name="name" required placeholder="Enter name..." maxlength="30">
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2>Starting Weapon</h2>
+            <p class="hint">Choose a weapon from those available to your class.</p>
+
+            <div class="weapon-grid">
+                {% for weapon in weapons %}
+                <label class="weapon-card">
+                    <input type="radio" name="weapon" value="{{ weapon.name }}" required>
+                    <div class="weapon-content">
+                        <h3>{{ weapon.name }}</h3>
+                        <div class="weapon-stats">
+                            <span class="damage">1d{{ weapon.damage_die }} {{ weapon.damage_type }}</span>
+                            <span class="category">{{ weapon.category }}</span>
+                        </div>
+                        <p class="properties">{{ weapon.properties }}</p>
+                    </div>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2>Skill Proficiencies</h2>
+            <p class="hint">Choose {{ num_skills }} skills to be proficient in.</p>
+
+            <div class="skill-grid">
+                {% for skill in skill_choices %}
+                <label class="skill-option">
+                    <input type="checkbox" name="skills" value="{{ skill }}" class="skill-checkbox">
+                    <span class="skill-name">{{ skill }}</span>
+                </label>
+                {% endfor %}
+            </div>
+            <p class="skill-counter">Selected: <span id="skill-count">0</span> / {{ num_skills }}</p>
+        </div>
+
+        <div class="actions mt-3">
+            <a href="/character/class" class="btn btn-secondary">Back</a>
+            <button type="submit" class="btn btn-primary" id="create-btn">Create Character</button>
+        </div>
+    </form>
+</div>
+
+<style>
+.character-creation {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.breadcrumb {
+    margin-bottom: 1.5rem;
+    color: var(--text-muted);
+}
+
+.breadcrumb .completed {
+    color: var(--success);
+}
+
+.breadcrumb .separator {
+    margin: 0 0.5rem;
+}
+
+.breadcrumb .current {
+    color: var(--secondary-color);
+    font-weight: bold;
+}
+
+.subtitle {
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+}
+
+.form-section {
+    background: var(--bg-medium);
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.form-section h2 {
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+}
+
+.hint {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.weapon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.weapon-card {
+    display: block;
+    cursor: pointer;
+}
+
+.weapon-card input {
+    display: none;
+}
+
+.weapon-content {
+    background: var(--bg-dark);
+    border: 2px solid var(--bg-light);
+    border-radius: 8px;
+    padding: 1rem;
+    transition: all 0.2s;
+}
+
+.weapon-card input:checked + .weapon-content {
+    border-color: var(--secondary-color);
+    background: var(--bg-light);
+}
+
+.weapon-content:hover {
+    border-color: var(--secondary-color);
+}
+
+.weapon-content h3 {
+    color: var(--text-light);
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+.weapon-stats {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.weapon-stats .damage {
+    color: var(--danger);
+    font-size: 0.9rem;
+}
+
+.weapon-stats .category {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.weapon-content .properties {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.skill-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.5rem;
+}
+
+.skill-option {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    background: var(--bg-dark);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.skill-option:hover {
+    background: var(--bg-light);
+}
+
+.skill-checkbox {
+    margin-right: 0.5rem;
+}
+
+.skill-checkbox:checked + .skill-name {
+    color: var(--secondary-color);
+}
+
+.skill-counter {
+    margin-top: 1rem;
+    color: var(--text-muted);
+}
+
+#skill-count {
+    color: var(--secondary-color);
+    font-weight: bold;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const maxSkills = {{ num_skills }};
+    const checkboxes = document.querySelectorAll('.skill-checkbox');
+    const counter = document.getElementById('skill-count');
+
+    function updateSkillCount() {
+        const checked = document.querySelectorAll('.skill-checkbox:checked').length;
+        counter.textContent = checked;
+
+        // Disable unchecked boxes if max reached
+        checkboxes.forEach(cb => {
+            if (!cb.checked) {
+                cb.disabled = checked >= maxSkills;
+            }
+        });
+    }
+
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', updateSkillCount);
+    });
+});
+</script>
+{% endblock %}

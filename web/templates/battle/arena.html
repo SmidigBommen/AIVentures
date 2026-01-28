@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="battle-arena">
+    <h1 class="battle-title">Round {{ round }}</h1>
+
+    <div class="combatants">
+        <div class="combatant player">
+            <h2>{{ character.name }}</h2>
+            <p class="info">{{ character.race }} {{ character.class_name }} - Lvl {{ character.level }}</p>
+            <div class="health-bar">
+                <div class="health-bar-fill" style="width: {{ (character.current_hit_points / character.max_hit_points * 100) | int }}%"></div>
+            </div>
+            <p class="hp-text">HP: {{ character.current_hit_points }} / {{ character.max_hit_points }}</p>
+            <p class="ac">AC: {{ character.armor_class }}</p>
+        </div>
+
+        <div class="vs">VS</div>
+
+        <div class="combatant monster">
+            <h2>{{ monster.name }}</h2>
+            <p class="info">{{ monster.race }} - Lvl {{ monster.level }}</p>
+            <div class="health-bar">
+                <div class="health-bar-fill" style="width: {{ (monster.hp / monster.max_hp * 100) | int }}%"></div>
+            </div>
+            <p class="hp-text">HP: {{ monster.hp }} / {{ monster.max_hp }}</p>
+            <p class="ac">AC: {{ monster.ac }}</p>
+        </div>
+    </div>
+
+    <div class="battle-log">
+        {% for entry in battle_log %}
+        <div class="log-entry {% if 'hits for' in entry %}damage{% elif 'heals' in entry %}heal{% endif %}">
+            {{ entry }}
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if is_player_turn %}
+    <div class="battle-actions">
+        <h3>Your Turn - Choose an Action</h3>
+        <div class="action-buttons">
+            <form action="/battle/attack" method="post" class="inline-form">
+                <button type="submit" class="btn btn-danger">Attack</button>
+            </form>
+            <form action="/battle/defend" method="post" class="inline-form">
+                <button type="submit" class="btn btn-secondary">Defend</button>
+            </form>
+        </div>
+
+        {% if usable_items %}
+        <div class="items-section">
+            <h4>Use Item</h4>
+            <div class="item-buttons">
+                {% for item in usable_items %}
+                <form action="/battle/item" method="post" class="inline-form">
+                    <input type="hidden" name="item_index" value="{{ item.index }}">
+                    <button type="submit" class="btn btn-success" title="{{ item.description }}">
+                        {{ item.name }}
+                    </button>
+                </form>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="battle-actions">
+        <h3>Monster's Turn...</h3>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.battle-arena {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.battle-title {
+    text-align: center;
+    color: var(--secondary-color);
+    margin-bottom: 2rem;
+}
+
+.combatants {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 2rem;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.vs {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--secondary-color);
+}
+
+.combatant {
+    background: var(--bg-medium);
+    padding: 1.5rem;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.combatant.player {
+    border: 2px solid var(--success);
+}
+
+.combatant.monster {
+    border: 2px solid var(--danger);
+}
+
+.combatant h2 {
+    margin-bottom: 0.5rem;
+}
+
+.combatant.player h2 {
+    color: var(--success);
+}
+
+.combatant.monster h2 {
+    color: var(--danger);
+}
+
+.combatant .info {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.health-bar {
+    background: var(--bg-dark);
+    height: 24px;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.health-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--danger) 0%, var(--warning) 50%, var(--success) 100%);
+    transition: width 0.3s;
+}
+
+.hp-text {
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+}
+
+.ac {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.battle-log {
+    background: var(--bg-dark);
+    border: 1px solid var(--bg-light);
+    border-radius: 8px;
+    padding: 1rem;
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 2rem;
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+
+.log-entry {
+    padding: 0.35rem 0;
+    border-bottom: 1px solid var(--bg-medium);
+}
+
+.log-entry:last-child {
+    border-bottom: none;
+}
+
+.log-entry.damage {
+    color: var(--danger);
+}
+
+.log-entry.heal {
+    color: var(--success);
+}
+
+.battle-actions {
+    background: var(--bg-medium);
+    padding: 1.5rem;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.battle-actions h3 {
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+}
+
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.inline-form {
+    display: inline;
+}
+
+.items-section {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--bg-light);
+}
+
+.items-section h4 {
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+}
+
+.item-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .combatants {
+        grid-template-columns: 1fr;
+    }
+
+    .vs {
+        margin: 1rem 0;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Scroll battle log to bottom
+    const log = document.querySelector('.battle-log');
+    if (log) {
+        log.scrollTop = log.scrollHeight;
+    }
+});
+</script>
+{% endblock %}

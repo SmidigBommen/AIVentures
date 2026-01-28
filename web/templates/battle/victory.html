@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="result-screen victory">
+    <h1>Victory!</h1>
+    <p class="subtitle">You have defeated {{ monster_name }}!</p>
+
+    {% if rewards %}
+    <div class="rewards">
+        <h3>Rewards</h3>
+        <ul>
+            <li class="xp-reward">
+                <span class="label">Experience:</span>
+                <span class="value">+{{ rewards.xp }} XP</span>
+            </li>
+            <li class="gold-reward">
+                <span class="label">Gold:</span>
+                <span class="value">+{{ rewards.gold }} gold</span>
+            </li>
+            {% if rewards.loot %}
+            <li class="loot-reward">
+                <span class="label">Loot:</span>
+                <span class="value">{{ rewards.loot }}</span>
+            </li>
+            {% endif %}
+        </ul>
+
+        {% if rewards.leveled_up %}
+        <div class="level-up">
+            <h3>Level Up!</h3>
+            <p>You are now level {{ rewards.new_level }}!</p>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if character %}
+    <div class="character-status">
+        <h3>{{ character.name }}</h3>
+        <p>HP: {{ character.current_hit_points }}/{{ character.max_hit_points }}</p>
+        <p>XP: {{ character.xp }}/{{ character.level * 150 }}</p>
+        <p>Gold: {{ character.gold }}</p>
+    </div>
+    {% endif %}
+
+    <div class="actions mt-3">
+        <a href="/game" class="btn btn-primary">Continue Adventure</a>
+    </div>
+</div>
+
+<style>
+.result-screen {
+    text-align: center;
+    padding: 4rem 2rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.result-screen.victory h1 {
+    color: var(--success);
+    font-size: 3rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    margin-bottom: 0.5rem;
+}
+
+.subtitle {
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+}
+
+.rewards {
+    background: var(--bg-medium);
+    padding: 2rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    border: 2px solid var(--success);
+}
+
+.rewards h3 {
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+}
+
+.rewards ul {
+    list-style: none;
+    padding: 0;
+}
+
+.rewards li {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--bg-light);
+}
+
+.rewards li:last-child {
+    border-bottom: none;
+}
+
+.rewards .label {
+    color: var(--text-muted);
+}
+
+.rewards .value {
+    font-weight: bold;
+}
+
+.xp-reward .value {
+    color: var(--secondary-color);
+}
+
+.gold-reward .value {
+    color: var(--warning);
+}
+
+.loot-reward .value {
+    color: var(--success);
+}
+
+.level-up {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 2px solid var(--secondary-color);
+}
+
+.level-up h3 {
+    color: var(--secondary-color);
+    font-size: 1.5rem;
+}
+
+.level-up p {
+    color: var(--text-light);
+}
+
+.character-status {
+    background: var(--bg-medium);
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.character-status h3 {
+    color: var(--secondary-color);
+    margin-bottom: 0.5rem;
+}
+
+.character-status p {
+    margin: 0.25rem 0;
+    color: var(--text-muted);
+}
+</style>
+{% endblock %}

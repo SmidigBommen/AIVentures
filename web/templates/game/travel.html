@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="travel-container">
+    <h1>Travel</h1>
+    <p class="subtitle">Choose a destination to travel to.</p>
+
+    <div class="current-location">
+        <span class="label">Current Location:</span>
+        <span class="value">{{ current_location.name }}</span>
+    </div>
+
+    <div class="locations-grid">
+        {% for loc in locations %}
+        <div class="location-card">
+            <h3>{{ loc.name }}</h3>
+            <p class="description">{{ loc.description }}</p>
+            {% if loc.level_range %}
+            <p class="level-range">Recommended Level: {{ loc.level_range }}</p>
+            {% endif %}
+            <form action="/game/travel" method="post">
+                <input type="hidden" name="location_name" value="{{ loc.name }}">
+                <button type="submit" class="btn btn-primary">Travel Here</button>
+            </form>
+        </div>
+        {% else %}
+        <p class="no-locations">No other locations available to travel to.</p>
+        {% endfor %}
+    </div>
+
+    <div class="actions mt-3">
+        <a href="/game" class="btn btn-secondary">Stay Here</a>
+    </div>
+</div>
+
+<style>
+.travel-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.travel-container h1 {
+    color: var(--secondary-color);
+    text-align: center;
+}
+
+.subtitle {
+    text-align: center;
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+}
+
+.current-location {
+    background: var(--bg-medium);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.current-location .label {
+    color: var(--text-muted);
+}
+
+.current-location .value {
+    color: var(--secondary-color);
+    font-weight: bold;
+    margin-left: 0.5rem;
+}
+
+.locations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.location-card {
+    background: var(--bg-medium);
+    border: 2px solid var(--bg-light);
+    border-radius: 8px;
+    padding: 1.5rem;
+    transition: all 0.2s;
+}
+
+.location-card:hover {
+    border-color: var(--secondary-color);
+}
+
+.location-card h3 {
+    color: var(--secondary-color);
+    margin-bottom: 0.5rem;
+}
+
+.location-card .description {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.location-card .level-range {
+    color: var(--warning);
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+}
+
+.no-locations {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 2rem;
+}
+
+.actions {
+    text-align: center;
+}
+</style>
+{% endblock %}

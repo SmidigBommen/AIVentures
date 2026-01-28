@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="shop-container">
+    <h1>General Store</h1>
+    <p class="subtitle">Buy and sell items</p>
+
+    <div class="gold-display">
+        <span class="gold-icon">Coins:</span>
+        <span class="gold-amount">{{ character.gold }} gold</span>
+    </div>
+
+    {% if message %}
+    <div class="alert alert-success">{{ message }}</div>
+    {% endif %}
+
+    {% if error %}
+    <div class="alert alert-error">{{ error }}</div>
+    {% endif %}
+
+    <div class="shop-panels">
+        <div class="shop-panel buy-panel">
+            <h2>Buy Items</h2>
+            <div class="shop-grid">
+                {% for item in shop_inventory %}
+                <div class="shop-item {% if item.quantity <= 0 %}out-of-stock{% endif %}">
+                    <h3>{{ item.name }}</h3>
+                    <p class="description">{{ item.description }}</p>
+                    <p class="price">{{ item.price }} gold</p>
+                    <p class="stock">Stock: {{ item.quantity }}</p>
+                    <form action="/shop/buy" method="post">
+                        <input type="hidden" name="item_index" value="{{ loop.index0 }}">
+                        <button type="submit" class="btn btn-primary"
+                                {% if item.quantity <= 0 or character.gold < item.price %}disabled{% endif %}>
+                            {% if item.quantity <= 0 %}
+                            Out of Stock
+                            {% elif character.gold < item.price %}
+                            Not Enough Gold
+                            {% else %}
+                            Buy
+                            {% endif %}
+                        </button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="shop-panel sell-panel">
+            <h2>Sell Items</h2>
+            {% if sellable_items %}
+            <ul class="inventory-list">
+                {% for item in sellable_items %}
+                <li class="inventory-item">
+                    <div class="item-info">
+                        <span class="item-name">{{ item.name }}</span>
+                        <span class="item-price">Sell: {{ item.sell_price }} gold</span>
+                    </div>
+                    <form action="/shop/sell" method="post">
+                        <input type="hidden" name="item_index" value="{{ item.index }}">
+                        <button type="submit" class="btn btn-secondary btn-small">Sell</button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="empty-inventory">You have nothing to sell.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="actions mt-3">
+        <a href="/game" class="btn btn-secondary">Leave Shop</a>
+    </div>
+</div>
+
+<style>
+.shop-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.shop-container h1 {
+    color: var(--secondary-color);
+    text-align: center;
+}
+
+.subtitle {
+    text-align: center;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+}
+
+.gold-display {
+    text-align: center;
+    background: var(--bg-medium);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.gold-icon {
+    color: var(--text-muted);
+}
+
+.gold-amount {
+    color: var(--warning);
+    font-weight: bold;
+    font-size: 1.25rem;
+    margin-left: 0.5rem;
+}
+
+.alert {
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.alert-success {
+    background: rgba(46, 125, 50, 0.2);
+    border: 1px solid var(--success);
+    color: var(--success);
+}
+
+.alert-error {
+    background: rgba(198, 40, 40, 0.2);
+    border: 1px solid var(--danger);
+    color: var(--danger);
+}
+
+.shop-panels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.shop-panel {
+    background: var(--bg-medium);
+    padding: 1.5rem;
+    border-radius: 8px;
+}
+
+.shop-panel h2 {
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+    border-bottom: 1px solid var(--bg-light);
+    padding-bottom: 0.5rem;
+}
+
+.shop-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.shop-item {
+    background: var(--bg-dark);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--bg-light);
+}
+
+.shop-item.out-of-stock {
+    opacity: 0.6;
+}
+
+.shop-item h3 {
+    color: var(--text-light);
+    margin-bottom: 0.25rem;
+    font-size: 1rem;
+}
+
+.shop-item .description {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+}
+
+.shop-item .price {
+    color: var(--warning);
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+}
+
+.shop-item .stock {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+}
+
+.inventory-list {
+    list-style: none;
+    padding: 0;
+}
+
+.inventory-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: var(--bg-dark);
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+}
+
+.item-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.item-name {
+    font-weight: bold;
+    color: var(--text-light);
+}
+
+.item-price {
+    color: var(--warning);
+    font-size: 0.85rem;
+}
+
+.btn-small {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+}
+
+.empty-inventory {
+    color: var(--text-muted);
+    text-align: center;
+    padding: 2rem;
+    font-style: italic;
+}
+
+.actions {
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .shop-panels {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="character-summary-page">
+    <h1>{{ character.name }}</h1>
+    <p class="subtitle">{{ character.race }} {{ character.class_name }} - Level {{ character.level }}</p>
+
+    <div class="character-summary">
+        <div class="summary-section">
+            <h2>Vital Statistics</h2>
+            <div class="vital-stats">
+                <div class="stat-box large">
+                    <span class="label">Hit Points</span>
+                    <span class="value hp">{{ character.current_hit_points }}/{{ character.max_hit_points }}</span>
+                </div>
+                <div class="stat-box large">
+                    <span class="label">Armor Class</span>
+                    <span class="value">{{ character.armor_class }}</span>
+                </div>
+                <div class="stat-box large">
+                    <span class="label">Gold</span>
+                    <span class="value gold">{{ character.gold }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary-section">
+            <h2>Ability Scores</h2>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <span class="label">Strength</span>
+                    <span class="value">{{ character.strength_score }}</span>
+                    <span class="modifier">{% if character.strength_modifier >= 0 %}+{% endif %}{{ character.strength_modifier }}</span>
+                </div>
+                <div class="stat-box">
+                    <span class="label">Dexterity</span>
+                    <span class="value">{{ character.dexterity_score }}</span>
+                    <span class="modifier">{% if character.dexterity_modifier >= 0 %}+{% endif %}{{ character.dexterity_modifier }}</span>
+                </div>
+                <div class="stat-box">
+                    <span class="label">Constitution</span>
+                    <span class="value">{{ character.constitution_score }}</span>
+                    <span class="modifier">{% if character.constitution_modifier >= 0 %}+{% endif %}{{ character.constitution_modifier }}</span>
+                </div>
+                <div class="stat-box">
+                    <span class="label">Intelligence</span>
+                    <span class="value">{{ character.intelligence_score }}</span>
+                    <span class="modifier">{% if character.intelligence_modifier >= 0 %}+{% endif %}{{ character.intelligence_modifier }}</span>
+                </div>
+                <div class="stat-box">
+                    <span class="label">Wisdom</span>
+                    <span class="value">{{ character.wisdom_score }}</span>
+                    <span class="modifier">{% if character.wisdom_modifier >= 0 %}+{% endif %}{{ character.wisdom_modifier }}</span>
+                </div>
+                <div class="stat-box">
+                    <span class="label">Charisma</span>
+                    <span class="value">{{ character.charisma_score }}</span>
+                    <span class="modifier">{% if character.charisma_modifier >= 0 %}+{% endif %}{{ character.charisma_modifier }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary-section">
+            <h2>Equipment</h2>
+            <div class="equipment-info">
+                <p><strong>Weapon:</strong> {{ character.weapon or "None" }}</p>
+            </div>
+        </div>
+
+        <div class="summary-section">
+            <h2>Inventory</h2>
+            <ul class="inventory-list">
+                {% for item in character.inventory %}
+                <li class="inventory-item">
+                    <span class="item-name">{{ item.name }}</span>
+                    <span class="item-desc">{{ item.description }}</span>
+                </li>
+                {% else %}
+                <li class="inventory-item">
+                    <span class="item-name">Empty</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="actions mt-3">
+        <a href="/character/new" class="btn btn-secondary">Create New Character</a>
+        <a href="/game" class="btn btn-primary">Begin Adventure</a>
+    </div>
+</div>
+
+<style>
+.character-summary-page {
+    max-width: 700px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.character-summary-page h1 {
+    color: var(--secondary-color);
+    font-size: 2.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.subtitle {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+.character-summary {
+    text-align: left;
+}
+
+.summary-section {
+    background: var(--bg-medium);
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.summary-section h2 {
+    color: var(--secondary-color);
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--bg-light);
+    padding-bottom: 0.5rem;
+}
+
+.vital-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.stat-box.large {
+    padding: 1.5rem;
+}
+
+.stat-box.large .value {
+    font-size: 2rem;
+}
+
+.stat-box.large .value.hp {
+    color: var(--success);
+}
+
+.stat-box.large .value.gold {
+    color: var(--warning);
+}
+
+.equipment-info p {
+    margin: 0.5rem 0;
+}
+
+.inventory-list {
+    list-style: none;
+}
+
+.inventory-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem;
+    background: var(--bg-dark);
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+}
+
+.item-name {
+    font-weight: bold;
+}
+
+.item-desc {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+</style>
+{% endblock %}

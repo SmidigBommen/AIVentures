@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ title | default("AIVentures") }}{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/" class="logo">AIVentures</a>
+            {% if character %}
+            <div class="character-status">
+                <span class="name">{{ character.name }}</span>
+                <span class="hp">HP: {{ character.current_hit_points }}/{{ character.max_hit_points }}</span>
+                <span class="gold">Gold: {{ character.gold }}</span>
+            </div>
+            {% endif %}
+        </nav>
+    </header>
+
+    <main>
+        {% block content %}
+        {% if content == "home" %}
+        <div class="home-container">
+            <h1>The Shattered Crown</h1>
+            <p class="tagline">A D&D 5e Text Adventure</p>
+
+            <div class="story-intro">
+                <p>In the realm of Eldoria, an ancient artifact known as the Shattered Crown
+                holds the power to reshape reality itself. When the dark sorcerer Malachar
+                begins gathering the crown's scattered fragments, only a brave adventurer
+                can stop him from plunging the world into eternal darkness.</p>
+            </div>
+
+            <div class="actions">
+                <a href="/character/new" class="btn btn-primary">Begin Your Adventure</a>
+            </div>
+        </div>
+        {% endif %}
+        {% endblock %}
+    </main>
+
+    <footer>
+        <p>AIVentures - A D&D 5e Inspired Adventure</p>
+    </footer>
+
+    <script src="/static/js/main.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

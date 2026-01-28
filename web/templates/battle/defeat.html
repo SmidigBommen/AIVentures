@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="result-screen defeat">
+    <h1>Defeat</h1>
+    <p class="subtitle">You have been slain by {{ monster_name }}...</p>
+
+    <div class="defeat-message">
+        <p>Your adventure has come to an end. But fear not, brave adventurer -
+        you may rise again to face the challenges that await.</p>
+    </div>
+
+    <div class="actions mt-3">
+        <a href="/character/new" class="btn btn-primary">Create New Character</a>
+        <a href="/" class="btn btn-secondary">Return Home</a>
+    </div>
+</div>
+
+<style>
+.result-screen {
+    text-align: center;
+    padding: 4rem 2rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.result-screen.defeat h1 {
+    color: var(--danger);
+    font-size: 3rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    margin-bottom: 0.5rem;
+}
+
+.subtitle {
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+}
+
+.defeat-message {
+    background: var(--bg-medium);
+    padding: 2rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    border: 2px solid var(--danger);
+}
+
+.defeat-message p {
+    color: var(--text-light);
+    font-style: italic;
+}
+
+.actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+</style>
+{% endblock %}

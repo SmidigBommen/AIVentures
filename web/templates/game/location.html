@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="location-container">
+    <div class="location-header">
+        <span class="act-name">{{ act.name }}</span>
+        <h1>{{ area.name if area else location.name }}</h1>
+        <p class="location-name">{{ location.name }}</p>
+    </div>
+
+    <div class="location-description">
+        <p>{{ area.description if area else location.description }}</p>
+    </div>
+
+    {% if request.query_params.get('explored') == 'true' %}
+    <div class="alert alert-info">
+        You explored the area but found nothing of interest.
+    </div>
+    {% endif %}
+
+    {% if request.query_params.get('rested') == 'true' %}
+    <div class="alert alert-success">
+        You rest and recover all your hit points.
+    </div>
+    {% endif %}
+
+    <div class="game-content">
+        <div class="character-panel">
+            <h3>{{ character.name }}</h3>
+            <div class="char-info">
+                <p>{{ character.race }} {{ character.class_name }} - Level {{ character.level }}</p>
+                <div class="health-display">
+                    <span class="hp-text">HP: {{ character.current_hit_points }}/{{ character.max_hit_points }}</span>
+                    <div class="health-bar">
+                        <div class="health-bar-fill" style="width: {{ (character.current_hit_points / character.max_hit_points * 100) | int }}%"></div>
+                    </div>
+                </div>
+                <p class="gold">Gold: {{ character.gold }}</p>
+                <p class="xp">XP: {{ character.xp }}</p>
+            </div>
+        </div>
+
+        {% if connected_areas %}
+        <div class="connections">
+            <h3>Nearby Areas</h3>
+            <div class="connection-links">
+                {% for conn in connected_areas %}
+                <form action="/game/move" method="post" class="inline-form">
+                    <input type="hidden" name="area_id" value="{{ conn.id }}">
+                    <button type="submit" class="btn btn-secondary">{{ conn.name }}</button>
+                </form>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="actions">
+            <h3>Actions</h3>
+            <div class="action-buttons">
+                <form action="/game/explore" method="post" class="inline-form">
+                    <button type="submit" class="btn btn-primary">Explore Area</button>
+                </form>
+
+                {% if can_rest %}
+                <form action="/game/rest" method="post" class="inline-form">
+                    <button type="submit" class="btn btn-success">Rest</button>
+                </form>
+                {% endif %}
+
+                {% if has_shop %}
+                <a href="/shop" class="btn btn-secondary">Visit Shop</a>
+                {% endif %}
+
+                <a href="/game/travel" class="btn btn-secondary">Travel</a>
+            </div>
+        </div>
+
+        {% if area and area.encounters > 0 %}
+        <div class="danger-indicator">
+            <span class="danger-level">Danger Level:
+                {% if area.encounters <= 2 %}
+                <span class="low">Low</span>
+                {% elif area.encounters <= 5 %}
+                <span class="medium">Medium</span>
+                {% else %}
+                <span class="high">High</span>
+                {% endif %}
+            </span>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.location-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.location-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.location-header .act-name {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.location-header h1 {
+    color: var(--secondary-color);
+    margin: 0.5rem 0;
+    font-size: 2rem;
+}
+
+.location-header .location-name {
+    color: var(--text-muted);
+}
+
+.location-description {
+    background: var(--bg-medium);
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    border-left: 4px solid var(--secondary-color);
+    font-style: italic;
+}
+
+.alert {
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}
+
+.alert-info {
+    background: var(--bg-light);
+    border: 1px solid var(--secondary-color);
+}
+
+.alert-success {
+    background: rgba(46, 125, 50, 0.2);
+    border: 1px solid var(--success);
+}
+
+.game-content {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.character-panel {
+    background: var(--bg-medium);
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--bg-light);
+}
+
+.character-panel h3 {
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+}
+
+.char-info p {
+    margin: 0.5rem 0;
+}
+
+.health-display {
+    margin: 1rem 0;
+}
+
+.hp-text {
+    color: var(--success);
+    font-weight: bold;
+}
+
+.health-bar {
+    background: var(--bg-dark);
+    height: 16px;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.health-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--danger), var(--success));
+    transition: width 0.3s;
+}
+
+.gold {
+    color: var(--warning);
+}
+
+.connections {
+    background: var(--bg-medium);
+    padding: 1.5rem;
+    border-radius: 8px;
+}
+
+.connections h3 {
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    font-size: 1rem;
+}
+
+.connection-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.inline-form {
+    display: inline;
+}
+
+.actions {
+    background: var(--bg-medium);
+    padding: 1.5rem;
+    border-radius: 8px;
+}
+
+.actions h3 {
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    font-size: 1rem;
+}
+
+.action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.danger-indicator {
+    text-align: center;
+    padding: 1rem;
+    background: var(--bg-medium);
+    border-radius: 8px;
+}
+
+.danger-level .low {
+    color: var(--success);
+}
+
+.danger-level .medium {
+    color: var(--warning);
+}
+
+.danger-level .high {
+    color: var(--danger);
+}
+</style>
+{% endblock %}
