@@ -18,18 +18,26 @@ router = APIRouter()
 templates = Jinja2Templates(directory=Path(__file__).parent.parent / "templates")
 
 
-def get_monster_for_area(area):
+def get_monster_for_area(area, location=None):
     """Generate a monster appropriate for the area."""
     # Get monster info from area - default to Goblin for simple areas
     monster_types = area.get("monster_types", ["Goblin"])
     monster_race = random.choice(monster_types)
 
-    # Get level range
-    level_range = area.get("encounter_levels", [1, 2])
-    if isinstance(level_range, list) and len(level_range) >= 2:
-        level = random.randint(level_range[0], level_range[1])
+    # Get level range from location's encounterLevel field
+    level_range_str = None
+    if location:
+        level_range_str = location.get("encounterLevel")
+    if level_range_str and "-" in str(level_range_str):
+        min_level, max_level = map(int, level_range_str.split("-"))
+        level = random.randint(min_level, max_level)
     else:
-        level = 1
+        # Fall back to area encounter_levels or default
+        level_range = area.get("encounter_levels", [1, 2])
+        if isinstance(level_range, list) and len(level_range) >= 2:
+            level = random.randint(level_range[0], level_range[1])
+        else:
+            level = 1
 
     return monster_race, level
 
@@ -47,27 +55,25 @@ async def start_battle(request: Request):
         return RedirectResponse("/game", status_code=303)
 
     # Generate monster
-    monster_race, level = get_monster_for_area(area)
+    location = session.current_location
+    monster_race, level = get_monster_for_area(area, location)
 
     # Create monster using factory
-    # MonsterFactory expects: name, race, class_name, monster_level, weapon_name
-    # Load monster defaults to get weapon
-    import json
-    with open(Path(__file__).parent.parent.parent / "json" / "monster_default_values.json") as f:
-        monster_defaults = json.load(f)
+    factory = MonsterFactory()
 
     # Make sure monster_race exists in defaults, fallback to Goblin
-    if monster_race not in monster_defaults:
+    if monster_race not in factory.races:
         monster_race = "Goblin"
 
-    monster_data = monster_defaults[monster_race]
-    weapon_name = monster_data.get("weapon_name", "Club")
+    race_data = factory.races[monster_race]
+    monster_name = random.choice(race_data.get("names", [monster_race]))
+    monster_class = random.choice(race_data.get("class_options", ["Fighter"]))
+    weapon_name = random.choice(race_data.get("weapons", [race_data.get("weapon_name", "Club")]))
 
-    factory = MonsterFactory()
     monster = factory.create_monster(
-        name=f"{monster_race}",
+        name=monster_name,
         race=monster_race,
-        class_name="Monster",
+        class_name=monster_class,
         monster_level=level,
         weapon_name=weapon_name
     )

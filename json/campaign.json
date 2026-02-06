@@ -56,6 +56,7 @@
               "name": "River Docks",
               "description": "Wooden piers where riverboats dock and fishermen mend their nets.",
               "encounters": 1,
+              "monster_types": ["Goblin"],
               "connections": ["town_square", "market", "bridge"],
               "special": "water_access"
             },
@@ -64,6 +65,7 @@
               "name": "Stone Bridge",
               "description": "An ancient stone bridge spanning the confluence, with strange runes carved into its supports.",
               "encounters": 1,
+              "monster_types": ["Goblin"],
               "connections": ["docks"],
               "special": "mysterious_runes"
             }
@@ -82,6 +84,7 @@
               "name": "Forest Entrance",
               "description": "A well-worn path leads into the shadowy woods.",
               "encounters": 1,
+              "monster_types": ["Goblin"],
               "connections": ["clearing"]
             },
             {
@@ -89,6 +92,7 @@
               "name": "Ancient Clearing",
               "description": "A circular clearing with strange runes carved into the trees.",
               "encounters": 2,
+              "monster_types": ["Goblin", "Orc"],
               "connections": ["entrance", "grove"]
             },
             {
@@ -96,6 +100,7 @@
               "name": "Corrupted Grove",
               "description": "The trees here are twisted and dark.",
               "encounters": 3,
+              "monster_types": ["Orc", "Blighted Dryad"],
               "connections": ["clearing"],
               "special": "crown_shard_location",
               "boss": "Shard Guardian"
@@ -115,6 +120,7 @@
               "name": "Watchtower Approach",
               "description": "A crumbling stone path leads to the abandoned structure.",
               "encounters": 1,
+              "monster_types": ["Goblin"],
               "connections": ["courtyard"]
             },
             {
@@ -122,6 +128,7 @@
               "name": "Overgrown Courtyard",
               "description": "Weeds and vines have overtaken what was once a well-maintained training ground.",
               "encounters": 2,
+              "monster_types": ["Goblin", "Troll"],
               "connections": ["approach", "ground_floor", "stable"]
             },
             {
@@ -129,6 +136,7 @@
               "name": "Ruined Stables",
               "description": "The collapsed remains of horse stables, now home to scavenging creatures.",
               "encounters": 2,
+              "monster_types": ["Goblin", "Troll"],
               "connections": ["courtyard"]
             },
             {
@@ -136,6 +144,7 @@
               "name": "Guard Barracks",
               "description": "The main floor where guards once lived, now filled with debris and shadows.",
               "encounters": 3,
+              "monster_types": ["Troll"],
               "connections": ["courtyard", "upper_floor", "basement"]
             },
             {
@@ -143,6 +152,7 @@
               "name": "Storage Cellar",
               "description": "A dank cellar where supplies were once stored, now harboring darker secrets.",
               "encounters": 3,
+              "monster_types": ["Troll"],
               "connections": ["ground_floor"],
               "special": "hidden_treasure"
             },
@@ -151,6 +161,7 @@
               "name": "Watch Room",
               "description": "The observation deck with commanding views of the surrounding area.",
               "encounters": 2,
+              "monster_types": ["Goblin", "Troll"],
               "connections": ["ground_floor", "tower_top"]
             },
             {
@@ -158,6 +169,7 @@
               "name": "Tower Peak",
               "description": "The highest point of the watchtower, where the beacon once burned.",
               "encounters": 4,
+              "monster_types": ["Troll"],
               "connections": ["upper_floor"],
               "boss": "Corrupted Captain",
               "special": "vantage_point"
@@ -199,6 +211,7 @@
               "name": "Treacherous Pass",
               "description": "A narrow mountain trail with steep drops and loose rocks.",
               "encounters": 2,
+              "monster_types": ["Orc", "Fire Salamander"],
               "connections": ["mining_camp"]
             },
             {
@@ -206,6 +219,7 @@
               "name": "Abandoned Mining Camp",
               "description": "A deserted dwarven camp with tools scattered about and strange heat emanating from the ground.",
               "encounters": 3,
+              "monster_types": ["Orc", "Fire Salamander"],
               "connections": ["mountain_pass", "mine_entrance", "forge_ruins"]
             },
             {
@@ -213,6 +227,7 @@
               "name": "Ruined Forge",
               "description": "The remains of a great dwarven forge, still glowing with residual heat.",
               "encounters": 2,
+              "monster_types": ["Orc", "Fire Salamander"],
               "connections": ["mining_camp"],
               "special": "magical_forge"
             },
@@ -221,6 +236,7 @@
               "name": "Mine Entrance",
               "description": "The mouth of the mine glows with an eerie red light from deep within.",
               "encounters": 3,
+              "monster_types": ["Orc", "Fire Salamander"],
               "connections": ["mining_camp", "mine_tunnels"]
             },
             {
@@ -228,6 +244,7 @@
               "name": "Scorching Tunnels",
               "description": "Deep underground passages where the air shimmers with heat.",
               "encounters": 4,
+              "monster_types": ["Orc", "Fire Salamander"],
               "connections": ["mine_entrance", "salamander_lair"]
             },
             {
@@ -235,6 +252,7 @@
               "name": "Salamander Temple",
               "description": "A carved chamber where fire cultists worship around a pool of lava.",
               "encounters": 5,
+              "monster_types": ["Orc", "Fire Salamander"],
               "connections": ["mine_tunnels"],
               "boss": "Flame Cultist Leader",
               "special": "fire_shard_location"
@@ -254,6 +272,7 @@
               "name": "Rocky Coastline",
               "description": "Jagged rocks and crashing waves guard the approach to the sunken temple.",
               "encounters": 2,
+              "monster_types": ["Sea Serpent", "Shadow Wraith"],
               "connections": ["temple_entrance"]
             },
             {
@@ -261,6 +280,7 @@
               "name": "Flooded Entrance",
               "description": "The temple's grand entrance is half-submerged, requiring careful navigation.",
               "encounters": 3,
+              "monster_types": ["Sea Serpent", "Shadow Wraith"],
               "connections": ["coastal_approach", "prayer_hall", "side_chamber"]
             },
             {
@@ -268,6 +288,7 @@
               "name": "Priests' Quarters",
               "description": "Former living quarters now home to aquatic creatures.",
               "encounters": 3,
+              "monster_types": ["Sea Serpent", "Shadow Wraith"],
               "connections": ["temple_entrance"],
               "special": "hidden_passage"
             },
@@ -276,6 +297,7 @@
               "name": "Great Prayer Hall",
               "description": "A vast chamber with towering pillars, partially filled with seawater.",
               "encounters": 4,
+              "monster_types": ["Sea Serpent", "Shadow Wraith"],
               "connections": ["temple_entrance", "inner_sanctum", "underwater_passage"]
             },
             {
@@ -283,6 +305,7 @@
               "name": "Submerged Corridor",
               "description": "A completely flooded passage that requires swimming to navigate.",
               "encounters": 4,
+              "monster_types": ["Sea Serpent", "Shadow Wraith"],
               "connections": ["prayer_hall", "treasure_chamber"]
             },
             {
@@ -290,6 +313,7 @@
               "name": "Drowned Treasury",
               "description": "The temple's treasury, now an underwater cave filled with ancient treasures.",
               "encounters": 3,
+              "monster_types": ["Sea Serpent", "Shadow Wraith"],
               "connections": ["underwater_passage"],
               "special": "ancient_treasures"
             },
@@ -298,6 +322,7 @@
               "name": "Sanctum of Dariel",
               "description": "The holiest chamber, where the water shard pulses with oceanic power.",
               "encounters": 5,
+              "monster_types": ["Sea Serpent", "Shadow Wraith"],
               "connections": ["prayer_hall"],
               "boss": "Corrupted High Priest",
               "special": "water_shard_location"
@@ -317,6 +342,7 @@
               "name": "Edge of the Plains",
               "description": "Where the forest meets endless grasslands under an expansive sky.",
               "encounters": 2,
+              "monster_types": ["Wind Specter", "Orc"],
               "connections": ["nomad_camp"]
             },
             {
@@ -324,6 +350,7 @@
               "name": "Tribal Encampment",
               "description": "Colorful tents and banners mark the temporary home of the wind riders.",
               "encounters": 3,
+              "monster_types": ["Wind Specter", "Orc"],
               "connections": ["plains_edge", "hunting_grounds", "burial_grounds"]
             },
             {
@@ -331,6 +358,7 @@
               "name": "Hunting Grounds",
               "description": "Sacred grounds where the tribes hunt the great buffalo of the plains.",
               "encounters": 4,
+              "monster_types": ["Wind Specter", "Orc"],
               "connections": ["nomad_camp", "wind_altar"]
             },
             {
@@ -338,6 +366,7 @@
               "name": "Altar of the Four Winds",
               "description": "An ancient stone circle where the wind never stops howling.",
               "encounters": 3,
+              "monster_types": ["Wind Specter", "Orc"],
               "connections": ["hunting_grounds"],
               "special": "wind_blessing"
             },
@@ -346,6 +375,7 @@
               "name": "Sacred Burial Grounds",
               "description": "Ancient mounds where the greatest wind riders of old were laid to rest.",
               "encounters": 4,
+              "monster_types": ["Wind Specter", "Orc"],
               "connections": ["nomad_camp", "great_mound"]
             },
             {
@@ -353,6 +383,7 @@
               "name": "The Great Mound",
               "description": "The largest burial mound, where the first wind rider sleeps with the air shard.",
               "encounters": 5,
+              "monster_types": ["Wind Specter", "Orc"],
               "connections": ["burial_grounds"],
               "boss": "Ancient Wind Rider",
               "special": "air_shard_location"
@@ -372,6 +403,7 @@
               "name": "Crystal Cave Entrance",
               "description": "The entrance glitters with embedded crystals that seem to pulse with inner light.",
               "encounters": 3,
+              "monster_types": ["Crystal Golem", "Stone Golem", "Shadow Wraith"],
               "connections": ["reflecting_chamber"]
             },
             {
@@ -379,6 +411,7 @@
               "name": "Chamber of Reflections",
               "description": "Mirrors and crystals create infinite reflections, making navigation disorienting.",
               "encounters": 4,
+              "monster_types": ["Crystal Golem", "Stone Golem", "Shadow Wraith"],
               "connections": ["cave_mouth", "maze_tunnels", "meditation_grove"]
             },
             {
@@ -386,6 +419,7 @@
               "name": "Underground Grove",
               "description": "An impossible grove of crystal trees growing in the heart of the mountain.",
               "encounters": 3,
+              "monster_types": ["Crystal Golem", "Stone Golem", "Shadow Wraith"],
               "connections": ["reflecting_chamber"],
               "special": "crystal_forest"
             },
@@ -394,6 +428,7 @@
               "name": "Labyrinthine Tunnels",
               "description": "Twisting passages that seem to shift and change when you're not looking.",
               "encounters": 5,
+              "monster_types": ["Crystal Golem", "Stone Golem", "Shadow Wraith"],
               "connections": ["reflecting_chamber", "reality_rift", "gem_chamber"]
             },
             {
@@ -401,6 +436,7 @@
               "name": "Geode Chamber",
               "description": "A massive geode with walls lined in precious gems and crystals.",
               "encounters": 4,
+              "monster_types": ["Crystal Golem", "Stone Golem", "Shadow Wraith"],
               "connections": ["maze_tunnels"],
               "special": "precious_gems"
             },
@@ -409,6 +445,7 @@
               "name": "Rift in Reality",
               "description": "A tear in space itself, where the laws of physics bend and warp.",
               "encounters": 6,
+              "monster_types": ["Crystal Golem", "Stone Golem", "Shadow Wraith"],
               "connections": ["maze_tunnels", "earth_core"]
             },
             {
@@ -416,6 +453,7 @@
               "name": "Core of the Earth",
               "description": "The deepest chamber, where the earth shard pulses with the planet's heartbeat.",
               "encounters": 6,
+              "monster_types": ["Crystal Golem", "Stone Golem", "Shadow Wraith"],
               "connections": ["reality_rift"],
               "boss": "Primordial Earth Elemental",
               "special": "earth_shard_location"
@@ -475,6 +513,7 @@
               "name": "Fortress Walls",
               "description": "Massive walls of black stone that seem to absorb light itself.",
               "encounters": 4,
+              "monster_types": ["Shadow Knight", "Void Fiend", "Shadow Wraith"],
               "connections": ["main_gate"]
             },
             {
@@ -482,6 +521,7 @@
               "name": "Gate of Shadows",
               "description": "A towering gate wreathed in dark energy and guarded by shadow creatures.",
               "encounters": 5,
+              "monster_types": ["Shadow Knight", "Void Fiend", "Shadow Wraith"],
               "connections": ["outer_walls", "courtyard", "guard_towers"]
             },
             {
@@ -489,6 +529,7 @@
               "name": "Shadow Towers",
               "description": "Twin towers flanking the gate, filled with Malachar's elite guards.",
               "encounters": 5,
+              "monster_types": ["Shadow Knight", "Void Fiend", "Shadow Wraith"],
               "connections": ["main_gate"],
               "special": "tactical_advantage"
             },
@@ -497,6 +538,7 @@
               "name": "Courtyard of Whispers",
               "description": "An open space where the very air seems to whisper with malevolent voices.",
               "encounters": 6,
+              "monster_types": ["Shadow Knight", "Void Fiend", "Shadow Wraith"],
               "connections": ["main_gate", "great_hall", "dungeons", "laboratory"]
             },
             {
@@ -504,6 +546,7 @@
               "name": "Shadow Dungeons",
               "description": "Prison cells where captured heroes and spirits are held in eternal torment.",
               "encounters": 5,
+              "monster_types": ["Shadow Knight", "Void Fiend", "Shadow Wraith"],
               "connections": ["courtyard"],
               "special": "prisoner_rescue"
             },
@@ -512,6 +555,7 @@
               "name": "Alchemical Laboratory",
               "description": "Where Malachar conducts his dark experiments on the crown shards.",
               "encounters": 6,
+              "monster_types": ["Shadow Knight", "Void Fiend", "Shadow Wraith"],
               "connections": ["courtyard", "ritual_chamber"],
               "special": "magical_research"
             },
@@ -520,6 +564,7 @@
               "name": "Hall of Conquest",
               "description": "A grand hall displaying Malachar's victories and the suffering he has caused.",
               "encounters": 6,
+              "monster_types": ["Shadow Knight", "Void Fiend", "Shadow Wraith"],
               "connections": ["courtyard", "throne_room"]
             },
             {
@@ -527,6 +572,7 @@
               "name": "Throne of Shadows",
               "description": "Malachar's seat of power, where he rules over his dark domain.",
               "encounters": 7,
+              "monster_types": ["Shadow Knight", "Void Fiend", "Shadow Wraith"],
               "connections": ["great_hall", "ritual_chamber"],
               "boss": "Lady Vex (Final Battle)"
             },
@@ -535,6 +581,7 @@
               "name": "The Convergence Chamber",
               "description": "The heart of the fortress, where Malachar performs the ritual to merge the planes.",
               "encounters": 8,
+              "monster_types": ["Shadow Knight", "Void Fiend", "Shadow Wraith"],
               "connections": ["laboratory", "throne_room"],
               "boss": "Malachar the Void-touched",
               "special": "final_ritual_site"

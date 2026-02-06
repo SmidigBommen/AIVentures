@@ -21,12 +21,6 @@ class MonsterFactory:
 
     def calculate_max_hit_points(self, monster_race, monster_level):
         hit_die = self.race_stats["hit_die"]
-        if monster_race == "Goblin":
-            return monster_level + Dice.roll(hit_die) + Dice.roll(hit_die) + ((self.race_stats["Constitution"] - 10) // 2)
-        elif monster_race == "Orc":
-            return monster_level + Dice.roll(hit_die) + Dice.roll(hit_die) + ((self.race_stats["Constitution"] - 10) // 2)
-        elif monster_race == "Troll":
-            return monster_level + Dice.roll(hit_die) + Dice.roll(hit_die) + ((self.race_stats["Constitution"] - 10) // 2)
-        elif monster_race == "Blighted Dryad":
-            return monster_level + Dice.roll_d20() + Dice.roll_d20() + ((self.race_stats["Constitution"] - 10) // 2)
-        return 10
+        con_modifier = (self.race_stats["Constitution"] - 10) // 2
+        hp = monster_level + Dice.roll(hit_die) + Dice.roll(hit_die) + con_modifier
+        return max(1, hp)

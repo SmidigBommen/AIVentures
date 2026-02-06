@@ -46,7 +46,7 @@ def display_introduction(campaign):
     input("Press Enter to begin your adventure...")
 
 
-def create_monster_for_location(location, character_level):
+def create_monster_for_location(location, character_level, area=None):
     monster_factory = MonsterFactory()
 
     # Extract encounter level range from location
@@ -56,21 +56,25 @@ def create_monster_for_location(location, character_level):
     # Adjust based on character level, but keep within location range
     monster_level = min(max(character_level, min_level), max_level)
 
-    # Select a monster type based on location
-    if location["type"] == "wilderness":
-        monster_types = [("Goblin", "Ranger"), ("Orc", "Barbarian")]
+    # Select a monster race from area data, fall back to location-type defaults
+    if area and area.get("monster_types"):
+        monster_types = area["monster_types"]
+    elif location["type"] == "wilderness":
+        monster_types = ["Goblin", "Orc"]
     elif location["type"] == "dungeon":
-        monster_types = [("Goblin", "Rogue"), ("Troll", "Fighter")]
-    else:  # town or default
-        monster_types = [("Goblin", "Rogue")]
+        monster_types = ["Goblin", "Troll"]
+    else:
+        monster_types = ["Goblin"]
 
-    monster_race, monster_class = random.choice(monster_types)
+    monster_race = random.choice(monster_types)
 
-    # Generate a random name
-    monster_names = ["Grak", "Thurg", "Zort", "Morg", "Kruzz", "Azgul"]
-    monster_name = random.choice(monster_names)
+    # Get race data from the factory for name, class, and weapon
+    race_data = monster_factory.races[monster_race]
+    monster_name = random.choice(race_data.get("names", [monster_race]))
+    monster_class = random.choice(race_data.get("class_options", ["Fighter"]))
+    weapon_name = random.choice(race_data.get("weapons", [race_data.get("weapon_name", "Club")]))
 
-    return monster_factory.create_monster(monster_name, monster_race, monster_class, monster_level, "Club")
+    return monster_factory.create_monster(monster_name, monster_race, monster_class, monster_level, weapon_name)
 
 
 def post_battle_menu():
@@ -92,7 +96,7 @@ def post_battle_menu():
         if random.random() < 0.7:  # 70% chance for encounter
             print("\nYou encounter a monster while exploring!")
             # Create a new monster appropriate for location and level
-            gamestate.monster = create_monster_for_location(gamestate.current_location, gamestate.character.level)
+            gamestate.monster = create_monster_for_location(gamestate.current_location, gamestate.character.level, gamestate.current_area)
             return "battle"
         else:
             print("\nYou explore the area but find nothing of interest.")
@@ -322,7 +326,7 @@ def explore_area():
         import random
         if random.random() < (encounter_chance * 0.2):  # 20% per encounter level
             print(f"\nYou encounter danger in {area['name']}!")
-            gamestate.monster = create_monster_for_location(gamestate.current_location, gamestate.character.level)
+            gamestate.monster = create_monster_for_location(gamestate.current_location, gamestate.character.level, area)
             return "battle"
 
     print(f"\nYou explore {area['name']} but find nothing threatening.")
@@ -403,7 +407,7 @@ def navigate_to_connected_area():
                     if random.random() < 0.3:  # 30% chance for immediate encounter
                         print("As you enter, you're immediately confronted by danger!")
                         gamestate.monster = create_monster_for_location(gamestate.current_location,
-                                                                        gamestate.character.level)
+                                                                        gamestate.character.level, selected_area)
                         return "battle"
 
                 return area_menu()
