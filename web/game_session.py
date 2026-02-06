@@ -69,6 +69,27 @@ def get_all_weapons_flat() -> dict:
     return flat
 
 
+_armors_cache = None
+
+
+def get_armors() -> dict:
+    """Get all armors from the catalog."""
+    global _armors_cache
+    if _armors_cache is None:
+        _armors_cache = load_json("armor_catalog.json")
+    return _armors_cache
+
+
+def get_all_armors_flat() -> dict:
+    """Get all armors as a flat dictionary."""
+    armors = get_armors()
+    flat = {}
+    for category, armor_list in armors.items():
+        for name, data in armor_list.items():
+            flat[name] = {**data, "type": category}
+    return flat
+
+
 @dataclass
 class CharacterCreationState:
     """Tracks character creation progress."""
@@ -76,6 +97,7 @@ class CharacterCreationState:
     class_name: Optional[str] = None
     name: Optional[str] = None
     weapon: Optional[str] = None
+    armor: Optional[str] = None
     skills: list = field(default_factory=list)
 
 
@@ -88,6 +110,14 @@ class BattleState:
     monster_hp: int = 0
     monster_max_hp: int = 0
     monster_ac: int = 10
+    monster_base_ac: int = 10
+    monster_dex_modifier: int = 0
+    monster_str_modifier: int = 0
+    monster_proficiency_bonus: int = 1
+    monster_weapon_name: str = ""
+    monster_weapon_damage_die: int = 6
+    monster_weapon_damage_dice_count: int = 1
+    monster_weapon_properties: list = field(default_factory=list)
     round_count: int = 0
     initiative_order: list = field(default_factory=list)
     battle_log: list = field(default_factory=list)
@@ -123,6 +153,7 @@ class GameSession:
                 "class_name": self.character_creation.class_name,
                 "name": self.character_creation.name,
                 "weapon": self.character_creation.weapon,
+                "armor": self.character_creation.armor,
                 "skills": self.character_creation.skills,
             },
             "battle": {
@@ -132,6 +163,14 @@ class GameSession:
                 "monster_hp": self.battle.monster_hp,
                 "monster_max_hp": self.battle.monster_max_hp,
                 "monster_ac": self.battle.monster_ac,
+                "monster_base_ac": self.battle.monster_base_ac,
+                "monster_dex_modifier": self.battle.monster_dex_modifier,
+                "monster_str_modifier": self.battle.monster_str_modifier,
+                "monster_proficiency_bonus": self.battle.monster_proficiency_bonus,
+                "monster_weapon_name": self.battle.monster_weapon_name,
+                "monster_weapon_damage_die": self.battle.monster_weapon_damage_die,
+                "monster_weapon_damage_dice_count": self.battle.monster_weapon_damage_dice_count,
+                "monster_weapon_properties": self.battle.monster_weapon_properties,
                 "round_count": self.battle.round_count,
                 "initiative_order": self.battle.initiative_order,
                 "battle_log": self.battle.battle_log[-5:],  # Only keep last 5 log entries
@@ -149,6 +188,12 @@ class GameSession:
         from character import WeaponSlot
         weapon = c.weapon_slots.get(WeaponSlot.MAIN_HAND)
         return weapon.name if weapon else None
+
+    def _get_armor_name(self, c) -> Optional[str]:
+        """Get the armor name from character, handling enum keys."""
+        from equipmentType import EquipmentType
+        armor = c.equipment.get(EquipmentType.ARMOR)
+        return armor.name if armor else None
 
     def _serialize_character(self) -> Optional[dict]:
         """Serialize character object to dict."""
@@ -178,6 +223,7 @@ class GameSession:
             "charisma_score": c.charisma_score,
             "charisma_modifier": c.charisma_modifier,
             "weapon": self._get_weapon_name(c),
+            "armor": self._get_armor_name(c),
             "inventory": [{"name": item.name, "description": item.description} for item in c.inventory],
         }
 
@@ -222,6 +268,7 @@ class GameSession:
             class_name=cc_data.get("class_name"),
             name=cc_data.get("name"),
             weapon=cc_data.get("weapon"),
+            armor=cc_data.get("armor"),
             skills=cc_data.get("skills", []),
         )
 
@@ -234,6 +281,14 @@ class GameSession:
             monster_hp=battle_data.get("monster_hp", 0),
             monster_max_hp=battle_data.get("monster_max_hp", 0),
             monster_ac=battle_data.get("monster_ac", 10),
+            monster_base_ac=battle_data.get("monster_base_ac", 10),
+            monster_dex_modifier=battle_data.get("monster_dex_modifier", 0),
+            monster_str_modifier=battle_data.get("monster_str_modifier", 0),
+            monster_proficiency_bonus=battle_data.get("monster_proficiency_bonus", 1),
+            monster_weapon_name=battle_data.get("monster_weapon_name", ""),
+            monster_weapon_damage_die=battle_data.get("monster_weapon_damage_die", 6),
+            monster_weapon_damage_dice_count=battle_data.get("monster_weapon_damage_dice_count", 1),
+            monster_weapon_properties=battle_data.get("monster_weapon_properties", []),
             round_count=battle_data.get("round_count", 0),
             initiative_order=battle_data.get("initiative_order", []),
             battle_log=battle_data.get("battle_log", []),
@@ -279,6 +334,16 @@ class GameSession:
                 try:
                     weapon = weapon_factory.get_weapon_by_name(cc_data["weapon"])
                     character.equip_weapon(weapon, WeaponSlot.MAIN_HAND)
+                except ValueError:
+                    pass
+
+            # Restore armor
+            if cc_data.get("armor"):
+                from armorFactory import ArmorFactory
+                armor_factory = ArmorFactory()
+                try:
+                    armor = armor_factory.get_armor_by_name(cc_data["armor"])
+                    character.equip(armor)
                 except ValueError:
                     pass
 

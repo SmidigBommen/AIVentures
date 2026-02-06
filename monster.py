@@ -14,6 +14,7 @@ class Monster(Entity):
         self.armor_class = self.calculate_total_ac()  # Calculate total AC including dex modifier
         self.damage_reduction = damage_reduction
         self.level = monster_level
+        self.update_proficiency_bonus()
         self.weapon = WeaponFactory().get_weapon_by_name(weapon_name)
 
     def calculate_total_ac(self):

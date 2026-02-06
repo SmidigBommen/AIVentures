@@ -66,12 +66,16 @@ class Entity:
         return actual_damage
     
     def calculate_total_ac(self):
-        """Calculate total AC including base AC and dexterity modifier"""
-        ac = self.base_ac
-        ac += self.dexterity_modifier
-        # If character has armor equipped, that would be calculated here
-        # For now, we'll just use base + dex modifier
-        return ac
+        """Calculate total AC using D&D 5e armor rules."""
+        armor = self.equipment.get(EquipmentType.ARMOR)
+        if armor is None:
+            return self.base_ac + self.dexterity_modifier
+        if armor.category == "Light":
+            return armor.base_ac + self.dexterity_modifier
+        if armor.category == "Medium":
+            return armor.base_ac + min(self.dexterity_modifier, 2)
+        # Heavy armor
+        return armor.base_ac
 
     def is_alive(self):
         return self.current_hit_points > 0
@@ -106,14 +110,16 @@ class Entity:
         if item.equipment_type in self.equipment:
             self.unequip(item.equipment_type)
             self.equipment[item.equipment_type] = item
-            # self.update_stats(item, equip=True)
+            if isinstance(item, Armor):
+                self.armor_class = self.calculate_total_ac()
             print(f"{self.name} has equipped {item.name}.")
 
     def unequip(self, equipment_type):
         item = self.equipment[equipment_type]
         if item:
-            self.update_stats(item, equip=False)
             self.equipment[equipment_type] = None
+            if isinstance(item, Armor):
+                self.armor_class = self.calculate_total_ac()
             print(f"{self.name} has unequipped {item.name}.")
 
     def update_stats(self, item, equip=True):
@@ -151,7 +157,15 @@ class Entity:
 
     def update_proficiency_bonus(self):
         """Update proficiency bonus based on level"""
-        self.proficiency_bonus = 2 + ((self.level - 1) // 4)
+        self.proficiency_bonus = 1 + (self.level // 4)
+
+    def get_attack_modifier(self, weapon):
+        """Return the correct ability modifier for a given weapon."""
+        if weapon.is_ranged:
+            return self.dexterity_modifier
+        if weapon.is_finesse:
+            return max(self.strength_modifier, self.dexterity_modifier)
+        return self.strength_modifier
 
     def make_skill_check(self, skill_name, difficulty_class=10):
         """Make a skill check"""

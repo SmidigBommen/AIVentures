@@ -11,3 +11,11 @@ class Weapon(Equipment):
         self.category = category  # "Simple" or "Martial"
         self.properties = properties or []
         self.damage_dice_count = damage_dice_count  # Default is 1, but some weapons like greatsword use 2d6 (two dice)
+
+    @property
+    def is_ranged(self):
+        return "ammunition" in self.properties
+
+    @property
+    def is_finesse(self):
+        return "finesse" in self.properties

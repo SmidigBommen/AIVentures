@@ -9,10 +9,11 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from web.game_session import (
     get_session, save_session, get_races, get_classes,
-    get_all_weapons_flat, get_campaign
+    get_all_weapons_flat, get_all_armors_flat, get_campaign
 )
 from characterFactory import CharacterFactory
 from weaponFactory import WeaponFactory
+from armorFactory import ArmorFactory
 from items import HealingPotion
 from character import WeaponSlot
 
@@ -29,6 +30,7 @@ async def new_character(request: Request):
     session.character_creation.class_name = None
     session.character_creation.name = None
     session.character_creation.weapon = None
+    session.character_creation.armor = None
     session.character_creation.skills = []
     session.character = None
     save_session(request, session)
@@ -154,6 +156,21 @@ async def details_page(request: Request):
                 "description": weapon_data.get("description", "")
             })
 
+    # Get available armors based on class armor training
+    all_armors = get_all_armors_flat()
+    armor_training = class_props["armor_training"]
+    available_armors = []
+
+    for armor_name, armor_data in all_armors.items():
+        if armor_data["category"] in armor_training:
+            available_armors.append({
+                "name": armor_name,
+                "base_ac": armor_data["base_ac"],
+                "category": armor_data["category"],
+                "weight": armor_data["weight"],
+                "stealth_disadvantage": armor_data["stealth_disadvantage"],
+            })
+
     # Get skill choices for this class
     skill_choices = class_props["skill_proficiency_choices"]
     num_skills = class_props["num_skill_choices"]
@@ -164,6 +181,7 @@ async def details_page(request: Request):
         "race": session.character_creation.race,
         "class_name": session.character_creation.class_name,
         "weapons": available_weapons,
+        "armors": available_armors,
         "skill_choices": skill_choices,
         "num_skills": num_skills
     })
@@ -174,6 +192,7 @@ async def create_character(
     request: Request,
     name: str = Form(...),
     weapon: str = Form(...),
+    armor: str = Form(default=""),
     skills: list = Form(default=[])
 ):
     """Finalize character creation."""
@@ -198,6 +217,15 @@ async def create_character(
     except ValueError:
         pass  # Invalid weapon, skip
 
+    # Equip armor
+    if armor:
+        armor_factory = ArmorFactory()
+        try:
+            armor_obj = armor_factory.get_armor_by_name(armor)
+            character.equip(armor_obj)
+        except ValueError:
+            pass  # Invalid armor, skip
+
     # Add skill proficiencies
     if isinstance(skills, str):
         skills = [skills]
@@ -213,6 +241,7 @@ async def create_character(
     session.character = character
     session.character_creation.name = name
     session.character_creation.weapon = weapon
+    session.character_creation.armor = armor if armor else None
     session.character_creation.skills = skills
 
     # Initialize campaign

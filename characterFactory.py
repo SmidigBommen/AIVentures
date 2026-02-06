@@ -55,6 +55,8 @@ class CharacterFactory:
         # Initialize hit points based on class hit die and constitution modifier
         self.initialize_hit_points(character, hit_die)
 
+        character.update_proficiency_bonus()
+
         return character
 
     def initialize_hit_points(self, character, hit_die):

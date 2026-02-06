@@ -86,6 +86,14 @@ async def start_battle(request: Request):
     session.battle.monster_hp = monster.current_hit_points
     session.battle.monster_max_hp = monster.max_hit_points
     session.battle.monster_ac = monster.armor_class
+    session.battle.monster_base_ac = monster.base_ac
+    session.battle.monster_dex_modifier = monster.dexterity_modifier
+    session.battle.monster_str_modifier = monster.strength_modifier
+    session.battle.monster_proficiency_bonus = monster.proficiency_bonus
+    session.battle.monster_weapon_name = monster.weapon.name
+    session.battle.monster_weapon_damage_die = monster.weapon.damage_die
+    session.battle.monster_weapon_damage_dice_count = monster.weapon.damage_dice_count
+    session.battle.monster_weapon_properties = monster.weapon.properties
     session.battle.round_count = 1
     session.battle.battle_log = []
 
@@ -112,6 +120,16 @@ async def start_battle(request: Request):
     return RedirectResponse("/battle", status_code=303)
 
 
+def get_monster_attack_modifier(battle):
+    """Return the correct ability modifier for the monster's weapon."""
+    props = battle.monster_weapon_properties
+    if "ammunition" in props:
+        return battle.monster_dex_modifier
+    if "finesse" in props:
+        return max(battle.monster_str_modifier, battle.monster_dex_modifier)
+    return battle.monster_str_modifier
+
+
 def execute_monster_turn(session):
     """Execute the monster's turn."""
     # Simple AI: 70% attack, 30% defend
@@ -119,16 +137,21 @@ def execute_monster_turn(session):
 
     if action < 0.7:
         # Attack
-        attack_roll = Dice.roll_d20() + (session.battle.monster_level // 2)
-        session.battle.battle_log.append(f"{session.battle.monster_name} attacks! (Roll: {attack_roll} vs AC {session.character.armor_class})")
+        battle = session.battle
+        ability_mod = get_monster_attack_modifier(battle)
+        attack_roll = Dice.roll_d20() + ability_mod + battle.monster_proficiency_bonus
+        session.battle.battle_log.append(f"{battle.monster_name} attacks with {battle.monster_weapon_name}! (Roll: {attack_roll} vs AC {session.character.armor_class})")
 
         if attack_roll >= session.character.armor_class:
-            # Hit - calculate damage
-            damage = max(1, Dice.roll_d6() + (session.battle.monster_level // 2))
+            # Hit - calculate damage using actual weapon dice
+            damage = 0
+            for _ in range(battle.monster_weapon_damage_dice_count):
+                damage += Dice.roll(battle.monster_weapon_damage_die)
+            damage = max(1, damage + ability_mod)
             session.character.current_hit_points = max(0, session.character.current_hit_points - damage)
-            session.battle.battle_log.append(f"{session.battle.monster_name} hits for {damage} damage!")
+            session.battle.battle_log.append(f"{battle.monster_name} hits for {damage} damage!")
         else:
-            session.battle.battle_log.append(f"{session.battle.monster_name}'s attack misses!")
+            session.battle.battle_log.append(f"{battle.monster_name}'s attack misses!")
     else:
         # Defend
         session.battle.monster_ac += 2
@@ -194,7 +217,11 @@ async def player_attack(request: Request):
         damage_dice_count = 1
 
     # Attack roll
-    attack_roll = Dice.roll_d20() + char.strength_modifier
+    if weapon:
+        ability_mod = char.get_attack_modifier(weapon)
+    else:
+        ability_mod = char.strength_modifier
+    attack_roll = Dice.roll_d20() + ability_mod + char.proficiency_bonus
     session.battle.battle_log.append(f"{char.name} attacks! (Roll: {attack_roll} vs AC {session.battle.monster_ac})")
 
     if attack_roll >= session.battle.monster_ac:
@@ -202,7 +229,7 @@ async def player_attack(request: Request):
         damage = 0
         for _ in range(damage_dice_count):
             damage += Dice.roll(damage_die)
-        damage = max(1, damage + char.strength_modifier)
+        damage = max(1, damage + ability_mod)
 
         session.battle.monster_hp = max(0, session.battle.monster_hp - damage)
         session.battle.battle_log.append(f"{char.name} hits for {damage} damage!")
@@ -222,7 +249,7 @@ async def player_attack(request: Request):
         return await end_battle(request, session, player_won=False)
 
     # Reset monster AC and advance round
-    session.battle.monster_ac = 10 + (session.battle.monster_level // 2)
+    session.battle.monster_ac = session.battle.monster_base_ac + session.battle.monster_dex_modifier
     session.battle.round_count += 1
     session.battle.is_player_turn = True
 
@@ -255,7 +282,7 @@ async def player_defend(request: Request):
 
     # Reset AC bonus and advance round
     char.armor_class -= ac_bonus
-    session.battle.monster_ac = 10 + (session.battle.monster_level // 2)
+    session.battle.monster_ac = session.battle.monster_base_ac + session.battle.monster_dex_modifier
     session.battle.round_count += 1
     session.battle.is_player_turn = True
 
@@ -293,7 +320,7 @@ async def use_item(request: Request, item_index: int = Form(...)):
         return await end_battle(request, session, player_won=False)
 
     # Advance round
-    session.battle.monster_ac = 10 + (session.battle.monster_level // 2)
+    session.battle.monster_ac = session.battle.monster_base_ac + session.battle.monster_dex_modifier
     session.battle.round_count += 1
     session.battle.is_player_turn = True
 

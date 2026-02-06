@@ -43,6 +43,40 @@
             </div>
         </div>
 
+        {% if armors %}
+        <div class="form-section">
+            <h2>Starting Armor</h2>
+            <p class="hint">Choose armor from those available to your class.</p>
+
+            <div class="weapon-grid">
+                <label class="weapon-card">
+                    <input type="radio" name="armor" value="" checked>
+                    <div class="weapon-content">
+                        <h3>No Armor</h3>
+                        <div class="weapon-stats">
+                            <span class="damage">AC 10 + DEX</span>
+                            <span class="category">Unarmored</span>
+                        </div>
+                        <p class="properties">No stealth penalty</p>
+                    </div>
+                </label>
+                {% for armor in armors %}
+                <label class="weapon-card">
+                    <input type="radio" name="armor" value="{{ armor.name }}">
+                    <div class="weapon-content">
+                        <h3>{{ armor.name }}</h3>
+                        <div class="weapon-stats">
+                            <span class="damage">AC {{ armor.base_ac }}{% if armor.category == "Light" %} + DEX{% elif armor.category == "Medium" %} + DEX (max 2){% endif %}</span>
+                            <span class="category">{{ armor.category }}</span>
+                        </div>
+                        <p class="properties">{{ armor.weight }} lb{% if armor.stealth_disadvantage %} | Stealth disadvantage{% endif %}</p>
+                    </div>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
         <div class="form-section">
             <h2>Skill Proficiencies</h2>
             <p class="hint">Choose {{ num_skills }} skills to be proficient in.</p>
