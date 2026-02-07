@@ -13,6 +13,7 @@ from monsterFactory import MonsterFactory
 from dice import Dice
 from items import HealingPotion
 from character import WeaponSlot
+from lootGenerator import LootGenerator
 
 router = APIRouter()
 templates = Jinja2Templates(directory=Path(__file__).parent.parent / "templates")
@@ -358,16 +359,19 @@ async def end_battle(request: Request, session, player_won: bool):
         session.monster_kills += 1
 
         # Chance for loot
-        loot = None
-        if random.random() < 0.2:
-            loot = "Healing Potion"
-            session.character.add_item(HealingPotion("Healing Potion", 10))
+        loot = LootGenerator().generate_loot(session.battle.monster_level, session.character.level)
+        if loot:
+            if loot["type"] == "gold":
+                session.character.gold += loot["amount"]
+            else:
+                session.character.add_item(loot["item"])
 
         # Store rewards in session for display
         request.session["battle_rewards"] = {
             "xp": xp_reward,
             "gold": gold_reward,
-            "loot": loot,
+            "loot": loot["message"] if loot else None,
+            "loot_type": loot["type"] if loot else None,
             "leveled_up": session.character.level > old_level,
             "new_level": session.character.level
         }

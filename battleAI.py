@@ -3,6 +3,7 @@ import random
 from character import WeaponSlot
 from dice import Dice
 from equipmentType import EquipmentType
+from lootGenerator import LootGenerator
 
 
 class Battle:
@@ -185,10 +186,13 @@ class Battle:
             self.character.gold += gold_award
 
             # Chance for item drop
-            dropped_item = self.generate_loot()
-            if dropped_item:
-                self.character.add_item(dropped_item)
-                print(f"You found: {dropped_item.name}!")
+            loot = LootGenerator().generate_loot(self.monster.level, self.character.level)
+            if loot:
+                if loot["type"] == "gold":
+                    self.character.gold += loot["amount"]
+                else:
+                    self.character.add_item(loot["item"])
+                print(f"You found: {loot['message']}!")
             else:
                 print("You found no loot.")
             return "player"
@@ -207,9 +211,4 @@ class Battle:
         return base_gold + Dice.roll_d8()
 
     def generate_loot(self):
-        # Simple random loot generation (20% chance)
-        if random.random() < 0.2:
-            # For now, just return a healing potion
-            from items import HealingPotion
-            return HealingPotion(f"Healing Potion", 10)
-        return None
+        return LootGenerator().generate_loot(self.monster.level, self.character.level)

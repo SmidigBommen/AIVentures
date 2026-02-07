@@ -18,7 +18,7 @@
                 <span class="value">+{{ rewards.gold }} gold</span>
             </li>
             {% if rewards.loot %}
-            <li class="loot-reward">
+            <li class="loot-reward loot-{{ rewards.loot_type or 'item' }}">
                 <span class="label">Loot:</span>
                 <span class="value">{{ rewards.loot }}</span>
             </li>
@@ -116,6 +116,18 @@
 
 .loot-reward .value {
     color: var(--success);
+}
+
+.loot-weapon .value {
+    color: #e06c75;
+}
+
+.loot-armor .value {
+    color: #61afef;
+}
+
+.loot-gold .value {
+    color: var(--warning);
 }
 
 .level-up {
