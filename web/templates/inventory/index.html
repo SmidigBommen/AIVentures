@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="inventory-container">
+    <h1>Equipment & Inventory</h1>
+    <p class="subtitle">Manage your gear</p>
+
+    {% if message %}
+    <div class="alert alert-success">{{ message }}</div>
+    {% endif %}
+
+    {% if error %}
+    <div class="alert alert-error">{{ error }}</div>
+    {% endif %}
+
+    <div class="equipped-section">
+        <h2>Equipped</h2>
+        <div class="equipped-grid">
+            <div class="equip-slot">
+                <h3>Weapon</h3>
+                {% if character.weapon_details %}
+                <div class="equipped-item">
+                    <span class="item-name">{{ character.weapon_details.name }}</span>
+                    <span class="item-stat">{{ character.weapon_details.damage_dice_count }}d{{ character.weapon_details.damage_die }} {{ character.weapon_details.damage_type }}</span>
+                    <span class="item-meta">{{ character.weapon_details.category }}{% if character.weapon_details.properties %} &middot; {{ character.weapon_details.properties | join(', ') }}{% endif %}</span>
+                    <form action="/inventory/unequip-weapon" method="post">
+                        <button type="submit" class="btn btn-secondary btn-small">Unequip</button>
+                    </form>
+                </div>
+                {% else %}
+                <p class="empty-slot">No weapon equipped</p>
+                {% endif %}
+            </div>
+
+            <div class="equip-slot">
+                <h3>Armor</h3>
+                {% if character.armor_details %}
+                <div class="equipped-item">
+                    <span class="item-name">{{ character.armor_details.name }}</span>
+                    <span class="item-stat">Base AC: {{ character.armor_details.base_ac }}</span>
+                    <span class="item-meta">{{ character.armor_details.category }} &middot; Total AC: {{ character.armor_class }}</span>
+                    <form action="/inventory/unequip-armor" method="post">
+                        <button type="submit" class="btn btn-secondary btn-small">Unequip</button>
+                    </form>
+                </div>
+                {% else %}
+                <p class="empty-slot">No armor equipped (AC: {{ character.armor_class }})</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="backpack-section">
+        <h2>Inventory</h2>
+        {% if character.inventory %}
+        <div class="backpack-grid">
+            {% for item in character.inventory %}
+            <div class="backpack-item {% if not item.can_equip and item.type != 'potion' %}not-proficient{% endif %}">
+                <div class="item-header">
+                    <span class="item-name">{{ item.name }}</span>
+                    <span class="type-badge badge-{{ item.type }}">{{ item.type | capitalize }}</span>
+                </div>
+
+                {% if item.type == 'weapon' %}
+                <p class="item-stat">{{ item.damage_dice_count }}d{{ item.damage_die }} {{ item.damage_type }}</p>
+                <p class="item-meta">{{ item.category }}{% if item.properties %} &middot; {{ item.properties | join(', ') }}{% endif %}</p>
+                {% elif item.type == 'armor' %}
+                <p class="item-stat">Base AC: {{ item.base_ac }}</p>
+                <p class="item-meta">{{ item.category }}</p>
+                {% else %}
+                <p class="item-meta">{{ item.description }}</p>
+                {% endif %}
+
+                {% if item.type == 'weapon' %}
+                    {% if item.can_equip %}
+                    <form action="/inventory/equip-weapon" method="post">
+                        <input type="hidden" name="item_index" value="{{ item.index }}">
+                        <button type="submit" class="btn btn-primary btn-small">Equip</button>
+                    </form>
+                    {% else %}
+                    <span class="proficiency-warning">Not proficient</span>
+                    {% endif %}
+                {% elif item.type == 'armor' %}
+                    {% if item.can_equip %}
+                    <form action="/inventory/equip-armor" method="post">
+                        <input type="hidden" name="item_index" value="{{ item.index }}">
+                        <button type="submit" class="btn btn-primary btn-small">Equip</button>
+                    </form>
+                    {% else %}
+                    <span class="proficiency-warning">Not proficient</span>
+                    {% endif %}
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="empty-inventory">Your inventory is empty.</p>
+        {% endif %}
+    </div>
+
+    <div class="actions mt-3">
+        <a href="/game" class="btn btn-secondary">Back to Game</a>
+    </div>
+</div>
+
+<style>
+.inventory-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.inventory-container h1 {
+    color: var(--secondary-color);
+    text-align: center;
+}
+
+.subtitle {
+    text-align: center;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
+
+.alert {
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.alert-success {
+    background: rgba(46, 125, 50, 0.2);
+    border: 1px solid var(--success);
+    color: var(--success);
+}
+
+.alert-error {
+    background: rgba(198, 40, 40, 0.2);
+    border: 1px solid var(--danger);
+    color: var(--danger);
+}
+
+.equipped-section, .backpack-section {
+    background: var(--bg-medium);
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.equipped-section h2, .backpack-section h2 {
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+    border-bottom: 1px solid var(--bg-light);
+    padding-bottom: 0.5rem;
+}
+
+.equipped-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.equip-slot {
+    background: var(--bg-dark);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--bg-light);
+}
+
+.equip-slot h3 {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.75rem;
+}
+
+.equipped-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.equipped-item .item-name {
+    font-weight: bold;
+    color: var(--text-light);
+    font-size: 1.1rem;
+}
+
+.equipped-item .item-stat {
+    color: var(--secondary-color);
+    font-size: 0.9rem;
+}
+
+.equipped-item .item-meta {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.equipped-item form {
+    margin-top: 0.5rem;
+}
+
+.empty-slot {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.backpack-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.backpack-item {
+    background: var(--bg-dark);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--bg-light);
+}
+
+.backpack-item.not-proficient {
+    opacity: 0.6;
+}
+
+.item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.item-header .item-name {
+    font-weight: bold;
+    color: var(--text-light);
+}
+
+.type-badge {
+    font-size: 0.75rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.badge-weapon {
+    background: rgba(198, 40, 40, 0.3);
+    color: var(--danger);
+}
+
+.badge-armor {
+    background: rgba(15, 52, 96, 0.5);
+    color: var(--text-light);
+}
+
+.badge-potion {
+    background: rgba(46, 125, 50, 0.3);
+    color: var(--success);
+}
+
+.backpack-item .item-stat {
+    color: var(--secondary-color);
+    font-size: 0.9rem;
+    margin: 0.25rem 0;
+}
+
+.backpack-item .item-meta {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin: 0.25rem 0;
+}
+
+.backpack-item form {
+    margin-top: 0.5rem;
+}
+
+.proficiency-warning {
+    color: var(--danger);
+    font-size: 0.85rem;
+    font-style: italic;
+    margin-top: 0.5rem;
+    display: inline-block;
+}
+
+.btn-small {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+}
+
+.empty-inventory {
+    color: var(--text-muted);
+    text-align: center;
+    padding: 2rem;
+    font-style: italic;
+}
+
+.actions {
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .equipped-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

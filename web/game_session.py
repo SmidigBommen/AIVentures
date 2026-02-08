@@ -203,7 +203,55 @@ class GameSession:
             return None
         from weapon import Weapon
         from armor import Armor
+        from character import WeaponSlot
+        from equipmentType import EquipmentType
         c = self.character
+
+        # Build weapon details
+        equipped_weapon = c.weapon_slots.get(WeaponSlot.MAIN_HAND)
+        weapon_details = None
+        if equipped_weapon:
+            weapon_details = {
+                "name": equipped_weapon.name,
+                "damage_die": equipped_weapon.damage_die,
+                "damage_dice_count": equipped_weapon.damage_dice_count,
+                "damage_type": equipped_weapon.damage_type,
+                "category": equipped_weapon.category,
+                "properties": equipped_weapon.properties,
+            }
+
+        # Build armor details
+        equipped_armor = c.equipment.get(EquipmentType.ARMOR)
+        armor_details = None
+        if equipped_armor:
+            armor_details = {
+                "name": equipped_armor.name,
+                "base_ac": equipped_armor.base_ac,
+                "category": equipped_armor.category,
+            }
+
+        # Build enriched inventory
+        inventory = []
+        for item in c.inventory:
+            entry = {
+                "name": item.name,
+                "description": getattr(item, 'description', ''),
+            }
+            if isinstance(item, Weapon):
+                entry["type"] = "weapon"
+                entry["damage_die"] = item.damage_die
+                entry["damage_dice_count"] = item.damage_dice_count
+                entry["damage_type"] = item.damage_type
+                entry["category"] = item.category
+                entry["properties"] = item.properties
+            elif isinstance(item, Armor):
+                entry["type"] = "armor"
+                entry["base_ac"] = item.base_ac
+                entry["category"] = item.category
+            else:
+                entry["type"] = "potion"
+            inventory.append(entry)
+
         return {
             "name": c.name,
             "race": c.race,
@@ -228,15 +276,9 @@ class GameSession:
             "charisma_modifier": c.charisma_modifier,
             "weapon": self._get_weapon_name(c),
             "armor": self._get_armor_name(c),
-            "inventory": [
-                {
-                    "name": item.name,
-                    "description": getattr(item, 'description', ''),
-                    "type": "weapon" if isinstance(item, Weapon) else
-                            "armor" if isinstance(item, Armor) else "potion"
-                }
-                for item in c.inventory
-            ],
+            "weapon_details": weapon_details,
+            "armor_details": armor_details,
+            "inventory": inventory,
         }
 
     @classmethod

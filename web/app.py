@@ -39,9 +39,10 @@ async def health_check():
 
 
 # Import and include routers
-from web.routes import character, game, battle, shop
+from web.routes import character, game, battle, shop, inventory
 
 app.include_router(character.router, prefix="/character", tags=["character"])
 app.include_router(game.router, prefix="/game", tags=["game"])
 app.include_router(battle.router, prefix="/battle", tags=["battle"])
 app.include_router(shop.router, prefix="/shop", tags=["shop"])
+app.include_router(inventory.router, prefix="/inventory", tags=["inventory"])
