@@ -137,6 +137,7 @@ class GameSession:
         self.current_area = None
         self.act = None
         self.monster_kills = 0
+        self.kills_at_last_restock = 0
 
     def to_dict(self) -> dict:
         """Serialize session to dictionary for storage."""
@@ -181,6 +182,7 @@ class GameSession:
             "area_id": area_id,
             "act_num": act_num,
             "monster_kills": self.monster_kills,
+            "kills_at_last_restock": self.kills_at_last_restock,
         }
 
     def _get_weapon_name(self, c) -> Optional[str]:
@@ -224,7 +226,7 @@ class GameSession:
             "charisma_modifier": c.charisma_modifier,
             "weapon": self._get_weapon_name(c),
             "armor": self._get_armor_name(c),
-            "inventory": [{"name": item.name, "description": item.description} for item in c.inventory],
+            "inventory": [{"name": item.name, "description": getattr(item, 'description', '')} for item in c.inventory],
         }
 
     @classmethod
@@ -232,6 +234,7 @@ class GameSession:
         """Deserialize session from dictionary."""
         session = cls(data.get("session_id"))
         session.monster_kills = data.get("monster_kills", 0)
+        session.kills_at_last_restock = data.get("kills_at_last_restock", 0)
 
         # Restore location from campaign data
         campaign = get_campaign()

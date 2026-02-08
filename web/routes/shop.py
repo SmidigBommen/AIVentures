@@ -30,6 +30,13 @@ def get_shop_inventory(request):
     return request.session["shop_inventory"]
 
 
+def restock_shop(request):
+    """Reset all shop items to full stock (quantity 5)."""
+    request.session["shop_inventory"] = [
+        {**item, "quantity": 5} for item in DEFAULT_SHOP_INVENTORY
+    ]
+
+
 @router.get("/", response_class=HTMLResponse)
 async def shop_view(request: Request):
     """Shop view - show items for sale."""

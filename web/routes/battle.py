@@ -14,6 +14,7 @@ from dice import Dice
 from items import HealingPotion
 from character import WeaponSlot
 from lootGenerator import LootGenerator
+from web.routes.shop import restock_shop
 
 router = APIRouter()
 templates = Jinja2Templates(directory=Path(__file__).parent.parent / "templates")
@@ -358,6 +359,11 @@ async def end_battle(request: Request, session, player_won: bool):
         session.character.gold += gold_reward
         session.monster_kills += 1
 
+        # Restock shop every 10 kills
+        if session.monster_kills - session.kills_at_last_restock >= 10:
+            restock_shop(request)
+            session.kills_at_last_restock = session.monster_kills
+
         # Chance for loot
         loot = LootGenerator().generate_loot(session.battle.monster_level, session.character.level)
         if loot:
@@ -377,6 +383,8 @@ async def end_battle(request: Request, session, player_won: bool):
         }
     else:
         request.session["battle_rewards"] = None
+        restock_shop(request)
+        session.kills_at_last_restock = session.monster_kills
 
     save_session(request, session)
 
