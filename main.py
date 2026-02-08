@@ -93,7 +93,7 @@ def post_battle_menu():
 
     if choice == "1":
         # Continue exploring with chance for encounter
-        if random.random() < 0.7:  # 70% chance for encounter
+        if random.random() < 1.0:  # 100% chance for encounter (doubled from 70%)
             print("\nYou encounter a monster while exploring!")
             # Create a new monster appropriate for location and level
             gamestate.monster = create_monster_for_location(gamestate.current_location, gamestate.character.level, gamestate.current_area)
@@ -246,7 +246,7 @@ def idle_menu():
         print(f"{connections}")
     print("\nWhat would you like to do?")
     encounter_chance = gamestate.current_area.get('encounters')
-    print(f"1. Explore the area ({encounter_chance}0% chance for an encounter)")
+    print(f"1. Explore the area ({min(encounter_chance * 2, 10)}0% chance for an encounter)")
 
     # Only show shop option in towns
     if gamestate.current_location["type"] == "town":
@@ -324,7 +324,7 @@ def explore_area():
     if encounter_chance > 0:
         # Roll for encounter based on area's encounter level
         import random
-        if random.random() < (encounter_chance * 0.2):  # 20% per encounter level
+        if random.random() < (encounter_chance * 0.4):  # 40% per encounter level (doubled)
             print(f"\nYou encounter danger in {area['name']}!")
             gamestate.monster = create_monster_for_location(gamestate.current_location, gamestate.character.level, area)
             return "battle"
@@ -337,7 +337,7 @@ def area_menu():
     """Menu for actions within a specific area"""
     print("\nWhat would you like to do?")
     encounter_chance = gamestate.current_area.get('encounters')
-    print(f"1. Explore the area ({encounter_chance}0% chance for an encounter)")
+    print(f"1. Explore the area ({min(encounter_chance * 2, 10)}0% chance for an encounter)")
     print("2. Move to a connected area")
     print("3. Return to location overview")
     print("4. View character stats")
@@ -404,7 +404,7 @@ def navigate_to_connected_area():
                 # Check for automatic encounters when entering certain areas
                 if selected_area.get('encounters', 0) >= 4:  # High encounter areas
                     import random
-                    if random.random() < 0.3:  # 30% chance for immediate encounter
+                    if random.random() < 0.6:  # 60% chance for immediate encounter (doubled)
                         print("As you enter, you're immediately confronted by danger!")
                         gamestate.monster = create_monster_for_location(gamestate.current_location,
                                                                         gamestate.character.level, selected_area)

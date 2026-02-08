@@ -321,81 +321,11 @@ main {
     justify-content: center;
 }
 
-/* Battle Arena */
-.battle-arena {
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-.combatants {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    margin-bottom: 2rem;
-}
-
-.combatant {
-    background: var(--bg-medium);
-    padding: 1.5rem;
-    border-radius: 8px;
-    text-align: center;
-}
-
-.combatant.player {
-    border: 2px solid var(--success);
-}
-
-.combatant.monster {
-    border: 2px solid var(--danger);
-}
-
-.combatant h2 {
-    margin-bottom: 1rem;
-}
-
-.health-bar {
-    background: var(--bg-dark);
-    height: 24px;
-    border-radius: 12px;
-    overflow: hidden;
-    margin-bottom: 0.5rem;
-}
-
-.health-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--danger), var(--success));
-    transition: width 0.3s;
-}
-
-.battle-log {
-    background: var(--bg-dark);
-    border: 1px solid var(--bg-light);
-    border-radius: 8px;
-    padding: 1rem;
-    max-height: 200px;
-    overflow-y: auto;
-    margin-bottom: 2rem;
-    font-family: monospace;
-    font-size: 0.9rem;
-}
-
-.battle-log .log-entry {
-    padding: 0.25rem 0;
-    border-bottom: 1px solid var(--bg-medium);
-}
-
-.battle-log .damage {
-    color: var(--danger);
-}
-
-.battle-log .heal {
-    color: var(--success);
-}
-
-.battle-actions {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
+/* Battle Page - full-bleed mode */
+body.battle-page main {
+    max-width: none;
+    padding: 0;
+    margin: 0;
 }
 
 /* Shop */
@@ -501,10 +431,6 @@ footer {
 @media (max-width: 768px) {
     .home-container h1 {
         font-size: 2rem;
-    }
-
-    .combatants {
-        grid-template-columns: 1fr;
     }
 
     .stats-grid {

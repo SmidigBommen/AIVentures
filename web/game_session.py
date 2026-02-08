@@ -201,6 +201,8 @@ class GameSession:
         """Serialize character object to dict."""
         if not self.character:
             return None
+        from weapon import Weapon
+        from armor import Armor
         c = self.character
         return {
             "name": c.name,
@@ -226,7 +228,15 @@ class GameSession:
             "charisma_modifier": c.charisma_modifier,
             "weapon": self._get_weapon_name(c),
             "armor": self._get_armor_name(c),
-            "inventory": [{"name": item.name, "description": getattr(item, 'description', '')} for item in c.inventory],
+            "inventory": [
+                {
+                    "name": item.name,
+                    "description": getattr(item, 'description', ''),
+                    "type": "weapon" if isinstance(item, Weapon) else
+                            "armor" if isinstance(item, Armor) else "potion"
+                }
+                for item in c.inventory
+            ],
         }
 
     @classmethod
@@ -331,9 +341,13 @@ class GameSession:
             character.armor_class = char_data.get("armor_class", character.armor_class)
             character.xp_to_next_level = character.level * 150
 
+            # Create factories (needed for equipped items and inventory restoration)
+            weapon_factory = WeaponFactory()
+            from armorFactory import ArmorFactory
+            armor_factory = ArmorFactory()
+
             # Restore weapon (use enum, not string)
             if cc_data.get("weapon"):
-                weapon_factory = WeaponFactory()
                 try:
                     weapon = weapon_factory.get_weapon_by_name(cc_data["weapon"])
                     character.equip_weapon(weapon, WeaponSlot.MAIN_HAND)
@@ -342,8 +356,6 @@ class GameSession:
 
             # Restore armor
             if cc_data.get("armor"):
-                from armorFactory import ArmorFactory
-                armor_factory = ArmorFactory()
                 try:
                     armor = armor_factory.get_armor_by_name(cc_data["armor"])
                     character.equip(armor)
@@ -357,7 +369,20 @@ class GameSession:
             # Restore inventory
             character.inventory = []
             for item_data in char_data.get("inventory", []):
-                if "Healing Potion" in item_data["name"]:
+                item_type = item_data.get("type", "potion")
+                if item_type == "weapon":
+                    try:
+                        weapon = weapon_factory.get_weapon_by_name(item_data["name"])
+                        character.add_item(weapon)
+                    except ValueError:
+                        pass
+                elif item_type == "armor":
+                    try:
+                        armor = armor_factory.get_armor_by_name(item_data["name"])
+                        character.add_item(armor)
+                    except ValueError:
+                        pass
+                elif "Healing Potion" in item_data["name"]:
                     # Parse healing amount from name or description
                     if "Minor" in item_data["name"]:
                         healing = 5

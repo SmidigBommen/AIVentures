@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/static/css/style.css">
     {% block head %}{% endblock %}
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
     <header>
         <nav>
             <a href="/" class="logo">AIVentures</a>

@@ -7,8 +7,10 @@ from fastapi.templating import Jinja2Templates
 # Add parent directories to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from web.game_session import get_session, save_session
+from web.game_session import get_session, save_session, get_all_weapons_flat, get_all_armors_flat
 from items import HealingPotion
+from weapon import Weapon
+from armor import Armor
 
 router = APIRouter()
 templates = Jinja2Templates(directory=Path(__file__).parent.parent / "templates")
@@ -90,6 +92,17 @@ def calculate_sell_price(item, shop_inventory):
     # Default pricing for items not in shop
     if isinstance(item, HealingPotion):
         return max(1, item.healing_amount // 2)
+
+    if isinstance(item, Weapon):
+        all_weapons = get_all_weapons_flat()
+        if item.name in all_weapons:
+            return max(1, int(all_weapons[item.name].get("cost_gp", 1)) // 2)
+
+    if isinstance(item, Armor):
+        all_armors = get_all_armors_flat()
+        if item.name in all_armors:
+            return max(1, int(all_armors[item.name].get("cost_gp", 1)) // 2)
+
     return 1
 
 

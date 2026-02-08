@@ -94,7 +94,7 @@ async def explore_area(request: Request):
         return RedirectResponse("/game", status_code=303)
 
     # Check for encounter based on area's encounter rating (0-10)
-    encounter_chance = area.get("encounters", 5) / 10.0
+    encounter_chance = min(1.0, area.get("encounters", 5) / 5.0)  # Doubled encounter rate
 
     if random.random() < encounter_chance:
         # Start a battle
