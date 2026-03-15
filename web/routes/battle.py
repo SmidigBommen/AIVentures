@@ -345,6 +345,7 @@ async def end_battle(request: Request, session, player_won: bool):
 
         # Apply rewards
         old_level = session.character.level
+        total_hp_increase = 0
         session.character.xp += xp_reward
         # Check for level up
         while session.character.xp >= session.character.xp_to_next_level:
@@ -355,6 +356,7 @@ async def end_battle(request: Request, session, player_won: bool):
             hp_increase = max(1, (session.character.hit_die // 2) + 1 + session.character.constitution_modifier)
             session.character.max_hit_points += hp_increase
             session.character.current_hit_points += hp_increase
+            total_hp_increase += hp_increase
 
         session.character.gold += gold_reward
         session.monster_kills += 1
@@ -379,7 +381,8 @@ async def end_battle(request: Request, session, player_won: bool):
             "loot": loot["message"] if loot else None,
             "loot_type": loot["type"] if loot else None,
             "leveled_up": session.character.level > old_level,
-            "new_level": session.character.level
+            "new_level": session.character.level,
+            "hp_increase": total_hp_increase
         }
     else:
         request.session["battle_rewards"] = None

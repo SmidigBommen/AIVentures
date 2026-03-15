@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{{ title | default("AIVentures") }}{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/style.css">
     {% block head %}{% endblock %}
 </head>
@@ -12,10 +15,24 @@
         <nav>
             <a href="/" class="logo">AIVentures</a>
             {% if character %}
-            <div class="character-status">
-                <span class="name">{{ character.name }}</span>
-                <span class="hp">HP: {{ character.current_hit_points }}/{{ character.max_hit_points }}</span>
-                <span class="gold">Gold: {{ character.gold }}</span>
+            <div class="nav-links">
+                <a href="/game">World</a>
+                <a href="/inventory">Inventory</a>
+                <a href="/character/summary">Character</a>
+            </div>
+            {% endif %}
+            <div class="nav-spacer"></div>
+            {% if character %}
+            <div class="nav-status">
+                <span class="nav-name">{{ character.name }}</span>
+                <div class="nav-hp-wrap">
+                    <div class="nav-hp-bar">
+                        <div class="nav-hp-fill" style="width: {{ (character.current_hit_points / character.max_hit_points * 100) | int }}%"></div>
+                    </div>
+                    <span class="nav-hp-text">{{ character.current_hit_points }}/{{ character.max_hit_points }}</span>
+                </div>
+                <span class="nav-gold">{{ character.gold }}g</span>
+                <span class="nav-level">Lv{{ character.level }}</span>
             </div>
             {% endif %}
         </nav>
@@ -24,28 +41,24 @@
     <main>
         {% block content %}
         {% if content == "home" %}
-        <div class="home-container">
+        <div class="home-hero">
             <h1>The Shattered Crown</h1>
-            <p class="tagline">A D&D 5e Text Adventure</p>
-
-            <div class="story-intro">
+            <p class="home-tagline">A D&amp;D 5e Text Adventure</p>
+            <div class="home-story glass">
                 <p>In the realm of Eldoria, an ancient artifact known as the Shattered Crown
                 holds the power to reshape reality itself. When the dark sorcerer Malachar
                 begins gathering the crown's scattered fragments, only a brave adventurer
                 can stop him from plunging the world into eternal darkness.</p>
             </div>
-
-            <div class="actions">
-                <a href="/character/new" class="btn btn-primary">Begin Your Adventure</a>
-            </div>
+            <a href="/character/new" class="btn btn-primary">Begin Your Adventure</a>
         </div>
         {% endif %}
         {% endblock %}
     </main>
 
-    <footer>
-        <p>AIVentures - A D&D 5e Inspired Adventure</p>
-    </footer>
+    <footer>AIVentures &mdash; A D&amp;D 5e Adventure</footer>
+
+    <div class="toast-container"></div>
 
     <script src="/static/js/main.js"></script>
     {% block scripts %}{% endblock %}
