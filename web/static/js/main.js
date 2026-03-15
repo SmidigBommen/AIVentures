@@ -268,6 +268,44 @@ function initAutoEffects() {
 }
 
 
+// ===== Shop Tabs =====
+function initShopTabs() {
+    var tabContainer = document.querySelector('.shop-tabs');
+    if (!tabContainer) return;
+
+    var tabs = tabContainer.querySelectorAll('.shop-tab');
+    var panels = document.querySelectorAll('.shop-tab-panel');
+
+    // Auto-select tab from URL param
+    var params = new URLSearchParams(window.location.search);
+    var activeTab = params.get('tab');
+    if (activeTab) {
+        tabs.forEach(function(t) { t.classList.remove('active'); });
+        panels.forEach(function(p) { p.classList.remove('active'); });
+        var targetTab = tabContainer.querySelector('[data-tab="' + activeTab + '"]');
+        var targetPanel = document.getElementById('tab-' + activeTab);
+        if (targetTab) targetTab.classList.add('active');
+        if (targetPanel) targetPanel.classList.add('active');
+    }
+
+    tabs.forEach(function(tab) {
+        tab.addEventListener('click', function() {
+            var target = this.dataset.tab;
+            tabs.forEach(function(t) { t.classList.remove('active'); });
+            panels.forEach(function(p) { p.classList.remove('active'); });
+            this.classList.add('active');
+            var panel = document.getElementById('tab-' + target);
+            if (panel) panel.classList.add('active');
+            // Update URL without reload
+            var url = new URL(window.location);
+            url.searchParams.set('tab', target);
+            window.history.replaceState({}, '', url);
+            SFX.play('click');
+        });
+    });
+}
+
+
 // ===== Active Nav Link =====
 function initActiveNav() {
     var path = window.location.pathname;
@@ -289,4 +327,5 @@ document.addEventListener('DOMContentLoaded', function() {
     initHealthBars();
     initAutoEffects();
     initActiveNav();
+    initShopTabs();
 });

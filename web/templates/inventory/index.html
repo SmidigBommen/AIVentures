@@ -55,10 +55,10 @@
         {% if character.inventory %}
         <div class="backpack-items">
             {% for item in character.inventory %}
-            <div class="backpack-item {% if not item.can_equip and item.type != 'potion' %}not-proficient{% endif %}">
+            <div class="backpack-item {% if not item.can_equip and item.type not in ('potion', 'quest_item') %}not-proficient{% endif %}">
                 <div class="item-header">
                     <span class="item-name">{{ item.name }}</span>
-                    <span class="type-badge badge-{{ item.type }}">{{ item.type | capitalize }}</span>
+                    <span class="type-badge badge-{{ item.type }}">{% if item.type == 'quest_item' %}Quest{% else %}{{ item.type | capitalize }}{% endif %}</span>
                 </div>
 
                 {% if item.type == 'weapon' %}

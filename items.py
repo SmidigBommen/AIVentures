@@ -7,6 +7,15 @@ class Item:
     def use(self, character):
         raise NotImplementedError("This method should be implemented by subclasses")
 
+class QuestItem(Item):
+    def __init__(self, name, description, quest_id):
+        super().__init__(name, description, is_usable_in_battle=False)
+        self.quest_id = quest_id
+
+    def use(self, character):
+        pass
+
+
 class HealingPotion(Item):
     def __init__(self, name, healing_amount):
         super().__init__(name, f"Heals {healing_amount} hit points")

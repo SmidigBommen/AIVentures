@@ -88,7 +88,6 @@ class Character(Entity):
         return True
 
     def add_item(self, item):
-        item.is_usable_in_battle = True
         self.inventory.append(item)
 
     def remove_item(self, item):

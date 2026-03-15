@@ -12,6 +12,9 @@
 </div>
 
 <div class="char-summary">
+    {% if character.portrait %}
+    <img src="{{ character.portrait }}" alt="{{ character.name }}" class="summary-portrait">
+    {% endif %}
     <h1 class="page-title">{{ character.name }}</h1>
     <p class="page-subtitle">{{ character.race }} {{ character.class_name }} - Level {{ character.level }}</p>
 

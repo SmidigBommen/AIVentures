@@ -193,6 +193,7 @@ async def create_character(
     name: str = Form(...),
     weapon: str = Form(...),
     armor: str = Form(default=""),
+    portrait: str = Form(default="/static/images/player_fighter.png"),
     skills: list = Form(default=[])
 ):
     """Finalize character creation."""
@@ -248,6 +249,7 @@ async def create_character(
     session.character_creation.name = name
     session.character_creation.weapon = weapon
     session.character_creation.armor = armor if armor else None
+    session.character_creation.portrait = portrait
     session.character_creation.skills = skills
 
     # Initialize campaign

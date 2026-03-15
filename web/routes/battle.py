@@ -8,16 +8,266 @@ from fastapi.templating import Jinja2Templates
 # Add parent directories to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from web.game_session import get_session, save_session, get_abilities, get_class_abilities, get_primary_modifier, calculate_max_pp
+from web.game_session import get_session, save_session, get_abilities, get_class_abilities, get_primary_modifier, calculate_max_pp, get_quests
 from monsterFactory import MonsterFactory
 from dice import Dice
-from items import HealingPotion
+from items import HealingPotion, QuestItem
 from character import WeaponSlot
 from lootGenerator import LootGenerator
 from web.routes.shop import restock_shop
 
 router = APIRouter()
 templates = Jinja2Templates(directory=Path(__file__).parent.parent / "templates")
+
+# Monster race → portrait image mapping
+MONSTER_PORTRAITS = {
+    "Goblin": "/static/images/goblin_fighter.png",
+    "Troll": "/static/images/troll_fighter.png",
+}
+DEFAULT_MONSTER_PORTRAIT = "/static/images/orc-creature-battle.jpg"
+
+# Monster taunts by race
+MONSTER_TAUNTS = {
+    "Goblin": {
+        "start": [
+            "Hehe, shiny armor! It'll be mine soon!",
+            "You lost, little human? Goblins own these roads now!",
+            "Stab stab stab! Goblins love stabbing!",
+            "More bones for the pile!",
+        ],
+        "attack": [
+            "Take this, soft-skin!",
+            "Goblin surprise!",
+            "Stab stab!",
+        ],
+        "hurt": [
+            "Ow! That not fair!",
+            "Grrr... you'll pay for that!",
+            "Lucky hit!",
+        ],
+    },
+    "Orc": {
+        "start": [
+            "WAAARGH! Another weakling to crush!",
+            "You smell like fear. Good.",
+            "Orc steel will taste your blood today!",
+            "Stand and fight, or die running. Either way, you die.",
+        ],
+        "attack": [
+            "SMASH!",
+            "Orc strength!",
+            "Feel the fury!",
+        ],
+        "hurt": [
+            "Is that all you've got?",
+            "Pain makes orc ANGRY!",
+            "You'll regret that!",
+        ],
+    },
+    "Troll": {
+        "start": [
+            "Mmm... you look tasty.",
+            "Troll hungry. You food.",
+            "Hrrr... little morsel wanders into troll's den.",
+            "Bones crunch nice. Troll likes crunching.",
+        ],
+        "attack": [
+            "CRUNCH!",
+            "Troll smash!",
+            "Hold still, food!",
+        ],
+        "hurt": [
+            "Grrr... it grows back!",
+            "That tickles!",
+            "Now troll MAD!",
+        ],
+    },
+    "Blighted Dryad": {
+        "start": [
+            "The forest rejects you... as do I.",
+            "Roots and thorns shall be your grave.",
+            "You trespass on corrupted ground. Leave... or become fertilizer.",
+            "The rot spreads, and you shall spread it further.",
+        ],
+        "attack": [
+            "The thorns hunger!",
+            "Decay take you!",
+            "Wither!",
+        ],
+        "hurt": [
+            "The corruption... sustains me...",
+            "Cut one branch, two grow back!",
+            "You cannot kill what is already rotting!",
+        ],
+    },
+    "Fire Salamander": {
+        "start": [
+            "Burn, surface-dweller! BURN!",
+            "The flames of the deep will consume you!",
+            "You dare challenge the children of fire?",
+            "Your flesh will melt like wax before me.",
+        ],
+        "attack": [
+            "Feel the heat!",
+            "BURN!",
+            "Fire consumes!",
+        ],
+        "hurt": [
+            "The flames only grow hotter!",
+            "You cannot quench this fire!",
+            "Ssss... pain fuels the inferno!",
+        ],
+    },
+    "Shadow Wraith": {
+        "start": [
+            "Your warmth... I will take it all...",
+            "The living do not belong here...",
+            "Cold. So cold. You will know this cold soon.",
+            "I was like you once... before the darkness took me...",
+        ],
+        "attack": [
+            "Feel the void...",
+            "Your life... drains...",
+            "Embrace the cold...",
+        ],
+        "hurt": [
+            "I am already dead... you cannot kill me again...",
+            "Light... it burns...",
+            "The shadows will return...",
+        ],
+    },
+    "Sea Serpent": {
+        "start": [
+            "The depths have sent me for you!",
+            "Surface creatures are so... fragile.",
+            "The ocean's fury given form stands before you!",
+            "You will drown in your own blood!",
+        ],
+        "attack": [
+            "The tide crushes!",
+            "Drown!",
+            "The deep strikes!",
+        ],
+        "hurt": [
+            "The sea heals all wounds!",
+            "A scratch!",
+            "The current shifts... but never stops!",
+        ],
+    },
+    "Wind Specter": {
+        "start": [
+            "You cannot strike what you cannot see...",
+            "The wind carries whispers of your death.",
+            "I am the storm that never ends.",
+            "Flesh and bone against the wind? Foolish.",
+        ],
+        "attack": [
+            "The gale strikes!",
+            "Carried by the storm!",
+            "Howl!",
+        ],
+        "hurt": [
+            "You cannot wound the wind!",
+            "I scatter... and reform!",
+            "A gust... nothing more!",
+        ],
+    },
+    "Stone Golem": {
+        "start": [
+            "...",
+            "INTRUDER. DESTROY.",
+            "GUARDIAN PROTOCOL: ENGAGED.",
+            "NONE SHALL PASS.",
+        ],
+        "attack": [
+            "CRUSH.",
+            "DESTROY.",
+            "SMASH.",
+        ],
+        "hurt": [
+            "DAMAGE... INSIGNIFICANT.",
+            "STONE... ENDURES.",
+            "RECALCULATING.",
+        ],
+    },
+    "Crystal Golem": {
+        "start": [
+            "The crystals sing of your destruction.",
+            "REFRACT. REFLECT. REJECT.",
+            "You see yourself in a thousand shards. Each one shows your death.",
+            "The earth's bones will grind you to dust.",
+        ],
+        "attack": [
+            "SHATTER!",
+            "Crystal fury!",
+            "The gems cut deep!",
+        ],
+        "hurt": [
+            "Cracks... heal...",
+            "CRYSTAL INTEGRITY: HOLDING.",
+            "You chip at a mountain!",
+        ],
+    },
+    "Shadow Knight": {
+        "start": [
+            "Malachar sends his regards.",
+            "Your light dies here, hero.",
+            "I have slain a hundred like you. You will be one hundred and one.",
+            "Kneel before the shadow, and I may grant a swift end.",
+        ],
+        "attack": [
+            "For Malachar!",
+            "Shadow strike!",
+            "Darkness falls!",
+        ],
+        "hurt": [
+            "A worthy blow... but futile.",
+            "The shadow does not yield!",
+            "Pain is an old friend.",
+        ],
+    },
+    "Void Fiend": {
+        "start": [
+            "Reality bends around me. You should run.",
+            "I have seen the space between worlds. There is nothing there for you.",
+            "Your existence is a brief flicker. I will snuff it out.",
+            "The void hungers, and I am its mouth.",
+        ],
+        "attack": [
+            "OBLIVION!",
+            "The void takes!",
+            "Reality tears!",
+        ],
+        "hurt": [
+            "Pain is... merely a concept...",
+            "I exist beyond your understanding!",
+            "The void... repairs...",
+        ],
+    },
+}
+
+DEFAULT_TAUNTS = {
+    "start": [
+        "You dare challenge me?",
+        "This will be your last mistake!",
+        "Prepare to meet your end!",
+    ],
+    "attack": [
+        "Take this!",
+        "Ha!",
+    ],
+    "hurt": [
+        "Grrr!",
+        "You'll pay for that!",
+    ],
+}
+
+
+def get_monster_taunt(race: str, context: str) -> str:
+    """Get a random monster taunt by race and context."""
+    taunts = MONSTER_TAUNTS.get(race, DEFAULT_TAUNTS)
+    lines = taunts.get(context, DEFAULT_TAUNTS.get(context, [""]))
+    return random.choice(lines)
 
 
 def get_monster_for_area(area, location=None):
@@ -144,6 +394,8 @@ def execute_monster_turn(session):
         monster_atk_bonus = get_effect_bonus(battle.monster_effects, "attack_bonus")
         player_ac = session.character.armor_class + get_effect_bonus(battle.player_effects, "ac")
         attack_roll = Dice.roll_d20() + ability_mod + battle.monster_proficiency_bonus + monster_atk_bonus
+        taunt = get_monster_taunt(battle.monster_race, "attack")
+        session.battle.battle_log.append(f'{battle.monster_name}: "{taunt}"')
         session.battle.battle_log.append(f"{battle.monster_name} attacks with {battle.monster_weapon_name}! (Roll: {attack_roll} vs AC {player_ac})")
 
         if attack_roll >= player_ac:
@@ -189,6 +441,9 @@ async def battle_view(request: Request):
     char = session.character
     abilities = get_class_abilities(char.class_name, char.level)
 
+    monster_portrait = MONSTER_PORTRAITS.get(session.battle.monster_race, DEFAULT_MONSTER_PORTRAIT)
+    monster_taunt = get_monster_taunt(session.battle.monster_race, "start") if session.battle.round_count <= 1 else None
+
     return templates.TemplateResponse("battle/arena.html", {
         "request": request,
         "title": "Battle!",
@@ -199,7 +454,9 @@ async def battle_view(request: Request):
             "level": session.battle.monster_level,
             "hp": session.battle.monster_hp,
             "max_hp": session.battle.monster_max_hp,
-            "ac": session.battle.monster_ac
+            "ac": session.battle.monster_ac,
+            "portrait": monster_portrait,
+            "taunt": monster_taunt,
         },
         "round": session.battle.round_count,
         "battle_log": session.battle.battle_log[-10:],
@@ -252,6 +509,9 @@ async def player_attack(request: Request):
         damage = max(1, damage - dr)
         session.battle.monster_hp = max(0, session.battle.monster_hp - damage)
         session.battle.battle_log.append(f"{char.name} hits for {damage} damage!")
+        if session.battle.monster_hp > 0:
+            hurt_taunt = get_monster_taunt(session.battle.monster_race, "hurt")
+            session.battle.battle_log.append(f'{session.battle.monster_name}: "{hurt_taunt}"')
     else:
         session.battle.battle_log.append(f"{char.name}'s attack misses!")
 
@@ -587,7 +847,7 @@ async def end_battle(request: Request, session, player_won: bool):
 
         # Restock shop every 10 kills
         if session.monster_kills - session.kills_at_last_restock >= 10:
-            restock_shop(request)
+            restock_shop(session)
             session.kills_at_last_restock = session.monster_kills
 
         # Chance for loot
@@ -598,8 +858,37 @@ async def end_battle(request: Request, session, player_won: bool):
             else:
                 session.character.add_item(loot["item"])
 
-        # Store rewards in session for display
-        request.session["battle_rewards"] = {
+        # Quest progress tracking
+        quest_updates = []
+        all_quests = get_quests()
+        monster_race = session.battle.monster_race
+        for quest_id, quest_state in list(session.active_quests.items()):
+            if quest_state["status"] != "active":
+                continue
+            quest_def = all_quests.get(quest_id)
+            if not quest_def or quest_def["target_monster"] != monster_race:
+                continue
+
+            if quest_def["type"] == "kill":
+                quest_state["progress"] = quest_state.get("progress", 0) + 1
+                quest_updates.append(f"{quest_def['name']}: {quest_state['progress']}/{quest_def['target_count']}")
+            elif quest_def["type"] == "gather":
+                qi = quest_def.get("quest_item", {})
+                if random.random() < qi.get("drop_chance", 0.5):
+                    item = QuestItem(qi["name"], qi.get("description", ""), quest_id)
+                    session.character.add_item(item)
+                    # Count matching quest items in inventory
+                    count = sum(1 for it in session.character.inventory if isinstance(it, QuestItem) and it.quest_id == quest_id)
+                    quest_state["progress"] = count
+                    quest_updates.append(f"{quest_def['name']}: found {qi['name']}! ({count}/{quest_def['target_count']})")
+                else:
+                    quest_updates.append(f"{quest_def['name']}: no {qi['name']} dropped this time")
+
+            if quest_state["progress"] >= quest_def["target_count"]:
+                quest_state["status"] = "ready"
+
+        # Store rewards for display
+        session.battle_rewards = {
             "xp": xp_reward,
             "gold": gold_reward,
             "loot": loot["message"] if loot else None,
@@ -608,11 +897,12 @@ async def end_battle(request: Request, session, player_won: bool):
             "new_level": session.character.level,
             "hp_increase": total_hp_increase,
             "new_abilities": new_abilities,
-            "new_max_pp": session.character.max_power_points if session.character.level > old_level else None
+            "new_max_pp": session.character.max_power_points if session.character.level > old_level else None,
+            "quest_updates": quest_updates,
         }
     else:
-        request.session["battle_rewards"] = None
-        restock_shop(request)
+        session.battle_rewards = None
+        restock_shop(session)
         session.kills_at_last_restock = session.monster_kills
 
     save_session(request, session)
@@ -627,7 +917,9 @@ async def end_battle(request: Request, session, player_won: bool):
 async def victory_screen(request: Request):
     """Display victory screen with rewards."""
     session = get_session(request)
-    rewards = request.session.get("battle_rewards", {})
+    rewards = session.battle_rewards or {}
+    session.battle_rewards = None
+    save_session(request, session)
     char_data = session._serialize_character() if session.character else None
 
     return templates.TemplateResponse("battle/victory.html", {
@@ -643,6 +935,8 @@ async def victory_screen(request: Request):
 async def defeat_screen(request: Request):
     """Display defeat screen."""
     session = get_session(request)
+    session.battle_rewards = None
+    save_session(request, session)
     char_data = session._serialize_character() if session.character else None
 
     return templates.TemplateResponse("battle/defeat.html", {

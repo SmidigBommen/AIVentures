@@ -10,6 +10,9 @@
 
             <div class="combatants">
                 <div class="combatant player">
+                    {% if character.portrait %}
+                    <img src="{{ character.portrait }}" alt="{{ character.name }}" class="player-portrait">
+                    {% endif %}
                     <h2>{{ character.name }}</h2>
                     <p class="info">{{ character.race }} {{ character.class_name }} - Lvl {{ character.level }}</p>
                     <div class="health-bar">
@@ -38,6 +41,12 @@
                 <div class="vs-badge">VS</div>
 
                 <div class="combatant monster">
+                    {% if monster.taunt %}
+                    <div class="monster-taunt">
+                        <p class="monster-taunt-text">"{{ monster.taunt }}"</p>
+                    </div>
+                    {% endif %}
+                    <img src="{{ monster.portrait }}" alt="{{ monster.race }}" class="monster-portrait">
                     <h2>{{ monster.name }}</h2>
                     <p class="info">{{ monster.race }} - Lvl {{ monster.level }}</p>
                     <div class="health-bar">
@@ -60,7 +69,7 @@
 
             <div class="battle-log">
                 {% for entry in battle_log %}
-                <div class="log-entry {% if 'hits for' in entry or 'deals' in entry %}damage{% elif 'heals' in entry %}heal{% elif 'defends' in entry %}defend{% elif 'misses' in entry or 'Miss' in entry %}miss{% elif 'uses' in entry or 'casts' in entry %}ability{% endif %}">
+                <div class="log-entry {% if '"' in entry and ':' in entry %}taunt{% elif 'hits for' in entry or 'deals' in entry %}damage{% elif 'heals' in entry %}heal{% elif 'defends' in entry %}defend{% elif 'misses' in entry or 'Miss' in entry %}miss{% elif 'uses' in entry or 'casts' in entry %}ability{% endif %}">
                     {{ entry }}
                 </div>
                 {% endfor %}

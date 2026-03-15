@@ -80,6 +80,17 @@ def get_armors() -> dict:
     return _armors_cache
 
 
+_quests_cache = None
+
+
+def get_quests() -> dict:
+    """Get all quests from the catalog."""
+    global _quests_cache
+    if _quests_cache is None:
+        _quests_cache = load_json("quests.json")
+    return _quests_cache
+
+
 _abilities_cache = None
 
 
@@ -141,6 +152,7 @@ class CharacterCreationState:
     name: Optional[str] = None
     weapon: Optional[str] = None
     armor: Optional[str] = None
+    portrait: Optional[str] = None
     skills: list = field(default_factory=list)
 
 
@@ -183,10 +195,27 @@ class GameSession:
         self.act = None
         self.monster_kills = 0
         self.kills_at_last_restock = 0
+        self.active_quests = {}       # {quest_id: {"progress": int, "status": "active"|"ready"}}
+        self.completed_quests = []    # [quest_id, ...]
+        # Shop state (previously in request.session)
+        self.shop_inventory = None    # None = needs initialization
+        self.haggled_items = {}
+        self.haggle_result = None
+        # Battle reward display (previously in request.session)
+        self.battle_rewards = None
+        # Flash messages (one-time display, cleared after read)
+        self._flash = {}
+
+    def set_flash(self, key: str, value):
+        """Set a flash message (displayed once, then cleared)."""
+        self._flash[key] = value
+
+    def pop_flash(self, key: str, default=None):
+        """Pop a flash message (returns and removes it)."""
+        return self._flash.pop(key, default)
 
     def to_dict(self) -> dict:
         """Serialize session to dictionary for storage."""
-        # Store only location/area IDs to reduce cookie size
         location_name = self.current_location.get("name") if self.current_location else None
         area_id = self.current_area.get("id") if self.current_area else None
         act_num = self.act.get("number") if self.act else 1
@@ -200,6 +229,7 @@ class GameSession:
                 "name": self.character_creation.name,
                 "weapon": self.character_creation.weapon,
                 "armor": self.character_creation.armor,
+                "portrait": self.character_creation.portrait,
                 "skills": self.character_creation.skills,
             },
             "battle": {
@@ -219,7 +249,7 @@ class GameSession:
                 "monster_weapon_properties": self.battle.monster_weapon_properties,
                 "round_count": self.battle.round_count,
                 "initiative_order": self.battle.initiative_order,
-                "battle_log": self.battle.battle_log[-5:],  # Only keep last 5 log entries
+                "battle_log": self.battle.battle_log[-10:],
                 "is_player_turn": self.battle.is_player_turn,
                 "is_active": self.battle.is_active,
                 "monster_effects": self.battle.monster_effects,
@@ -230,6 +260,13 @@ class GameSession:
             "act_num": act_num,
             "monster_kills": self.monster_kills,
             "kills_at_last_restock": self.kills_at_last_restock,
+            "active_quests": self.active_quests,
+            "completed_quests": self.completed_quests,
+            "shop_inventory": self.shop_inventory,
+            "haggled_items": self.haggled_items,
+            "haggle_result": self.haggle_result,
+            "battle_rewards": self.battle_rewards,
+            "_flash": self._flash,
         }
 
     def _get_weapon_name(self, c) -> Optional[str]:
@@ -250,6 +287,7 @@ class GameSession:
             return None
         from weapon import Weapon
         from armor import Armor
+        from items import QuestItem
         from character import WeaponSlot
         from equipmentType import EquipmentType
         c = self.character
@@ -284,7 +322,10 @@ class GameSession:
                 "name": item.name,
                 "description": getattr(item, 'description', ''),
             }
-            if isinstance(item, Weapon):
+            if isinstance(item, QuestItem):
+                entry["type"] = "quest_item"
+                entry["quest_id"] = item.quest_id
+            elif isinstance(item, Weapon):
                 entry["type"] = "weapon"
                 entry["damage_die"] = item.damage_die
                 entry["damage_dice_count"] = item.damage_dice_count
@@ -329,6 +370,7 @@ class GameSession:
             "power_points": c.power_points,
             "max_power_points": c.max_power_points,
             "active_effects": c.active_effects,
+            "portrait": self.character_creation.portrait,
         }
 
     @classmethod
@@ -337,6 +379,13 @@ class GameSession:
         session = cls(data.get("session_id"))
         session.monster_kills = data.get("monster_kills", 0)
         session.kills_at_last_restock = data.get("kills_at_last_restock", 0)
+        session.active_quests = data.get("active_quests", {})
+        session.completed_quests = data.get("completed_quests", [])
+        session.shop_inventory = data.get("shop_inventory")
+        session.haggled_items = data.get("haggled_items", {})
+        session.haggle_result = data.get("haggle_result")
+        session.battle_rewards = data.get("battle_rewards")
+        session._flash = data.get("_flash", {})
 
         # Restore location from campaign data
         campaign = get_campaign()
@@ -374,6 +423,7 @@ class GameSession:
             name=cc_data.get("name"),
             weapon=cc_data.get("weapon"),
             armor=cc_data.get("armor"),
+            portrait=cc_data.get("portrait"),
             skills=cc_data.get("skills", []),
         )
 
@@ -415,7 +465,7 @@ class GameSession:
         try:
             from characterFactory import CharacterFactory
             from weaponFactory import WeaponFactory
-            from items import HealingPotion
+            from items import HealingPotion, QuestItem
             from character import WeaponSlot
 
             # Recreate character using factory
@@ -482,6 +532,9 @@ class GameSession:
                         character.add_item(armor)
                     except ValueError:
                         pass
+                elif item_type == "quest_item":
+                    quest_id = item_data.get("quest_id", "")
+                    character.add_item(QuestItem(item_data["name"], item_data.get("description", ""), quest_id))
                 elif "Healing Potion" in item_data["name"]:
                     # Parse healing amount from name or description
                     if "Minor" in item_data["name"]:
@@ -502,14 +555,35 @@ class GameSession:
             return None
 
 
+SESSIONS_DIR = Path(__file__).parent / "sessions"
+
+
+def _session_file(session_id: str) -> Path:
+    """Get the file path for a session."""
+    # Sanitize session_id to prevent path traversal
+    safe_id = "".join(c for c in session_id if c.isalnum() or c == "-")
+    return SESSIONS_DIR / f"{safe_id}.json"
+
+
 def get_session(request) -> GameSession:
-    """Get or create a GameSession from the request session."""
-    session_data = request.session.get("game_session")
-    if session_data:
-        return GameSession.from_dict(session_data)
+    """Get or create a GameSession. Loads from server-side file."""
+    session_id = request.session.get("session_id")
+    if session_id:
+        path = _session_file(session_id)
+        if path.exists():
+            try:
+                with open(path) as f:
+                    data = json.load(f)
+                return GameSession.from_dict(data)
+            except (json.JSONDecodeError, Exception):
+                pass
     return GameSession()
 
 
 def save_session(request, session: GameSession):
-    """Save GameSession to the request session."""
-    request.session["game_session"] = session.to_dict()
+    """Save GameSession to server-side file. Cookie stores only the session ID."""
+    SESSIONS_DIR.mkdir(exist_ok=True)
+    path = _session_file(session.session_id)
+    with open(path, "w") as f:
+        json.dump(session.to_dict(), f)
+    request.session["session_id"] = session.session_id

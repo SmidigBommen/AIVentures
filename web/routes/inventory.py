@@ -48,8 +48,10 @@ async def inventory_view(request: Request):
         item["can_equip"] = _can_equip_item(actual_item, weapon_proficiencies, armor_training)
         item["index"] = i
 
-    message = request.session.pop("inventory_message", None)
-    error = request.session.pop("inventory_error", None)
+    message = session.pop_flash("inventory_message")
+    error = session.pop_flash("inventory_error")
+    if message or error:
+        save_session(request, session)
 
     return templates.TemplateResponse("inventory/index.html", {
         "request": request,
@@ -70,12 +72,14 @@ async def equip_weapon(request: Request, item_index: int = Form(...)):
 
     character = session.character
     if item_index < 0 or item_index >= len(character.inventory):
-        request.session["inventory_error"] = "Invalid item."
+        session.set_flash("inventory_error", "Invalid item.")
+        save_session(request, session)
         return RedirectResponse("/inventory", status_code=303)
 
     item = character.inventory[item_index]
     if not isinstance(item, Weapon):
-        request.session["inventory_error"] = "That item is not a weapon."
+        session.set_flash("inventory_error", "That item is not a weapon.")
+        save_session(request, session)
         return RedirectResponse("/inventory", status_code=303)
 
     # Check proficiency
@@ -83,14 +87,15 @@ async def equip_weapon(request: Request, item_index: int = Form(...)):
     class_props = classes.get(session.character_creation.class_name, {})
     weapon_proficiencies = class_props.get("weapon_proficiencies", [])
     if item.category not in weapon_proficiencies and item.name not in weapon_proficiencies:
-        request.session["inventory_error"] = f"You are not proficient with {item.name}."
+        session.set_flash("inventory_error", f"You are not proficient with {item.name}.")
+        save_session(request, session)
         return RedirectResponse("/inventory", status_code=303)
 
     # equip_weapon handles inventory (removes new from inventory, returns old to inventory)
     character.equip_weapon(item, WeaponSlot.MAIN_HAND)
     session.character_creation.weapon = item.name
 
-    request.session["inventory_message"] = f"Equipped {item.name}."
+    session.set_flash("inventory_message", f"Equipped {item.name}.")
     save_session(request, session)
     return RedirectResponse("/inventory", status_code=303)
 
@@ -106,14 +111,15 @@ async def unequip_weapon(request: Request):
     character = session.character
     weapon = character.weapon_slots.get(WeaponSlot.MAIN_HAND)
     if not weapon:
-        request.session["inventory_error"] = "No weapon equipped."
+        session.set_flash("inventory_error", "No weapon equipped.")
+        save_session(request, session)
         return RedirectResponse("/inventory", status_code=303)
 
     # unequip_weapon handles inventory (adds weapon back to inventory)
     character.unequip_weapon(WeaponSlot.MAIN_HAND)
     session.character_creation.weapon = None
 
-    request.session["inventory_message"] = f"Unequipped {weapon.name}."
+    session.set_flash("inventory_message", f"Unequipped {weapon.name}.")
     save_session(request, session)
     return RedirectResponse("/inventory", status_code=303)
 
@@ -128,12 +134,14 @@ async def equip_armor(request: Request, item_index: int = Form(...)):
 
     character = session.character
     if item_index < 0 or item_index >= len(character.inventory):
-        request.session["inventory_error"] = "Invalid item."
+        session.set_flash("inventory_error", "Invalid item.")
+        save_session(request, session)
         return RedirectResponse("/inventory", status_code=303)
 
     item = character.inventory[item_index]
     if not isinstance(item, Armor):
-        request.session["inventory_error"] = "That item is not armor."
+        session.set_flash("inventory_error", "That item is not armor.")
+        save_session(request, session)
         return RedirectResponse("/inventory", status_code=303)
 
     # Check proficiency
@@ -141,7 +149,8 @@ async def equip_armor(request: Request, item_index: int = Form(...)):
     class_props = classes.get(session.character_creation.class_name, {})
     armor_training = class_props.get("armor_training", [])
     if item.category not in armor_training:
-        request.session["inventory_error"] = f"You are not trained with {item.name}."
+        session.set_flash("inventory_error", f"You are not trained with {item.name}.")
+        save_session(request, session)
         return RedirectResponse("/inventory", status_code=303)
 
     # entity.equip() does NOT manage inventory, so handle manually
@@ -152,7 +161,7 @@ async def equip_armor(request: Request, item_index: int = Form(...)):
     character.equip(item)
     session.character_creation.armor = item.name
 
-    request.session["inventory_message"] = f"Equipped {item.name}."
+    session.set_flash("inventory_message", f"Equipped {item.name}.")
     save_session(request, session)
     return RedirectResponse("/inventory", status_code=303)
 
@@ -168,7 +177,8 @@ async def unequip_armor(request: Request):
     character = session.character
     armor = character.equipment.get(EquipmentType.ARMOR)
     if not armor:
-        request.session["inventory_error"] = "No armor equipped."
+        session.set_flash("inventory_error", "No armor equipped.")
+        save_session(request, session)
         return RedirectResponse("/inventory", status_code=303)
 
     # Manually add armor back to inventory, then unequip
@@ -176,6 +186,6 @@ async def unequip_armor(request: Request):
     character.unequip(EquipmentType.ARMOR)
     session.character_creation.armor = None
 
-    request.session["inventory_message"] = f"Unequipped {armor.name}."
+    session.set_flash("inventory_message", f"Unequipped {armor.name}.")
     save_session(request, session)
     return RedirectResponse("/inventory", status_code=303)

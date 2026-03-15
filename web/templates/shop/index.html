@@ -1,59 +1,148 @@
 {% extends "base.html" %}
 
+{% block body_class %}shop-page{% endblock %}
+
 {% block content %}
 <div class="shop-container">
-    <h1 class="page-title">General Store</h1>
-    <p class="page-subtitle">Buy and sell items</p>
 
-    <div class="gold-banner">
-        <span class="amount">{{ character.gold }} gold</span>
+    <!-- Shopkeeper Section -->
+    <div class="shopkeeper-section">
+        <div class="shopkeeper-portrait-wrap">
+            <img src="{{ shopkeeper.portrait }}" alt="{{ shopkeeper.name }}" class="shopkeeper-portrait">
+            <div class="shopkeeper-nameplate">
+                <span class="shopkeeper-name">{{ shopkeeper.name }}</span>
+                <span class="shopkeeper-title">{{ shopkeeper.title }}</span>
+            </div>
+        </div>
+        <div class="shopkeeper-dialog-area">
+            <div class="dialog-bubble">
+                <p class="dialog-text">{{ dialog }}</p>
+            </div>
+
+            {% if haggle_result %}
+            <div class="haggle-roll-result haggle-{{ haggle_result.tier }}">
+                <div class="roll-dice">
+                    <span class="roll-d20">d20</span>
+                    <span class="roll-value">{{ haggle_result.roll }}</span>
+                    {% if haggle_result.modifier >= 0 %}
+                    <span class="roll-mod">+{{ haggle_result.modifier }}</span>
+                    {% else %}
+                    <span class="roll-mod">{{ haggle_result.modifier }}</span>
+                    {% endif %}
+                    <span class="roll-eq">=</span>
+                    <span class="roll-total">{{ haggle_result.total }}</span>
+                </div>
+                <div class="roll-outcome">
+                    <span class="roll-label">Persuasion</span>
+                    {% if haggle_result.tier == 'nat20' %}
+                    <span class="roll-tag tag-crit">NAT 20!</span>
+                    {% elif haggle_result.tier == 'nat1' %}
+                    <span class="roll-tag tag-fumble">NAT 1!</span>
+                    {% elif haggle_result.discount > 0 %}
+                    <span class="roll-tag tag-success">{{ haggle_result.discount }}% OFF</span>
+                    {% elif haggle_result.discount < 0 %}
+                    <span class="roll-tag tag-fumble">+{{ -haggle_result.discount }}% MARKUP</span>
+                    {% else %}
+                    <span class="roll-tag tag-fail">NO DISCOUNT</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="shop-header-info">
+                <h1 class="shop-title">Elara's Curiosities</h1>
+                <div class="gold-banner">
+                    <span class="gold-icon">&#x2B50;</span>
+                    <span class="amount">{{ character.gold }} gold</span>
+                </div>
+            </div>
+        </div>
     </div>
 
     {% if message %}
-    <div class="alert alert-success">{{ message }}</div>
+    <div data-toast="{{ message }}" data-toast-type="success"></div>
+    <div data-sound="coin"></div>
     {% endif %}
 
     {% if error %}
-    <div class="alert alert-error">{{ error }}</div>
+    <div data-toast="{{ error }}" data-toast-type="error"></div>
     {% endif %}
 
-    <div class="shop-panels">
-        <div class="shop-panel">
-            <h2 class="panel-title">Buy Items</h2>
+    <!-- Tab Navigation -->
+    <div class="shop-tabs" data-active-tab="{{ active_tab }}">
+        <button class="shop-tab {% if active_tab == 'wares' %}active{% endif %}" data-tab="wares">Wares</button>
+        <button class="shop-tab {% if active_tab == 'sell' %}active{% endif %}" data-tab="sell">Sell</button>
+        <button class="shop-tab {% if active_tab == 'quests' %}active{% endif %}" data-tab="quests">
+            Quests
+            {% if active_quests %}
+            <span class="tab-badge">{{ active_quests|length }}</span>
+            {% endif %}
+        </button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="shop-tab-content">
+
+        <!-- Wares Tab -->
+        <div class="shop-tab-panel {% if active_tab == 'wares' %}active{% endif %}" id="tab-wares">
             <div class="shop-items">
-                {% for item in shop_inventory %}
-                <div class="shop-item {% if item.quantity <= 0 %}out-of-stock{% endif %}">
-                    <h3>{{ item.name }}</h3>
-                    <p class="description">{{ item.description }}</p>
-                    <p class="price">{{ item.price }} gold</p>
-                    <p class="stock">Stock: {{ item.quantity }}</p>
-                    <form action="/shop/buy" method="post">
-                        <input type="hidden" name="item_index" value="{{ loop.index0 }}">
-                        <button type="submit" class="btn btn-primary btn-small"
-                                {% if item.quantity <= 0 or character.gold < item.price %}disabled{% endif %}>
-                            {% if item.quantity <= 0 %}
-                            Out of Stock
-                            {% elif character.gold < item.price %}
-                            Not Enough Gold
-                            {% else %}
-                            Buy
+                {% for item in shop_items %}
+                <div class="shop-item {% if item.quantity <= 0 %}out-of-stock{% endif %} {% if item.haggled and item.discount > 0 %}haggled-discount{% elif item.haggled and item.discount < 0 %}haggled-markup{% endif %}">
+                    <div class="shop-item-header">
+                        <h3>{{ item.name }}</h3>
+                        <div class="price-area">
+                            {% if item.haggled and item.discount != 0 %}
+                            <span class="price-original">{{ item.original_price }}</span>
                             {% endif %}
-                        </button>
-                    </form>
+                            <span class="price">{{ item.effective_price }} gold</span>
+                            {% if item.haggled and item.discount > 0 %}
+                            <span class="discount-badge">-{{ item.discount }}%</span>
+                            {% elif item.haggled and item.discount < 0 %}
+                            <span class="markup-badge">+{{ -item.discount }}%</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <p class="description">{{ item.description }}</p>
+                    <div class="shop-item-footer">
+                        <span class="stock">{{ item.quantity }} in stock</span>
+                        <div class="shop-item-actions">
+                            {% if not item.haggled %}
+                            <form action="/shop/haggle" method="post" class="inline-form">
+                                <input type="hidden" name="item_index" value="{{ loop.index0 }}">
+                                <button type="submit" class="btn btn-haggle btn-small" {% if item.quantity <= 0 %}disabled{% endif %}>
+                                    Haggle
+                                </button>
+                            </form>
+                            {% endif %}
+                            <form action="/shop/buy" method="post" class="inline-form">
+                                <input type="hidden" name="item_index" value="{{ loop.index0 }}">
+                                <button type="submit" class="btn btn-primary btn-small"
+                                        {% if item.quantity <= 0 or character.gold < item.effective_price %}disabled{% endif %}>
+                                    {% if item.quantity <= 0 %}
+                                    Sold Out
+                                    {% elif character.gold < item.effective_price %}
+                                    Can't Afford
+                                    {% else %}
+                                    Buy
+                                    {% endif %}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
                 {% endfor %}
             </div>
         </div>
 
-        <div class="shop-panel">
-            <h2 class="panel-title">Sell Items</h2>
+        <!-- Sell Tab -->
+        <div class="shop-tab-panel {% if active_tab == 'sell' %}active{% endif %}" id="tab-sell">
             {% if sellable_items %}
             <div class="sell-list">
                 {% for item in sellable_items %}
                 <div class="sell-item">
                     <div class="item-info">
                         <span class="item-name">{{ item.name }}</span>
-                        <span class="item-price">Sell: {{ item.sell_price }} gold</span>
+                        <span class="item-price">{{ item.sell_price }} gold</span>
                     </div>
                     <form action="/shop/sell" method="post">
                         <input type="hidden" name="item_index" value="{{ item.index }}">
@@ -63,7 +152,83 @@
                 {% endfor %}
             </div>
             {% else %}
-            <p class="empty-state">You have nothing to sell.</p>
+            <p class="empty-state">Your pack is empty. Nothing to sell.</p>
+            {% endif %}
+        </div>
+
+        <!-- Quests Tab -->
+        <div class="shop-tab-panel {% if active_tab == 'quests' %}active{% endif %}" id="tab-quests">
+            {% if active_quests %}
+            <h3 class="quest-section-title">Active Quests</h3>
+            <div class="quest-list">
+                {% for quest in active_quests %}
+                <div class="quest-card {% if quest.status == 'ready' %}quest-ready{% endif %}">
+                    <div class="quest-card-header">
+                        <div class="quest-name-row">
+                            <h4 class="quest-name">{{ quest.name }}</h4>
+                            <span class="quest-type-badge quest-type-{{ quest.type }}">{{ quest.type }}</span>
+                        </div>
+                        <p class="quest-description">{{ quest.description }}</p>
+                    </div>
+                    <div class="quest-progress-section">
+                        <div class="quest-progress-bar">
+                            <div class="quest-progress-fill" style="width: {{ quest.progress_pct }}%"></div>
+                        </div>
+                        <span class="quest-progress-text">{{ quest.progress }}/{{ quest.target_count }} {{ quest.target_monster }}{% if quest.type == 'kill' %}s killed{% else %} items{% endif %}</span>
+                    </div>
+                    <div class="quest-rewards-preview">
+                        <span class="quest-reward-gold">{{ quest.rewards.gold }} gold</span>
+                        <span class="quest-reward-xp">{{ quest.rewards.xp }} XP</span>
+                    </div>
+                    <div class="quest-card-actions">
+                        {% if quest.status == 'ready' %}
+                        <form action="/shop/quest/turn-in" method="post" class="inline-form">
+                            <input type="hidden" name="quest_id" value="{{ quest.id }}">
+                            <button type="submit" class="btn btn-success btn-small">Turn In</button>
+                        </form>
+                        {% endif %}
+                        <form action="/shop/quest/abandon" method="post" class="inline-form">
+                            <input type="hidden" name="quest_id" value="{{ quest.id }}">
+                            <button type="submit" class="btn btn-danger btn-small">Abandon</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <h3 class="quest-section-title">{% if active_quests %}Available Quests{% else %}Quest Board{% endif %}</h3>
+            {% if available_quests %}
+            <div class="quest-list">
+                {% for quest in available_quests %}
+                <div class="quest-card quest-available">
+                    <div class="quest-card-header">
+                        <div class="quest-name-row">
+                            <h4 class="quest-name">{{ quest.name }}</h4>
+                            <span class="quest-type-badge quest-type-{{ quest.type }}">{{ quest.type }}</span>
+                        </div>
+                        <p class="quest-dialog-offer">{{ quest.dialog_offer }}</p>
+                    </div>
+                    <div class="quest-target">
+                        <span>Target: {{ quest.target_count }} {{ quest.target_monster }}{% if quest.type == 'kill' %}s{% endif %}</span>
+                    </div>
+                    <div class="quest-rewards-preview">
+                        <span class="quest-reward-gold">{{ quest.rewards.gold }} gold</span>
+                        <span class="quest-reward-xp">{{ quest.rewards.xp }} XP</span>
+                    </div>
+                    <div class="quest-card-actions">
+                        <form action="/shop/quest/accept" method="post" class="inline-form">
+                            <input type="hidden" name="quest_id" value="{{ quest.id }}">
+                            <button type="submit" class="btn btn-primary btn-small" {% if quest_slots_full %}disabled{% endif %}>
+                                {% if quest_slots_full %}Quest Log Full{% else %}Accept{% endif %}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="empty-state">No quests available right now. Check back after exploring further.</p>
             {% endif %}
         </div>
     </div>

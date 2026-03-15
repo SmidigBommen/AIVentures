@@ -39,6 +39,7 @@ The game uses a D&D 5e rules engine with an `Entity` base class:
 - **`Monster(Entity)`** → enemy: created by `MonsterFactory`, has a single `weapon` attribute (not slots)
 - **`Weapon(Equipment)`** → damage_die, damage_dice_count, damage_type, category (Simple/Martial), properties (finesse, ammunition determine attack modifier)
 - **`Armor(Equipment)`** → base_ac, category (Light/Medium/Heavy), affects AC calculation differently per category
+- **`QuestItem(Item)`** → quest-specific item with `quest_id` field, `is_usable_in_battle=False`. Used for gather quests.
 
 ### Factory Pattern
 
@@ -60,6 +61,18 @@ All 11 classes have unique abilities powered by **Power Points (PP)**:
 - **Stat modifiers**: `ac`, `attack_bonus`, `damage_bonus`, `damage_reduction` — applied in weapon attacks, ability attacks, and monster turns
 - PP initialized on character creation, restored on rest, recalculated on level up
 
+### Quest System
+
+JSON-driven quest system with kill and gather quest types:
+- **Data**: `json/quests.json` — 9 quests across 3 acts (4 Act 1, 3 Act 2, 2 Act 3)
+- **Quest types**: Kill quests track monster kills; gather quests drop `QuestItem`s with a % chance on matching monster kills
+- **Session state**: `active_quests: dict` (`{quest_id: {"progress": int, "status": "active"|"ready"}}`), `completed_quests: list` (max 3 active)
+- **Battle integration**: In `end_battle()`, loops active quests and matches `target_monster` against `session.battle.monster_race`. Kill quests increment progress; gather quests roll `drop_chance` and create `QuestItem` instances
+- **Shop UI**: 3-tab interface (Wares/Sell/Quests) in `web/templates/shop/index.html`. Quest board shows available + active quests with progress bars, accept/turn-in/abandon actions
+- **Routes**: `POST /shop/quest/accept`, `POST /shop/quest/turn-in`, `POST /shop/quest/abandon`
+- **Rewards**: Gold + XP granted on turn-in; gather quest items removed from inventory on completion
+- **Dialog**: Shopkeeper Elara has quest-specific dialog lines (`quest_accept`, `quest_complete`, `quest_progress`, `quest_abandon`, `quest_full`)
+
 ### Battle System
 
 Two separate battle implementations exist:
@@ -70,13 +83,37 @@ Combat mechanics: d20 attack roll + ability modifier + proficiency vs AC. Weapon
 
 Battle actions: `POST /battle/attack`, `POST /battle/defend`, `POST /battle/ability` (with `ability_id` form field), `POST /battle/item`.
 
+**Monster portraits**: `MONSTER_PORTRAITS` dict in `battle.py` maps race → image path. Falls back to `orc-creature-battle.jpg`. Portraits display on the monster combatant card.
+
+**Monster taunts**: `MONSTER_TAUNTS` dict with `start`, `attack`, `hurt` line arrays for all 12 monster races. Start taunts show as a speech bubble on round 1; attack/hurt taunts appear in the battle log.
+
+**Player portraits**: Selected during character creation (3 options: Knight, Berserker, Wizard). Stored in `CharacterCreationState.portrait`. Displayed on the player combatant card in battle and on the character summary page.
+
 ### Web Application (`web/`)
 
 - **`web/app.py`** → FastAPI app, mounts static files, includes route blueprints at `/character`, `/game`, `/battle`, `/shop`, `/inventory`
-- **`web/game_session.py`** → `GameSession` dataclass serialized to/from Starlette session cookies. Contains `CharacterCreationState`, `BattleState` (including `player_effects`/`monster_effects`), and references to campaign location/area data. Character objects are recreated from factory on each request via `_restore_character()`. Also contains ability system helpers.
+- **`web/game_session.py`** → `GameSession` class with server-side file storage. Contains `CharacterCreationState`, `BattleState`, quest state, shop state, and references to campaign location/area data. Character objects are recreated from factory on each request via `_restore_character()`. Also contains ability system helpers and JSON data loaders.
 - **Routes** use server-side rendering with Jinja2 templates and POST/Redirect/GET pattern (303 redirects)
 - **Templates** in `web/templates/` extend `base.html` — all styling in `web/static/css/style.css`, all JS in `web/static/js/main.js` (no inline styles/scripts in templates)
-- **Session state**: Game state is stored in signed cookies via `SessionMiddleware`. The `GameSession` serializes the full character + battle state to a dict, storing only location/area IDs (resolved against `campaign.json` on restore).
+
+### Session / Save System
+
+Game state uses **server-side file storage**:
+- **Cookie**: Contains only a `session_id` string (~100 bytes) via Starlette `SessionMiddleware`
+- **Server files**: `web/sessions/{session_id}.json` stores the full serialized `GameSession`
+- **`get_session(request)`**: Reads session_id from cookie, loads JSON file from disk
+- **`save_session(request, session)`**: Writes JSON file to disk, sets session_id in cookie
+- **Flash messages**: `session.set_flash(key, value)` / `session.pop_flash(key)` for one-time display messages (shop notifications, inventory messages)
+- **All state in one place**: Character, battle, shop inventory, haggle state, quest progress, battle rewards — all stored in `GameSession.to_dict()`, no scattered `request.session` keys
+
+### Shop System
+
+- **Shopkeeper NPC** (Elara) with portrait, dialog system, and context-sensitive lines
+- **Haggling**: Persuasion skill check → tiered discounts (nat20: 40% off, nat1: 25% markup). Each item can only be haggled once per restock
+- **Buy/sell** with price calculation (sell = 50% of buy price)
+- **Restocking**: After 10 monster kills or player death
+- **3-tab UI**: Wares, Sell, Quests — tab state preserved via `?tab=` query param
+- **Quest items filtered** from sell list (can't sell quest items)
 
 ### UI Design System (`web/static/css/style.css`)
 
@@ -85,6 +122,10 @@ Consolidated CSS design system with:
 - Cinzel font for headings (loaded from Google Fonts in `base.html`)
 - Reusable components: `.glass`, `.panel`, `.btn-*`, `.selection-card`, `.stat-box`, `.health-bar`, `.toast`, `.steps` (step indicator), `.effect-badge`, `.btn-ability`/`.btn-ability-free`
 - Battle arena uses glassmorphism with background image overlay
+- Portrait styles: `.player-portrait`, `.monster-portrait`, `.summary-portrait`, `.portrait-grid` (selection)
+- Shop tabs: `.shop-tabs`, `.shop-tab`, `.shop-tab-panel`
+- Quest board: `.quest-card`, `.quest-progress-bar`, `.quest-type-badge`
+- Monster taunt bubble: `.monster-taunt`
 - Responsive breakpoints at 768px and 480px
 
 ### JavaScript (`web/static/js/main.js`)
@@ -92,6 +133,7 @@ Consolidated CSS design system with:
 - `SFX` object: Web Audio API synthesized sounds (hit, miss, heal, defend, spell, victory, defeat, levelup, coin, click)
 - Toast notification system (`showToast`, `initToasts` — reads `data-toast` elements)
 - Confetti effect (`showConfetti`) and screen shake (`screenShake`) triggered by `data-confetti`/`data-screen-shake` attributes
+- `initShopTabs()`: Tab switching with URL param auto-select (`?tab=quests`)
 - Selection card handler, skill counter, battle log auto-scroll, health bar coloring, active nav link detection
 
 ### Game World (`json/campaign.json`)
@@ -103,7 +145,11 @@ Campaign data defines acts → locations → areas. Each area has `connections` 
 - Factories load JSON config once and create domain objects
 - Ability modifiers derived as `(score - 10) // 2` everywhere
 - `sys.path.insert(0, ...)` used in web modules to import root-level game modules
-- Web battle stores monster stats as flat fields in `BattleState` (not a `Monster` object) to enable cookie serialization
+- Web battle stores monster stats as flat fields in `BattleState` (not a `Monster` object) for serialization
 - Shop restocks after 10 monster kills or player death
 - All ability/spell data is JSON-driven (`json/abilities.json`) — no hardcoded spell logic
+- All quest data is JSON-driven (`json/quests.json`) — quest types, targets, rewards, dialog
 - Active effects are flat stat modifiers (`{stat, value, duration, source}`) applied per-round via `get_effect_bonus()`
+- Server-side session files replace cookie storage — no 4KB limit, state persists across browser restarts
+- Flash messages (`set_flash`/`pop_flash`) replace direct `request.session` manipulation for one-time notifications
+- `Character.add_item()` preserves each item's `is_usable_in_battle` flag (QuestItems are not usable in battle)

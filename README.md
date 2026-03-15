@@ -4,7 +4,7 @@ A D&D 5e-inspired text adventure game built in Python with a modern web UI.
 
 ## About
 
-AIVentures is a single-player RPG set in the realm of Eldoria, where the dark sorcerer Malachar is gathering fragments of the Shattered Crown. Players create a character, explore a 3-act campaign world, battle monsters, collect loot, and level up — all driven by D&D 5e-style mechanics.
+AIVentures is a single-player RPG set in the realm of Eldoria, where the dark sorcerer Malachar is gathering fragments of the Shattered Crown. Players create a character, explore a 3-act campaign world, battle monsters, collect loot, complete quests, and level up — all driven by D&D 5e-style mechanics.
 
 Started as an experiment using AI as a co-coder, it has grown into a full-featured game with two interfaces:
 
@@ -29,6 +29,7 @@ Then open http://localhost:8000 in your browser.
 - Skill proficiency selection based on class
 - Equipment system with weapon and armor slots, proficiency checks
 - XP-based leveling with HP increases
+- Player portrait selection during character creation (Knight, Berserker, Wizard)
 
 ### Magic & Ability System
 - **Power Points (PP)**: Universal resource pool — full casters get more, martial classes get fewer but impactful abilities
@@ -49,18 +50,39 @@ Then open http://localhost:8000 in your browser.
 - Monster AI: 70% attack, 30% defend
 - Active buff/debuff effects from abilities apply to both sides
 - Tier-based loot drops (potions, gold, weapons, armor)
-- Victory rewards: XP, gold, loot, level-up notifications with HP/PP/new ability display
+- Victory rewards: XP, gold, loot, quest progress, level-up notifications
+- Monster portraits and taunts — each of the 12 monster races has unique start, attack, and hurt dialog lines
+- Player portraits displayed on the battle arena
+
+### Quest System
+- Shopkeeper Elara offers kill quests and gather quests
+- **Kill quests**: Track monster kills of a specific type (e.g., "Kill 5 Goblins")
+- **Gather quests**: Quest items drop with a % chance from specific monsters, stored in inventory
+- 9 quests across 3 acts, scaling in difficulty and rewards
+- Max 3 active quests at a time
+- Quest progress shown on victory screen after each battle
+- Quest board in the shop with accept, turn-in, and abandon actions
+- Rewards: gold + XP on turn-in
+
+### Shop & NPC
+- Shopkeeper NPC (Elara) with portrait, dialog system, and context-sensitive lines
+- Buy potions, sell equipment
+- **Haggling system**: Roll a Persuasion check for discounts (nat 20 = 40% off, nat 1 = price goes up)
+- 3-tab interface: Wares, Sell, Quests
+- Shop restocks after 10 monster kills or player death
 
 ### World
 - 3-act campaign ("The Shattered Crown") with 8 locations and 50+ interconnected areas
 - Area-based navigation with encounter chance ratings
+- 12 monster races with unique stats, weapons, and personalities
 - Rest at inns/taverns to recover HP and PP
-- Shop system with buy/sell mechanics, restocks after 10 kills or death
 - Location travel between zones within each act
 
 ### Web UI
 - Dark fantasy theme with Cinzel heading font
 - Glassmorphism battle arena with background art
+- Player and monster portraits in battle
+- Monster taunt speech bubbles and combat dialog
 - Animated health and PP bars
 - Toast notification system
 - Confetti on victory, screen shake on defeat
@@ -82,27 +104,68 @@ pytest test/test_armor.py       # armor AC calculations
 
 - **Backend**: Python, FastAPI, uvicorn, Jinja2
 - **Frontend**: Pure HTML/CSS/JS (no frameworks), Google Fonts (Cinzel)
-- **Session**: Starlette SessionMiddleware (signed cookies)
-- **Data**: JSON configuration files for races, classes, weapons, armor, monsters, abilities, campaign
+- **Session**: Server-side JSON files (`web/sessions/`), cookie holds only session ID
+- **Data**: JSON configuration files for races, classes, weapons, armor, monsters, abilities, quests, campaign
+
+## Project Structure
+
+```
+AIVentures/
+├── main.py                    # CLI entry point
+├── character.py               # Character class (player)
+├── entity.py                  # Base Entity class (shared stats/mechanics)
+├── monster.py                 # Monster class (enemies)
+├── items.py                   # Item, HealingPotion, QuestItem classes
+├── battleAI.py                # CLI battle system
+├── *Factory.py                # Factory classes for creating game objects
+├── json/                      # Game data files
+│   ├── campaign.json          # World: acts, locations, areas
+│   ├── abilities.json         # 55 class abilities
+│   ├── quests.json            # 9 quests across 3 acts
+│   ├── weapon-catalog.json    # Weapon definitions
+│   ├── armor_catalog.json     # Armor definitions
+│   ├── classes_properties.json # Class stats, proficiencies
+│   ├── races.json             # Race ability bonuses
+│   └── monster_default_values.json # Monster race stats
+├── web/
+│   ├── app.py                 # FastAPI application
+│   ├── game_session.py        # Session management, data loaders
+│   ├── sessions/              # Server-side session JSON files
+│   ├── routes/
+│   │   ├── character.py       # Character creation flow
+│   │   ├── game.py            # World navigation, exploration, rest
+│   │   ├── battle.py          # Combat system, monster taunts/portraits
+│   │   ├── shop.py            # Shop, haggling, quests
+│   │   └── inventory.py       # Equipment management
+│   ├── templates/             # Jinja2 HTML templates
+│   └── static/
+│       ├── css/style.css      # Complete design system
+│       ├── js/main.js         # Sound effects, toasts, tabs, animations
+│       └── images/            # Portraits (player, monster, shopkeeper)
+└── test/                      # pytest test suite
+```
 
 ## Worklist
 
 Status | Feature
 -------|--------
 Done | Core combat system (attack rolls, AC, damage, initiative)
-Done | Character creation with race/class selection
+Done | Character creation with race/class/portrait selection
 Done | Equipment system (weapons, armor, inventory management)
 Done | XP and leveling system
 Done | Campaign world with locations and areas
-Done | Shop with buy/sell and restocking
+Done | Shop with buy/sell, haggling, and restocking
 Done | Web UI with FastAPI + Jinja2
 Done | UI/UX redesign (glassmorphism, animations, sound effects, responsive design)
 Done | Magic/ability system (Power Points, 55 abilities across 11 classes)
 Done | Active effects (buffs/debuffs) in combat
+Done | NPC shopkeeper with dialog system
+Done | Quest system (kill & gather quests, quest board, rewards)
+Done | Monster portraits and taunts
+Done | Player portraits (selection at character creation)
+Done | Server-side session storage (JSON files, no cookie size limits)
 x | Boss encounters with unique mechanics
-x | Quest system and act progression gating
-x | NPC dialogue
+x | Act progression gating
 x | Monster abilities and smarter AI
 x | Spells/abilities for exploration (outside combat)
 x | Off-hand / dual wielding
-x | Save/load (server-side storage)
