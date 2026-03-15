@@ -1,0 +1,656 @@
+{
+    "power_strike": {
+        "name": "Power Strike",
+        "classes": ["Fighter"],
+        "cost": 0,
+        "unlock_level": 1,
+        "description": "A powerful weapon strike with extra force.",
+        "target": "enemy",
+        "attack_method": "melee_attack",
+        "damage": { "dice_count": 1, "dice_size": 10, "bonus": "ability_modifier", "type": "slashing" },
+        "scaling": { "5": { "dice_count": 2 }, "11": { "dice_count": 3 } }
+    },
+    "second_wind": {
+        "name": "Second Wind",
+        "classes": ["Fighter"],
+        "cost": 1,
+        "unlock_level": 1,
+        "description": "Draw on your stamina to heal yourself.",
+        "target": "self",
+        "attack_method": "auto_hit",
+        "heal": { "dice_count": 1, "dice_size": 10, "bonus": "level" }
+    },
+    "action_surge": {
+        "name": "Action Surge",
+        "classes": ["Fighter"],
+        "cost": 2,
+        "unlock_level": 2,
+        "description": "Push beyond your limits for a devastating double strike.",
+        "target": "enemy",
+        "attack_method": "melee_attack",
+        "damage": { "dice_count": 2, "dice_size": 10, "bonus": "ability_modifier", "type": "slashing" }
+    },
+    "rallying_cry": {
+        "name": "Rallying Cry",
+        "classes": ["Fighter"],
+        "cost": 2,
+        "unlock_level": 4,
+        "description": "Steel your resolve, recovering health and fighting harder.",
+        "target": "self",
+        "attack_method": "auto_hit",
+        "heal": { "dice_count": 1, "dice_size": 6, "bonus": "ability_modifier" },
+        "effects": [{ "stat": "damage_bonus", "value": 2, "duration": 0 }]
+    },
+    "champions_blow": {
+        "name": "Champion's Blow",
+        "classes": ["Fighter"],
+        "cost": 3,
+        "unlock_level": 6,
+        "description": "Channel all your might into one crushing blow.",
+        "target": "enemy",
+        "attack_method": "melee_attack",
+        "damage": { "dice_count": 3, "dice_size": 10, "bonus": "ability_modifier", "type": "slashing" }
+    },
+
+    "fire_bolt": {
+        "name": "Fire Bolt",
+        "classes": ["Wizard"],
+        "cost": 0,
+        "unlock_level": 1,
+        "description": "Hurl a mote of fire at a creature.",
+        "target": "enemy",
+        "attack_method": "spell_attack",
+        "damage": { "dice_count": 1, "dice_size": 10, "bonus": "ability_modifier", "type": "fire" },
+        "scaling": { "5": { "dice_count": 2 }, "11": { "dice_count": 3 } }
+    },
+    "magic_missile": {
+        "name": "Magic Missile",
+        "classes": ["Wizard"],
+        "cost": 1,
+        "unlock_level": 1,
+        "description": "Three darts of magical force strike unerringly.",
+        "target": "enemy",
+        "attack_method": "auto_hit",
+        "damage": { "dice_count": 3, "dice_size": 4, "bonus": 3, "type": "force" }
+    },
+    "arcane_shield": {
+        "name": "Arcane Shield",
+        "classes": ["Wizard"],
+        "cost": 1,
+        "unlock_level": 2,
+        "description": "An invisible barrier of magical force protects you.",
+        "target": "self",
+        "attack_method": "auto_hit",
+        "effects": [{ "stat": "ac", "value": 5, "duration": 1 }]
+    },
+    "fireball": {
+        "name": "Fireball",
+        "classes": ["Wizard"],
+        "cost": 2,
+        "unlock_level": 4,
+        "description": "A bright streak erupts into a burst of flame.",
+        "target": "enemy",
+        "attack_method": "spell_save",
+        "save_ability": "Dexterity",
+        "damage": { "dice_count": 6, "dice_size": 6, "bonus": 0, "type": "fire" }
+    },
+    "ice_storm": {
+        "name": "Ice Storm",
+        "classes": ["Wizard"],
+        "cost": 3,
+        "unlock_level": 6,
+        "description": "Hail and freezing rain slam down, chilling to the bone.",
+        "target": "enemy",
+        "attack_method": "spell_save",
+        "save_ability": "Dexterity",
+        "damage": { "dice_count": 4, "dice_size": 8, "bonus": 0, "type": "cold" },
+        "effects": [{ "stat": "attack_bonus", "value": -2, "duration": 0 }]
+    },
+
+    "sneak_attack": {
+        "name": "Sneak Attack",
+        "classes": ["Rogue"],
+        "cost": 0,
+        "unlock_level": 1,
+        "description": "Exploit a foe's distraction with a precise strike.",
+        "target": "enemy",
+        "attack_method": "melee_attack",
+        "damage": { "dice_count": 2, "dice_size": 6, "bonus": "ability_modifier", "type": "piercing" },
+        "scaling": { "3": { "dice_count": 3 }, "5": { "dice_count": 4 }, "7": { "dice_count": 5 } }
+    },
+    "cunning_dodge": {
+        "name": "Cunning Dodge",
+        "classes": ["Rogue"],
+        "cost": 1,
+        "unlock_level": 1,
+        "description": "Duck and weave, making yourself harder to hit.",
+        "target": "self",
+        "attack_method": "auto_hit",
+        "effects": [{ "stat": "ac", "value": 4, "duration": 1 }]
+    },
+    "evasion": {
+        "name": "Evasion",
+        "classes": ["Rogue"],
+        "cost": 2,
+        "unlock_level": 2,
+        "description": "Brace against incoming damage with uncanny reflexes.",
+        "target": "self",
+        "attack_method": "auto_hit",
+        "effects": [{ "stat": "damage_reduction", "value": 5, "duration": 1 }]
+    },
+    "poison_strike": {
+        "name": "Poison Strike",
+        "classes": ["Rogue"],
+        "cost": 2,
+        "unlock_level": 4,
+        "description": "Coat your blade with venom and slash.",
+        "target": "enemy",
+        "attack_method": "melee_attack",
+        "damage": { "dice_count": 2, "dice_size": 8, "bonus": "ability_modifier", "type": "poison" },
+        "effects": [{ "stat": "ac", "value": -1, "duration": 0 }]
+    },
+    "shadow_step": {
+        "name": "Shadow Step",
+        "classes": ["Rogue"],
+        "cost": 3,
+        "unlock_level": 6,
+        "description": "Vanish into shadow and strike from the blind spot.",
+        "target": "enemy",
+        "attack_method": "melee_attack",
+        "damage": { "dice_count": 4, "dice_size": 8, "bonus": "ability_modifier", "type": "piercing" }
+    },
+
+    "sacred_flame": {
+        "name": "Sacred Flame",
+        "classes": ["Cleric"],
+        "cost": 0,
+        "unlock_level": 1,
+        "description": "Flame-like radiance descends on a creature.",
+        "target": "enemy",
+        "attack_method": "spell_save",
+        "save_ability": "Dexterity",
+        "damage": { "dice_count": 1, "dice_size": 8, "bonus": 0, "type": "radiant" },
+        "scaling": { "5": { "dice_count": 2 }, "11": { "dice_count": 3 } }
+    },
+    "cure_wounds": {
+        "name": "Cure Wounds",
+        "classes": ["Cleric"],
+        "cost": 1,
+        "unlock_level": 1,
+        "description": "Touch a creature and channel healing energy.",
+        "target": "self",
+        "attack_method": "auto_hit",
+        "heal": { "dice_count": 1, "dice_size": 8, "bonus": "ability_modifier" }
+    },
+    "shield_of_faith": {
+        "name": "Shield of Faith",
+        "classes": ["Cleric"],
+        "cost": 2,
+        "unlock_level": 2,
+        "description": "A shimmering field of divine protection surrounds you.",
+        "target": "self",
+        "attack_method": "auto_hit",
+        "effects": [{ "stat": "ac", "value": 2, "duration": 0 }]
+    },
+    "spiritual_weapon": {
+        "name": "Spiritual Weapon",
+        "classes": ["Cleric"],
+        "cost": 2,
+        "unlock_level": 4,
+        "description": "A floating spectral weapon strikes your foe.",
+        "target": "enemy",
+        "attack_method": "spell_attack",
+        "damage": { "dice_count": 2, "dice_size": 8, "bonus": "ability_modifier", "type": "force" }
+    },
+    "mass_heal": {
+        "name": "Mass Heal",
+        "classes": ["Cleric"],
+        "cost": 3,
+        "unlock_level": 6,
+        "description": "A flood of divine healing energy washes over you.",
+        "target": "self",
+        "attack_method": "auto_hit",
+        "heal": { "dice_count": 3, "dice_size": 8, "bonus": "ability_modifier" }
+    },
+
+    "reckless_attack": {
+        "name": "Reckless Attack",
+        "classes": ["Barbarian"],
+        "cost": 0,
+        "unlock_level": 1,
+        "description": "Throw caution to the wind with a wild, powerful swing.",
+        "target": "enemy",
+        "attack_method": "melee_attack",
+        "damage": { "dice_count": 1, "dice_size": 12, "bonus": "ability_modifier", "type": "slashing" },
+        "scaling": { "5": { "dice_count": 2 }, "11": { "dice_count": 3 } }
+    },
+    "rage": {
+        "name": "Rage",
+        "classes": ["Barbarian"],
+        "cost": 1,
+        "unlock_level": 1,
+        "description": "Enter a primal fury, hitting harder and shrugging off blows.",
+        "target": "self",
+        "attack_method": "auto_hit",
+        "effects": [
+            { "stat": "damage_bonus", "value": 2, "duration": 0 },
+            { "stat": "damage_reduction", "value": 2, "duration": 0 }
+        ]
+    },
+    "brutal_strike": {
+        "name": "Brutal Strike",
+        "classes": ["Barbarian"],
+        "cost": 2,
+        "unlock_level": 2,
+        "description": "Bring your weapon down with bone-crushing force.",
+        "target": "enemy",
+        "attack_method": "melee_attack",
+        "damage": { "dice_count": 2, "dice_size": 12, "bonus": "ability_modifier", "type": "slashing" }
+    },
+    "intimidating_roar": {
+        "name": "Intimidating Roar",
+        "classes": ["Barbarian"],
+        "cost": 2,
+        "unlock_level": 4,
+        "description": "Let loose a terrifying war cry that shakes your foe's nerve.",
+        "target": "enemy",
+        "attack_method": "auto_hit",
+        "effects": [{ "stat": "attack_bonus", "value": -2, "duration": 0 }]
+    },
+    "relentless_fury": {
+        "name": "Relentless Fury",
+        "classes": ["Barbarian"],
+        "cost": 3,
+        "unlock_level": 6,
+        "description": "Unleash an unstoppable onslaught of savage blows.",
+        "target": "enemy",
+        "attack_method": "melee_attack",
+        "damage": { "dice_count": 3, "dice_size": 12, "bonus": "ability_modifier", "type": "slashing" }
+    },
+
+    "divine_strike": {
+        "name": "Divine Strike",
+        "classes": ["Paladin"],
+        "cost": 0,
+        "unlock_level": 1,
+        "description": "Channel holy power through your weapon.",
+        "target": "enemy",
+        "attack_method": "melee_attack",
+        "damage": { "dice_count": 1, "dice_size": 8, "bonus": "ability_modifier", "type": "radiant" },
+        "scaling": { "5": { "dice_count": 2 }, "11": { "dice_count": 3 } }
+    },
+    "lay_on_hands": {
+        "name": "Lay on Hands",
+        "classes": ["Paladin"],
+        "cost": 1,
+        "unlock_level": 1,
+        "description": "Your blessed touch mends wounds.",
+        "target": "self",
+        "attack_method": "auto_hit",
+        "heal": { "dice_count": 2, "dice_size": 6, "bonus": 0 }
+    },
+    "divine_smite": {
+        "name": "Divine Smite",
+        "classes": ["Paladin"],
+        "cost": 2,
+        "unlock_level": 2,
+        "description": "Smite your foe with searing radiant energy.",
+        "target": "enemy",
+        "attack_method": "melee_attack",
+        "damage": { "dice_count": 2, "dice_size": 8, "bonus": "ability_modifier", "type": "radiant" }
+    },
+    "shield_of_devotion": {
+        "name": "Shield of Devotion",
+        "classes": ["Paladin"],
+        "cost": 2,
+        "unlock_level": 4,
+        "description": "A holy aura shields you from harm.",
+        "target": "self",
+        "attack_method": "auto_hit",
+        "effects": [{ "stat": "ac", "value": 2, "duration": 0 }]
+    },
+    "holy_smite": {
+        "name": "Holy Smite",
+        "classes": ["Paladin"],
+        "cost": 3,
+        "unlock_level": 6,
+        "description": "A devastating blow blessed by divine wrath, healing you as it strikes.",
+        "target": "enemy",
+        "attack_method": "melee_attack",
+        "damage": { "dice_count": 3, "dice_size": 8, "bonus": "ability_modifier", "type": "radiant" },
+        "heal": { "dice_count": 1, "dice_size": 6, "bonus": 0 }
+    },
+
+    "precise_shot": {
+        "name": "Precise Shot",
+        "classes": ["Ranger"],
+        "cost": 0,
+        "unlock_level": 1,
+        "description": "A carefully aimed shot finds its mark.",
+        "target": "enemy",
+        "attack_method": "melee_attack",
+        "damage": { "dice_count": 1, "dice_size": 8, "bonus": "ability_modifier", "type": "piercing" },
+        "scaling": { "5": { "dice_count": 2 }, "11": { "dice_count": 3 } }
+    },
+    "ensnaring_strike": {
+        "name": "Ensnaring Strike",
+        "classes": ["Ranger"],
+        "cost": 1,
+        "unlock_level": 1,
+        "description": "Thorny vines lash out on impact, binding your target.",
+        "target": "enemy",
+        "attack_method": "melee_attack",
+        "damage": { "dice_count": 1, "dice_size": 6, "bonus": "ability_modifier", "type": "piercing" },
+        "effects": [{ "stat": "ac", "value": -2, "duration": 0 }]
+    },
+    "healing_spirit_ranger": {
+        "name": "Healing Spirit",
+        "classes": ["Ranger"],
+        "cost": 2,
+        "unlock_level": 2,
+        "description": "Call upon nature's restorative magic.",
+        "target": "self",
+        "attack_method": "auto_hit",
+        "heal": { "dice_count": 2, "dice_size": 6, "bonus": 0 }
+    },
+    "volley": {
+        "name": "Volley",
+        "classes": ["Ranger"],
+        "cost": 2,
+        "unlock_level": 4,
+        "description": "Loose a rapid barrage of projectiles.",
+        "target": "enemy",
+        "attack_method": "melee_attack",
+        "damage": { "dice_count": 3, "dice_size": 8, "bonus": "ability_modifier", "type": "piercing" }
+    },
+    "foe_slayer": {
+        "name": "Foe Slayer",
+        "classes": ["Ranger"],
+        "cost": 3,
+        "unlock_level": 6,
+        "description": "Strike with the lethal precision of a seasoned hunter.",
+        "target": "enemy",
+        "attack_method": "melee_attack",
+        "damage": { "dice_count": 4, "dice_size": 8, "bonus": "ability_modifier", "type": "piercing" }
+    },
+
+    "martial_arts_strike": {
+        "name": "Martial Arts",
+        "classes": ["Monk"],
+        "cost": 0,
+        "unlock_level": 1,
+        "description": "A swift unarmed strike powered by discipline.",
+        "target": "enemy",
+        "attack_method": "melee_attack",
+        "damage": { "dice_count": 1, "dice_size": 6, "bonus": "ability_modifier", "type": "bludgeoning" },
+        "scaling": { "5": { "dice_count": 2 }, "11": { "dice_count": 3 } }
+    },
+    "flurry_of_blows": {
+        "name": "Flurry of Blows",
+        "classes": ["Monk"],
+        "cost": 1,
+        "unlock_level": 1,
+        "description": "Unleash a rapid series of unarmed strikes.",
+        "target": "enemy",
+        "attack_method": "melee_attack",
+        "damage": { "dice_count": 2, "dice_size": 6, "bonus": "ability_modifier", "type": "bludgeoning" }
+    },
+    "patient_defense": {
+        "name": "Patient Defense",
+        "classes": ["Monk"],
+        "cost": 2,
+        "unlock_level": 2,
+        "description": "Focus your ki to dodge with supernatural awareness.",
+        "target": "self",
+        "attack_method": "auto_hit",
+        "effects": [{ "stat": "ac", "value": 4, "duration": 1 }]
+    },
+    "stunning_strike": {
+        "name": "Stunning Strike",
+        "classes": ["Monk"],
+        "cost": 2,
+        "unlock_level": 4,
+        "description": "Strike a pressure point to daze your foe.",
+        "target": "enemy",
+        "attack_method": "melee_attack",
+        "damage": { "dice_count": 1, "dice_size": 6, "bonus": "ability_modifier", "type": "bludgeoning" },
+        "effects": [{ "stat": "attack_bonus", "value": -3, "duration": 1 }]
+    },
+    "quivering_palm": {
+        "name": "Quivering Palm",
+        "classes": ["Monk"],
+        "cost": 3,
+        "unlock_level": 6,
+        "description": "Channel devastating ki into a single deadly strike.",
+        "target": "enemy",
+        "attack_method": "melee_attack",
+        "damage": { "dice_count": 4, "dice_size": 10, "bonus": "ability_modifier", "type": "bludgeoning" }
+    },
+
+    "vicious_mockery": {
+        "name": "Vicious Mockery",
+        "classes": ["Bard"],
+        "cost": 0,
+        "unlock_level": 1,
+        "description": "Unleash a string of insults laced with subtle enchantments.",
+        "target": "enemy",
+        "attack_method": "spell_save",
+        "save_ability": "Wisdom",
+        "damage": { "dice_count": 1, "dice_size": 6, "bonus": 0, "type": "psychic" },
+        "effects": [{ "stat": "attack_bonus", "value": -2, "duration": 1 }],
+        "scaling": { "5": { "dice_count": 2 }, "11": { "dice_count": 3 } }
+    },
+    "healing_word": {
+        "name": "Healing Word",
+        "classes": ["Bard"],
+        "cost": 1,
+        "unlock_level": 1,
+        "description": "A soothing melody restores vitality.",
+        "target": "self",
+        "attack_method": "auto_hit",
+        "heal": { "dice_count": 1, "dice_size": 6, "bonus": "ability_modifier" }
+    },
+    "bardic_inspiration": {
+        "name": "Bardic Inspiration",
+        "classes": ["Bard"],
+        "cost": 2,
+        "unlock_level": 2,
+        "description": "Inspire yourself with a rousing performance.",
+        "target": "self",
+        "attack_method": "auto_hit",
+        "effects": [
+            { "stat": "attack_bonus", "value": 2, "duration": 0 },
+            { "stat": "damage_bonus", "value": 2, "duration": 0 }
+        ]
+    },
+    "dissonant_whispers": {
+        "name": "Dissonant Whispers",
+        "classes": ["Bard"],
+        "cost": 2,
+        "unlock_level": 4,
+        "description": "A discordant melody only your target can hear tears at their mind.",
+        "target": "enemy",
+        "attack_method": "spell_save",
+        "save_ability": "Wisdom",
+        "damage": { "dice_count": 3, "dice_size": 6, "bonus": 0, "type": "psychic" }
+    },
+    "power_chord": {
+        "name": "Power Chord",
+        "classes": ["Bard"],
+        "cost": 3,
+        "unlock_level": 6,
+        "description": "A thunderous blast of sonic energy.",
+        "target": "enemy",
+        "attack_method": "spell_save",
+        "save_ability": "Constitution",
+        "damage": { "dice_count": 4, "dice_size": 8, "bonus": 0, "type": "thunder" }
+    },
+
+    "acid_splash": {
+        "name": "Acid Splash",
+        "classes": ["Sorcerer"],
+        "cost": 0,
+        "unlock_level": 1,
+        "description": "Hurl a bubble of acid.",
+        "target": "enemy",
+        "attack_method": "spell_save",
+        "save_ability": "Dexterity",
+        "damage": { "dice_count": 1, "dice_size": 10, "bonus": 0, "type": "acid" },
+        "scaling": { "5": { "dice_count": 2 }, "11": { "dice_count": 3 } }
+    },
+    "chromatic_orb": {
+        "name": "Chromatic Orb",
+        "classes": ["Sorcerer"],
+        "cost": 1,
+        "unlock_level": 1,
+        "description": "A sphere of elemental energy streaks toward your target.",
+        "target": "enemy",
+        "attack_method": "spell_attack",
+        "damage": { "dice_count": 3, "dice_size": 8, "bonus": 0, "type": "fire" }
+    },
+    "arcane_ward": {
+        "name": "Arcane Ward",
+        "classes": ["Sorcerer"],
+        "cost": 1,
+        "unlock_level": 2,
+        "description": "Innate magic surges to protect you.",
+        "target": "self",
+        "attack_method": "auto_hit",
+        "effects": [{ "stat": "ac", "value": 5, "duration": 1 }]
+    },
+    "lightning_bolt": {
+        "name": "Lightning Bolt",
+        "classes": ["Sorcerer"],
+        "cost": 2,
+        "unlock_level": 4,
+        "description": "A bolt of lightning arcs from your fingertips.",
+        "target": "enemy",
+        "attack_method": "spell_save",
+        "save_ability": "Dexterity",
+        "damage": { "dice_count": 6, "dice_size": 6, "bonus": 0, "type": "lightning" }
+    },
+    "chaos_bolt": {
+        "name": "Chaos Bolt",
+        "classes": ["Sorcerer"],
+        "cost": 3,
+        "unlock_level": 6,
+        "description": "Wild magic coalesces into a devastating blast.",
+        "target": "enemy",
+        "attack_method": "spell_attack",
+        "damage": { "dice_count": 4, "dice_size": 10, "bonus": "ability_modifier", "type": "fire" }
+    },
+
+    "eldritch_blast": {
+        "name": "Eldritch Blast",
+        "classes": ["Warlock"],
+        "cost": 0,
+        "unlock_level": 1,
+        "description": "A beam of crackling eldritch energy.",
+        "target": "enemy",
+        "attack_method": "spell_attack",
+        "damage": { "dice_count": 1, "dice_size": 10, "bonus": "ability_modifier", "type": "force" },
+        "scaling": { "5": { "dice_count": 2 }, "11": { "dice_count": 3 } }
+    },
+    "hex": {
+        "name": "Hex",
+        "classes": ["Warlock"],
+        "cost": 1,
+        "unlock_level": 1,
+        "description": "Place a dark curse on your target, weakening and harming them.",
+        "target": "enemy",
+        "attack_method": "auto_hit",
+        "damage": { "dice_count": 1, "dice_size": 6, "bonus": 0, "type": "necrotic" },
+        "effects": [{ "stat": "ac", "value": -1, "duration": 0 }]
+    },
+    "hellish_rebuke": {
+        "name": "Hellish Rebuke",
+        "classes": ["Warlock"],
+        "cost": 2,
+        "unlock_level": 2,
+        "description": "Surround your foe in hellish flames.",
+        "target": "enemy",
+        "attack_method": "auto_hit",
+        "damage": { "dice_count": 2, "dice_size": 10, "bonus": 0, "type": "fire" }
+    },
+    "hunger_of_hadar": {
+        "name": "Hunger of Hadar",
+        "classes": ["Warlock"],
+        "cost": 2,
+        "unlock_level": 4,
+        "description": "Dark tendrils of void energy sap your foe's strength.",
+        "target": "enemy",
+        "attack_method": "spell_save",
+        "save_ability": "Constitution",
+        "damage": { "dice_count": 3, "dice_size": 6, "bonus": 0, "type": "cold" },
+        "effects": [{ "stat": "attack_bonus", "value": -2, "duration": 0 }]
+    },
+    "eldritch_smite": {
+        "name": "Eldritch Smite",
+        "classes": ["Warlock"],
+        "cost": 3,
+        "unlock_level": 6,
+        "description": "Channel your patron's power into a devastating eldritch strike.",
+        "target": "enemy",
+        "attack_method": "spell_attack",
+        "damage": { "dice_count": 4, "dice_size": 8, "bonus": "ability_modifier", "type": "force" }
+    },
+
+    "thorn_whip": {
+        "name": "Thorn Whip",
+        "classes": ["Druid"],
+        "cost": 0,
+        "unlock_level": 1,
+        "description": "A thorny vine lashes out at your command.",
+        "target": "enemy",
+        "attack_method": "spell_attack",
+        "damage": { "dice_count": 1, "dice_size": 6, "bonus": "ability_modifier", "type": "piercing" },
+        "scaling": { "5": { "dice_count": 2 }, "11": { "dice_count": 3 } }
+    },
+    "entangle": {
+        "name": "Entangle",
+        "classes": ["Druid"],
+        "cost": 1,
+        "unlock_level": 1,
+        "description": "Grasping weeds and vines restrain your foe.",
+        "target": "enemy",
+        "attack_method": "spell_save",
+        "save_ability": "Strength",
+        "damage": { "dice_count": 1, "dice_size": 4, "bonus": 0, "type": "bludgeoning" },
+        "effects": [{ "stat": "attack_bonus", "value": -2, "duration": 0 }]
+    },
+    "healing_word_druid": {
+        "name": "Healing Word",
+        "classes": ["Druid"],
+        "cost": 2,
+        "unlock_level": 2,
+        "description": "Nature's restorative energy mends your wounds.",
+        "target": "self",
+        "attack_method": "auto_hit",
+        "heal": { "dice_count": 1, "dice_size": 8, "bonus": "ability_modifier" }
+    },
+    "call_lightning": {
+        "name": "Call Lightning",
+        "classes": ["Druid"],
+        "cost": 2,
+        "unlock_level": 4,
+        "description": "A bolt of lightning streaks down from above.",
+        "target": "enemy",
+        "attack_method": "spell_save",
+        "save_ability": "Dexterity",
+        "damage": { "dice_count": 4, "dice_size": 6, "bonus": 0, "type": "lightning" }
+    },
+    "wild_shape": {
+        "name": "Wild Shape",
+        "classes": ["Druid"],
+        "cost": 3,
+        "unlock_level": 6,
+        "description": "Transform into a powerful beast, gaining resilience.",
+        "target": "self",
+        "attack_method": "auto_hit",
+        "heal": { "dice_count": 2, "dice_size": 6, "bonus": 0 },
+        "effects": [
+            { "stat": "ac", "value": 2, "duration": 0 },
+            { "stat": "damage_bonus", "value": 2, "duration": 0 }
+        ]
+    }
+}

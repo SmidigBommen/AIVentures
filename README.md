@@ -1,55 +1,108 @@
-# AIVentures
+# AIVentures — The Shattered Crown
 
-Just playing around with some Python code and ChatGPT/Claude as co-coder to test out limits and benefits it could possibly have for developers and testers
+A D&D 5e-inspired text adventure game built in Python with a modern web UI.
 
-Initial Scope:
-Create characters and monsters
-roll dice
-engage in battle based in dice rolls
-add items and more attributes
+## About
 
-## Worklist items ##
-_This is an iterative approach so done only means an iteration is done and an initial implementation is in place_
+AIVentures is a single-player RPG set in the realm of Eldoria, where the dark sorcerer Malachar is gathering fragments of the Shattered Crown. Players create a character, explore a 3-act campaign world, battle monsters, collect loot, and level up — all driven by D&D 5e-style mechanics.
 
-Status | Ideas / Feature
--------| ------
-Done | Dice roll
-Done | Monster creation
-Done | Initiative (Who goes first)
-Done | Combat (1 character vs 1 monster)
-Done | Armor (minus vs an attack roll)
-Done | Turns
-Done | Level up (xp + add more stats?)
-Done | Armor Class (AC) - Does the hit actually land (hit calculation)
-Done | Initial Hit points on player calculated based on class (con + class modifier)
-Done | Weapons (adds to an damage roll)
-Done | Added choice to roll or take average on HP increase at level up.
-Done | Refactor weapons to be a specific variable and not a general item
-Done | Monster initial hit points based on level and dice rolls at creation including CON modifier
-Fixed | Bug: Monster attack rolls (defence choice is not cleared) are not being calculated correctly
-Fixed | Bug: Barbarian does not get correct skills. This can be becasue the class is a DEX class in the setup, book says strength..
-Done | Locations: add more locations and implement the transitions between them
-Done | Locations: Areas in each locations is implemented with connection to eachother
-Fixed| Bug: transition out of area after combat does not seem to work correctly when you have changed location
- x | Special: Some areas have special attribute with some hidden element. Implement interaction these specials with skill rolls
- x | Improvement: Add starting equipment according to class (D&D 5e Player Handbook 2024 : Example of Core Fighter Traits, page 91)
- x | Improvement: Battle (end_battle) should maybe not handle the XP logic.
- x | Monsters have XP connected to them directly
- x | Group (More than one monster)
- x | Character Abilities: Design unique abilities for each character class, such as special attacks or spells. _Implement methods to use these abilities in battles and manage their resource costs (e.g., mana or energy)_
- x | Status Effects: Add conditions that can affect characters during battles, such as poison, paralysis, or buffs/debuffs. _Implement methods to apply, remove, and manage these effects_
- x | Equipment: Introduce equipment items that can be worn by characters to enhance their abilities, such as armor, weapons, or accessories. _Implement methods to manage equipment inventory and equip/un-equip items_
- x | Advanced Combat System: Develop a more strategic combat system, which can involve implementing a turn-based or real-time system, positioning, or unique tactics for each character class or enemy type.
- Done | Ability Scores: Add Ability Scores and Modifiers correctly on a character and monster.
- x | Ability Scores: Characters can decide to use a standard array and divide it onto different scores. Characters can decide to roll 4x6 dice an discard.  Two options.
- Done | Random Monster Encounter: Player doesnt meet same monster each time. (name and level changes)
+Started as an experiment using AI as a co-coder, it has grown into a full-featured game with two interfaces:
 
-### Implementing Additional Game Mechanics ###
-* Armor Class (AC) - Does the hit actually land
-* Different armor types (light/medium/heavy)
-* Equipment slots
-* Durability
+- **Web UI** (active focus): FastAPI + Jinja2 server-rendered HTML with a polished dark fantasy theme
+- **CLI** (legacy): Terminal-based game with ANSI colors
 
-### Future expansions ###
-* Add Textual for the textGUI
-* Add more monsters types
+## Quick Start
+
+```bash
+pip install -r requirements.txt
+uvicorn web.app:app --reload --host 0.0.0.0 --port 8000
+```
+
+Then open http://localhost:8000 in your browser.
+
+## Features
+
+### Character System
+- 12 races with unique ability score bonuses
+- 11 classes: Fighter, Wizard, Rogue, Cleric, Barbarian, Paladin, Ranger, Monk, Bard, Sorcerer, Warlock, Druid
+- 6 ability scores (STR/DEX/CON/INT/WIS/CHA) with D&D 5e modifier calculation
+- Skill proficiency selection based on class
+- Equipment system with weapon and armor slots, proficiency checks
+- XP-based leveling with HP increases
+
+### Magic & Ability System
+- **Power Points (PP)**: Universal resource pool — full casters get more, martial classes get fewer but impactful abilities
+- **55 unique abilities** across all 11 classes (5 per class), defined in `json/abilities.json`
+- Each class has a free cantrip/basic ability (0 PP) plus 4 costed abilities (1-3 PP) unlocking at levels 1, 2, 4, and 6
+- Ability types: damage (melee/spell attack, spell save, auto-hit), healing, buffs (self), debuffs (enemy)
+- Cantrips scale with level (more dice at levels 5, 11)
+- Active effects modify attack rolls, damage, AC, and damage reduction
+- Effects tick down each round; duration 0 = lasts entire combat
+- PP recovers on rest
+- New abilities shown on level-up victory screen
+
+### Combat
+- Turn-based battle system with D&D 5e mechanics
+- d20 attack rolls + ability modifier + proficiency vs AC
+- Initiative system (d20 + DEX modifier)
+- Actions: Attack, Defend, Abilities, Items
+- Monster AI: 70% attack, 30% defend
+- Active buff/debuff effects from abilities apply to both sides
+- Tier-based loot drops (potions, gold, weapons, armor)
+- Victory rewards: XP, gold, loot, level-up notifications with HP/PP/new ability display
+
+### World
+- 3-act campaign ("The Shattered Crown") with 8 locations and 50+ interconnected areas
+- Area-based navigation with encounter chance ratings
+- Rest at inns/taverns to recover HP and PP
+- Shop system with buy/sell mechanics, restocks after 10 kills or death
+- Location travel between zones within each act
+
+### Web UI
+- Dark fantasy theme with Cinzel heading font
+- Glassmorphism battle arena with background art
+- Animated health and PP bars
+- Toast notification system
+- Confetti on victory, screen shake on defeat
+- Synthesized sound effects via Web Audio API (hit, miss, heal, spell, victory, defeat, level-up, coin)
+- Step indicator for character creation flow
+- Responsive design for mobile
+- Active effect badges on combatants during battle
+
+## Running Tests
+
+```bash
+pytest                          # all tests (39 tests)
+pytest test/test_abilities.py   # ability system tests
+pytest test/test_battle.py      # battle mechanics
+pytest test/test_armor.py       # armor AC calculations
+```
+
+## Tech Stack
+
+- **Backend**: Python, FastAPI, uvicorn, Jinja2
+- **Frontend**: Pure HTML/CSS/JS (no frameworks), Google Fonts (Cinzel)
+- **Session**: Starlette SessionMiddleware (signed cookies)
+- **Data**: JSON configuration files for races, classes, weapons, armor, monsters, abilities, campaign
+
+## Worklist
+
+Status | Feature
+-------|--------
+Done | Core combat system (attack rolls, AC, damage, initiative)
+Done | Character creation with race/class selection
+Done | Equipment system (weapons, armor, inventory management)
+Done | XP and leveling system
+Done | Campaign world with locations and areas
+Done | Shop with buy/sell and restocking
+Done | Web UI with FastAPI + Jinja2
+Done | UI/UX redesign (glassmorphism, animations, sound effects, responsive design)
+Done | Magic/ability system (Power Points, 55 abilities across 11 classes)
+Done | Active effects (buffs/debuffs) in combat
+x | Boss encounters with unique mechanics
+x | Quest system and act progression gating
+x | NPC dialogue
+x | Monster abilities and smarter AI
+x | Spells/abilities for exploration (outside combat)
+x | Off-hand / dual wielding
+x | Save/load (server-side storage)

@@ -26,6 +26,10 @@ class Character(Entity):
             WeaponSlot.MAIN_HAND: None,
             WeaponSlot.OFF_HAND: None
         }
+        # Ability system
+        self.power_points = 0
+        self.max_power_points = 0
+        self.active_effects = []  # list of {"stat", "value", "duration", "source"}
 
     def assign_stats(self, strength_score, dexterity_score, constitution_score, intelligence_score, wisdom_score, charisma_score):
         self.strength_score = strength_score

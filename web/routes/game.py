@@ -119,8 +119,10 @@ async def rest(request: Request):
     if not area or not can_rest:
         return RedirectResponse("/game", status_code=303)
 
-    # Restore HP
+    # Restore HP and PP
     session.character.current_hit_points = session.character.max_hit_points
+    session.character.power_points = session.character.max_power_points
+    session.character.active_effects = []
     save_session(request, session)
 
     return RedirectResponse("/game?rested=true", status_code=303)

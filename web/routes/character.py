@@ -237,6 +237,12 @@ async def create_character(
     character.add_item(HealingPotion("Small Healing Potion", 10))
     character.add_item(HealingPotion("Medium Healing Potion", 25))
 
+    # Initialize power points
+    from web.game_session import calculate_max_pp, get_primary_modifier
+    primary_mod = get_primary_modifier(character)
+    character.max_power_points = calculate_max_pp(character.class_name, character.level, primary_mod)
+    character.power_points = character.max_power_points
+
     # Save character to session
     session.character = character
     session.character_creation.name = name

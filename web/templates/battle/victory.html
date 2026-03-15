@@ -31,6 +31,17 @@
         {% if rewards.hp_increase %}
         <p class="text-success">+{{ rewards.hp_increase }} Max HP</p>
         {% endif %}
+        {% if rewards.new_max_pp %}
+        <p class="text-info">PP: {{ rewards.new_max_pp }} max</p>
+        {% endif %}
+        {% if rewards.new_abilities %}
+        <div class="new-abilities">
+            <p class="text-warning">New abilities unlocked:</p>
+            {% for name in rewards.new_abilities %}
+            <span class="new-ability-badge">{{ name }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
     </div>
     {% endif %}
     {% endif %}

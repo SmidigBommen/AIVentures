@@ -17,7 +17,22 @@
                              data-hp-percent="{{ (character.current_hit_points / character.max_hit_points * 100) | int }}"></div>
                     </div>
                     <p class="hp-text">HP: {{ character.current_hit_points }} / {{ character.max_hit_points }}</p>
+                    <div class="pp-bar-row">
+                        <span class="pp-text">PP: {{ character.power_points }} / {{ character.max_power_points }}</span>
+                        <div class="pp-bar">
+                            <div class="pp-bar-fill" style="width: {{ (character.power_points / character.max_power_points * 100) | int if character.max_power_points > 0 else 0 }}%"></div>
+                        </div>
+                    </div>
                     <p class="ac">AC: {{ character.armor_class }}</p>
+                    {% if player_effects %}
+                    <div class="effect-badges">
+                        {% for eff in player_effects %}
+                        <span class="effect-badge effect-buff" title="{{ eff.source }}: {{ eff.stat.replace('_', ' ') }} {{ '%+d' % eff.value }}{% if eff.duration > 0 %} ({{ eff.duration }}rd){% endif %}">
+                            {{ eff.source[:3] }} {{ '%+d' % eff.value }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 </div>
 
                 <div class="vs-badge">VS</div>
@@ -31,12 +46,21 @@
                     </div>
                     <p class="hp-text">HP: {{ monster.hp }} / {{ monster.max_hp }}</p>
                     <p class="ac">AC: {{ monster.ac }}</p>
+                    {% if monster_effects %}
+                    <div class="effect-badges">
+                        {% for eff in monster_effects %}
+                        <span class="effect-badge effect-debuff" title="{{ eff.source }}: {{ eff.stat.replace('_', ' ') }} {{ '%+d' % eff.value }}{% if eff.duration > 0 %} ({{ eff.duration }}rd){% endif %}">
+                            {{ eff.source[:3] }} {{ '%+d' % eff.value }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 
             <div class="battle-log">
                 {% for entry in battle_log %}
-                <div class="log-entry {% if 'hits for' in entry %}damage{% elif 'heals' in entry %}heal{% elif 'defends' in entry %}defend{% elif 'misses' in entry %}miss{% endif %}">
+                <div class="log-entry {% if 'hits for' in entry or 'deals' in entry %}damage{% elif 'heals' in entry %}heal{% elif 'defends' in entry %}defend{% elif 'misses' in entry or 'Miss' in entry %}miss{% elif 'uses' in entry or 'casts' in entry %}ability{% endif %}">
                     {{ entry }}
                 </div>
                 {% endfor %}
@@ -53,6 +77,25 @@
                         <button type="submit" class="btn btn-defend">Defend</button>
                     </form>
                 </div>
+
+                {% if abilities %}
+                <div class="items-section">
+                    <h4>Abilities (PP: {{ character.power_points }}/{{ character.max_power_points }})</h4>
+                    <div class="item-buttons">
+                        {% for ability in abilities %}
+                        <form action="/battle/ability" method="post" class="inline-form">
+                            <input type="hidden" name="ability_id" value="{{ ability.id }}">
+                            <button type="submit"
+                                    class="btn btn-ability{% if ability.cost == 0 %}-free{% endif %}"
+                                    title="{{ ability.description }} ({{ ability.cost }} PP)"
+                                    {% if character.power_points < ability.cost %}disabled{% endif %}>
+                                {{ ability.name }}{% if ability.cost > 0 %} <span class="ability-cost">{{ ability.cost }}</span>{% endif %}
+                            </button>
+                        </form>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
 
                 {% if usable_items %}
                 <div class="items-section">

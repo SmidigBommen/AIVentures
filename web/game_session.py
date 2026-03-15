@@ -80,6 +80,49 @@ def get_armors() -> dict:
     return _armors_cache
 
 
+_abilities_cache = None
+
+
+def get_abilities() -> dict:
+    """Get all abilities from the catalog."""
+    global _abilities_cache
+    if _abilities_cache is None:
+        _abilities_cache = load_json("abilities.json")
+    return _abilities_cache
+
+
+def get_class_abilities(class_name: str, level: int) -> list:
+    """Get unlocked abilities for a class at a given level."""
+    abilities = get_abilities()
+    result = []
+    for ability_id, ability in abilities.items():
+        if class_name in ability.get("classes", []) and level >= ability.get("unlock_level", 1):
+            result.append({"id": ability_id, **ability})
+    result.sort(key=lambda a: (a["cost"], a["unlock_level"]))
+    return result
+
+
+def calculate_max_pp(class_name: str, level: int, primary_modifier: int) -> int:
+    """Calculate max power points for a class."""
+    full_casters = {"Wizard", "Sorcerer", "Warlock", "Cleric", "Druid", "Bard"}
+    half_casters = {"Paladin", "Ranger"}
+    if class_name in full_casters:
+        pp = level + primary_modifier
+    elif class_name in half_casters:
+        pp = (level // 2) + primary_modifier
+    else:
+        pp = (level // 3) + primary_modifier
+    return max(2, pp)
+
+
+def get_primary_modifier(character) -> int:
+    """Get the primary ability modifier for a character."""
+    classes = get_classes()
+    class_data = classes.get(character.class_name, {})
+    primary = class_data.get("primary_ability", "Strength").lower()
+    return getattr(character, f"{primary}_modifier", 0)
+
+
 def get_all_armors_flat() -> dict:
     """Get all armors as a flat dictionary."""
     armors = get_armors()
@@ -123,6 +166,8 @@ class BattleState:
     battle_log: list = field(default_factory=list)
     is_player_turn: bool = True
     is_active: bool = False
+    monster_effects: list = field(default_factory=list)  # active effects on monster
+    player_effects: list = field(default_factory=list)   # active effects on player
 
 
 class GameSession:
@@ -177,6 +222,8 @@ class GameSession:
                 "battle_log": self.battle.battle_log[-5:],  # Only keep last 5 log entries
                 "is_player_turn": self.battle.is_player_turn,
                 "is_active": self.battle.is_active,
+                "monster_effects": self.battle.monster_effects,
+                "player_effects": self.battle.player_effects,
             },
             "location_name": location_name,
             "area_id": area_id,
@@ -279,6 +326,9 @@ class GameSession:
             "weapon_details": weapon_details,
             "armor_details": armor_details,
             "inventory": inventory,
+            "power_points": c.power_points,
+            "max_power_points": c.max_power_points,
+            "active_effects": c.active_effects,
         }
 
     @classmethod
@@ -349,6 +399,8 @@ class GameSession:
             battle_log=battle_data.get("battle_log", []),
             is_player_turn=battle_data.get("is_player_turn", True),
             is_active=battle_data.get("is_active", False),
+            monster_effects=battle_data.get("monster_effects", []),
+            player_effects=battle_data.get("player_effects", []),
         )
 
         # Restore character if creation data exists
@@ -382,6 +434,12 @@ class GameSession:
             character.max_hit_points = char_data.get("max_hit_points", character.max_hit_points)
             character.armor_class = char_data.get("armor_class", character.armor_class)
             character.xp_to_next_level = character.level * 150
+
+            # Restore power points
+            primary_mod = get_primary_modifier(character)
+            character.max_power_points = calculate_max_pp(character.class_name, character.level, primary_mod)
+            character.power_points = char_data.get("power_points", character.max_power_points)
+            character.active_effects = char_data.get("active_effects", [])
 
             # Create factories (needed for equipped items and inventory restoration)
             weapon_factory = WeaponFactory()

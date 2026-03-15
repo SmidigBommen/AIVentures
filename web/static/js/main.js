@@ -97,6 +97,12 @@ const SFX = {
 
     _click() {
         this._noise(0.03, 3000, 0.06);
+    },
+
+    _spell() {
+        this._osc(440, 'sine', 0.15, 0.08);
+        setTimeout(() => this._osc(660, 'sine', 0.15, 0.08), 80);
+        setTimeout(() => this._osc(880, 'triangle', 0.2, 0.06), 160);
     }
 };
 
@@ -225,6 +231,7 @@ function initBattleLog() {
         else if (last.classList.contains('miss')) SFX.play('miss');
         else if (last.classList.contains('heal')) SFX.play('heal');
         else if (last.classList.contains('defend')) SFX.play('defend');
+        else if (last.classList.contains('ability')) SFX.play('spell');
     }
 }
 
