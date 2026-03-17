@@ -1,141 +1,48 @@
 import sys
 import random
 from pathlib import Path
-from fastapi import APIRouter, Request, Form
+from fastapi import APIRouter, Request, Form, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 # Add parent directories to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from web.game_session import get_session, save_session, get_all_weapons_flat, get_all_armors_flat, get_quests
+from web.game_session import get_session, save_session, get_all_weapons_flat, get_all_armors_flat, get_quests, get_shopkeeper, get_default_shop_inventory
+from web.dependencies import require_character
 from items import HealingPotion, QuestItem
 from weapon import Weapon
 from armor import Armor
 from skills import make_skill_check
+from engine.quests import turn_in_quest as engine_turn_in_quest
 
 router = APIRouter()
 templates = Jinja2Templates(directory=Path(__file__).parent.parent / "templates")
 
-# Shopkeeper NPC data
-SHOPKEEPER = {
-    "name": "Elara",
-    "title": "The Collector",
-    "portrait": "/static/images/shopkeeper.jpg",
-    "greetings": [
-        "Welcome, traveler! Come, browse my wares. I've gathered curiosities from every corner of Eldoria.",
-        "Ah, a fellow adventurer! You look like someone who appreciates quality goods. Step closer.",
-        "The roads are dangerous these days. Best stock up before you head out again, wouldn't you say?",
-        "Welcome to my humble shop! Don't let the dust fool you — everything here is top quality.",
-        "Another brave soul! I can tell by the look in your eyes. What can Elara do for you today?",
-    ],
-    "buy_reactions": [
-        "An excellent choice! That'll serve you well out there.",
-        "Wise purchase. I had a feeling you'd pick that one.",
-        "You have fine taste, adventurer. May it keep you alive.",
-        "A fair trade! Come back when you need more.",
-    ],
-    "sell_reactions": [
-        "I'll gladly take that off your hands. A fair price, wouldn't you agree?",
-        "Interesting... I know just the collector who'd pay a premium for this.",
-        "One adventurer's surplus is another merchant's treasure!",
-        "Sold! I'll have this cleaned up and back on the shelf in no time.",
-    ],
-    "low_gold": [
-        "Your purse seems a bit light, friend. Perhaps you have something to sell?",
-        "Gold is earned with sweat and steel. Come back when fortune smiles on you.",
-        "Don't worry — the best deals come to those who wait. And fight monsters.",
-    ],
-    "browse": [
-        "Take your time. I'm not going anywhere... unlike my stock, which tends to disappear quickly.",
-        "See anything that catches your eye? Everything is priced fairly, I assure you.",
-        "Feel free to look around. And if you have tales from the road, I'm always listening.",
-    ],
-    "farewell": [
-        "Safe travels, adventurer. May your blade stay sharp and your potions full.",
-        "Come back soon! And try not to die out there — you're one of my best customers.",
-        "Until next time! The roads of Eldoria won't travel themselves.",
-    ],
-    "haggle_nat20": [
-        "By the gods, you could sell sand to a desert nomad! Fine — take it at that price, you silver-tongued rogue.",
-        "I... I can't believe I'm agreeing to this. You have a gift, adventurer. A dangerous gift.",
-    ],
-    "haggle_great": [
-        "You drive a hard bargain! Alright, alright — I'll lower the price. But don't tell anyone.",
-        "Hmph. You remind me of my mother — impossible to say no to. Here, take the discount.",
-    ],
-    "haggle_good": [
-        "Fair enough, I can shave a little off the price. You've earned it.",
-        "A reasonable offer. I'll meet you partway — how's that sound?",
-    ],
-    "haggle_okay": [
-        "I suppose I can take a copper or two off... but that's my final offer!",
-        "You're persistent, I'll give you that. A small discount, then.",
-    ],
-    "haggle_fail": [
-        "Ha! Nice try, adventurer. But these prices are already more than fair.",
-        "I appreciate the effort, but my prices are firm on this one. Perhaps try another item?",
-        "You'll have to do better than that! I didn't survive twenty years in this trade by giving discounts to everyone.",
-    ],
-    "haggle_nat1": [
-        "Did you just... try to insult my wares? The price just went UP, friend.",
-        "Oh my. That was the worst attempt at haggling I've ever witnessed. I'm raising the price out of principle.",
-    ],
-    "quest_accept": [
-        "Excellent! I knew I could count on you. Come back when the job's done.",
-        "A brave soul indeed! Off you go — and try not to get killed.",
-        "Deal struck! I'll have your reward waiting when you return.",
-    ],
-    "quest_complete": [
-        "You actually did it! I never doubted you. Well, maybe a little. Here's your reward!",
-        "Magnificent work! The tales they'll tell of this day... Here, you've earned every coin.",
-        "Contract fulfilled! It's a pleasure doing business with a professional.",
-    ],
-    "quest_progress": [
-        "Still working on that quest? Keep at it — I believe in you!",
-        "Not done yet? The reward isn't going anywhere, but neither should you be dawdling.",
-    ],
-    "quest_abandon": [
-        "Giving up? Well, I won't judge... much. The quest board is always here if you change your mind.",
-        "A shame, but I understand. Not every quest is for every adventurer.",
-    ],
-    "quest_full": [
-        "Three quests is plenty, adventurer. Finish one before taking on more!",
-        "You're already juggling three tasks. Complete one first, then we'll talk.",
-    ],
-}
-
-
 def get_shopkeeper_dialog(context: str, character_gold: int = 0) -> str:
     """Get a context-appropriate shopkeeper dialog line."""
-    if context in SHOPKEEPER:
-        return random.choice(SHOPKEEPER[context])
+    shopkeeper = get_shopkeeper()
+    if context in shopkeeper:
+        return random.choice(shopkeeper[context])
     if context == "buy":
-        return random.choice(SHOPKEEPER["buy_reactions"])
+        return random.choice(shopkeeper["buy_reactions"])
     elif context == "sell":
-        return random.choice(SHOPKEEPER["sell_reactions"])
+        return random.choice(shopkeeper["sell_reactions"])
     elif context == "low_gold" or character_gold <= 5:
-        return random.choice(SHOPKEEPER["low_gold"])
+        return random.choice(shopkeeper["low_gold"])
     elif context == "greeting":
-        return random.choice(SHOPKEEPER["greetings"])
+        return random.choice(shopkeeper["greetings"])
     elif context == "farewell":
-        return random.choice(SHOPKEEPER["farewell"])
+        return random.choice(shopkeeper["farewell"])
     else:
-        return random.choice(SHOPKEEPER["browse"])
-
-# Shop inventory - shared across sessions but quantity per session
-DEFAULT_SHOP_INVENTORY = [
-    {"name": "Minor Healing Potion", "healing": 5, "price": 10, "description": "Restores 5 HP"},
-    {"name": "Healing Potion", "healing": 10, "price": 25, "description": "Restores 10 HP"},
-    {"name": "Greater Healing Potion", "healing": 20, "price": 50, "description": "Restores 20 HP"},
-]
+        return random.choice(shopkeeper["browse"])
 
 
 def get_shop_inventory(session):
     """Get shop inventory from session, initializing if needed."""
     if session.shop_inventory is None:
         session.shop_inventory = [
-            {**item, "quantity": 5} for item in DEFAULT_SHOP_INVENTORY
+            {**item, "quantity": 5} for item in get_default_shop_inventory()
         ]
     return session.shop_inventory
 
@@ -143,7 +50,7 @@ def get_shop_inventory(session):
 def restock_shop(session):
     """Reset all shop items to full stock (quantity 5) and clear haggle state."""
     session.shop_inventory = [
-        {**item, "quantity": 5} for item in DEFAULT_SHOP_INVENTORY
+        {**item, "quantity": 5} for item in get_default_shop_inventory()
     ]
     session.haggled_items = {}
 
@@ -158,12 +65,8 @@ def get_effective_price(base_price, item_index, haggle_state):
 
 
 @router.get("/", response_class=HTMLResponse)
-async def shop_view(request: Request):
+async def shop_view(request: Request, session=Depends(require_character)):
     """Shop view - show items for sale."""
-    session = get_session(request)
-
-    if not session.character:
-        return RedirectResponse("/character/new", status_code=303)
 
     # Check if shop is available in current area
     area = session.current_area
@@ -262,7 +165,7 @@ async def shop_view(request: Request):
         "sellable_items": sellable_items,
         "message": message,
         "error": error,
-        "shopkeeper": SHOPKEEPER,
+        "shopkeeper": get_shopkeeper(),
         "dialog": dialog,
         "haggle_result": haggle_result,
         "active_quests": active_quest_list,
@@ -295,12 +198,8 @@ def calculate_sell_price(item, shop_inventory):
 
 
 @router.post("/buy")
-async def buy_item(request: Request, item_index: int = Form(...)):
+async def buy_item(request: Request, item_index: int = Form(...), session=Depends(require_character)):
     """Purchase an item from the shop."""
-    session = get_session(request)
-
-    if not session.character:
-        return RedirectResponse("/character/new", status_code=303)
 
     inventory = get_shop_inventory(session)
 
@@ -335,12 +234,8 @@ async def buy_item(request: Request, item_index: int = Form(...)):
 
 
 @router.post("/sell")
-async def sell_item(request: Request, item_index: int = Form(...)):
+async def sell_item(request: Request, item_index: int = Form(...), session=Depends(require_character)):
     """Sell an item to the shop."""
-    session = get_session(request)
-
-    if not session.character:
-        return RedirectResponse("/character/new", status_code=303)
 
     if 0 <= item_index < len(session.character.inventory):
         item = session.character.inventory[item_index]
@@ -363,12 +258,8 @@ async def sell_item(request: Request, item_index: int = Form(...)):
 
 
 @router.post("/haggle")
-async def haggle_item(request: Request, item_index: int = Form(...)):
+async def haggle_item(request: Request, item_index: int = Form(...), session=Depends(require_character)):
     """Attempt to haggle the price of an item using a Persuasion check."""
-    session = get_session(request)
-
-    if not session.character:
-        return RedirectResponse("/character/new", status_code=303)
 
     inventory = get_shop_inventory(session)
     haggle_state = session.haggled_items
@@ -438,12 +329,8 @@ async def haggle_item(request: Request, item_index: int = Form(...)):
 
 
 @router.post("/quest/accept")
-async def accept_quest(request: Request, quest_id: str = Form(...)):
+async def accept_quest(request: Request, quest_id: str = Form(...), session=Depends(require_character)):
     """Accept a quest from the quest board."""
-    session = get_session(request)
-
-    if not session.character:
-        return RedirectResponse("/character/new", status_code=303)
 
     all_quests = get_quests()
     quest_def = all_quests.get(quest_id)
@@ -473,44 +360,22 @@ async def accept_quest(request: Request, quest_id: str = Form(...)):
 
 
 @router.post("/quest/turn-in")
-async def turn_in_quest(request: Request, quest_id: str = Form(...)):
+async def turn_in_quest_route(request: Request, quest_id: str = Form(...), session=Depends(require_character)):
     """Turn in a completed quest for rewards."""
-    session = get_session(request)
-
-    if not session.character:
-        return RedirectResponse("/character/new", status_code=303)
 
     all_quests = get_quests()
-    quest_def = all_quests.get(quest_id)
-    quest_state = session.active_quests.get(quest_id)
 
-    if not quest_def or not quest_state or quest_state["status"] != "ready":
+    result = engine_turn_in_quest(
+        quest_id, session.active_quests, session.completed_quests,
+        all_quests, session.character)
+
+    if not result:
         session.set_flash("shop_error", "Quest not ready for turn-in.")
         save_session(request, session)
         return RedirectResponse("/shop?tab=quests", status_code=303)
 
-    rewards = quest_def["rewards"]
-    session.character.gold += rewards.get("gold", 0)
-    xp_reward = rewards.get("xp", 0)
-    session.character.xp += xp_reward
-    while session.character.xp >= session.character.xp_to_next_level:
-        session.character.level += 1
-        session.character.xp -= session.character.xp_to_next_level
-        session.character.xp_to_next_level = session.character.level * 150
-        hp_increase = max(1, (session.character.hit_die // 2) + 1 + session.character.constitution_modifier)
-        session.character.max_hit_points += hp_increase
-        session.character.current_hit_points += hp_increase
-
-    if quest_def["type"] == "gather":
-        session.character.inventory = [
-            item for item in session.character.inventory
-            if not (isinstance(item, QuestItem) and item.quest_id == quest_id)
-        ]
-
-    del session.active_quests[quest_id]
-    session.completed_quests.append(quest_id)
-
-    session.set_flash("shop_message", f"Quest complete: {quest_def['name']}! +{rewards.get('gold', 0)} gold, +{xp_reward} XP")
+    session.set_flash("shop_message",
+        f"Quest complete: {result['quest_name']}! +{result['gold']} gold, +{result['xp']} XP")
     session.set_flash("shop_dialog_context", "quest_complete")
     save_session(request, session)
 
@@ -518,12 +383,8 @@ async def turn_in_quest(request: Request, quest_id: str = Form(...)):
 
 
 @router.post("/quest/abandon")
-async def abandon_quest(request: Request, quest_id: str = Form(...)):
+async def abandon_quest(request: Request, quest_id: str = Form(...), session=Depends(require_character)):
     """Abandon an active quest."""
-    session = get_session(request)
-
-    if not session.character:
-        return RedirectResponse("/character/new", status_code=303)
 
     all_quests = get_quests()
     quest_def = all_quests.get(quest_id)

@@ -1,0 +1,86 @@
+{
+    "name": "Elara",
+    "title": "The Collector",
+    "portrait": "/static/images/shopkeeper.jpg",
+    "greetings": [
+        "Welcome, traveler! Come, browse my wares. I've gathered curiosities from every corner of Eldoria.",
+        "Ah, a fellow adventurer! You look like someone who appreciates quality goods. Step closer.",
+        "The roads are dangerous these days. Best stock up before you head out again, wouldn't you say?",
+        "Welcome to my humble shop! Don't let the dust fool you — everything here is top quality.",
+        "Another brave soul! I can tell by the look in your eyes. What can Elara do for you today?"
+    ],
+    "buy_reactions": [
+        "An excellent choice! That'll serve you well out there.",
+        "Wise purchase. I had a feeling you'd pick that one.",
+        "You have fine taste, adventurer. May it keep you alive.",
+        "A fair trade! Come back when you need more."
+    ],
+    "sell_reactions": [
+        "I'll gladly take that off your hands. A fair price, wouldn't you agree?",
+        "Interesting... I know just the collector who'd pay a premium for this.",
+        "One adventurer's surplus is another merchant's treasure!",
+        "Sold! I'll have this cleaned up and back on the shelf in no time."
+    ],
+    "low_gold": [
+        "Your purse seems a bit light, friend. Perhaps you have something to sell?",
+        "Gold is earned with sweat and steel. Come back when fortune smiles on you.",
+        "Don't worry — the best deals come to those who wait. And fight monsters."
+    ],
+    "browse": [
+        "Take your time. I'm not going anywhere... unlike my stock, which tends to disappear quickly.",
+        "See anything that catches your eye? Everything is priced fairly, I assure you.",
+        "Feel free to look around. And if you have tales from the road, I'm always listening."
+    ],
+    "farewell": [
+        "Safe travels, adventurer. May your blade stay sharp and your potions full.",
+        "Come back soon! And try not to die out there — you're one of my best customers.",
+        "Until next time! The roads of Eldoria won't travel themselves."
+    ],
+    "haggle_nat20": [
+        "By the gods, you could sell sand to a desert nomad! Fine — take it at that price, you silver-tongued rogue.",
+        "I... I can't believe I'm agreeing to this. You have a gift, adventurer. A dangerous gift."
+    ],
+    "haggle_great": [
+        "You drive a hard bargain! Alright, alright — I'll lower the price. But don't tell anyone.",
+        "Hmph. You remind me of my mother — impossible to say no to. Here, take the discount."
+    ],
+    "haggle_good": [
+        "Fair enough, I can shave a little off the price. You've earned it.",
+        "A reasonable offer. I'll meet you partway — how's that sound?"
+    ],
+    "haggle_okay": [
+        "I suppose I can take a copper or two off... but that's my final offer!",
+        "You're persistent, I'll give you that. A small discount, then."
+    ],
+    "haggle_fail": [
+        "Ha! Nice try, adventurer. But these prices are already more than fair.",
+        "I appreciate the effort, but my prices are firm on this one. Perhaps try another item?",
+        "You'll have to do better than that! I didn't survive twenty years in this trade by giving discounts to everyone."
+    ],
+    "haggle_nat1": [
+        "Did you just... try to insult my wares? The price just went UP, friend.",
+        "Oh my. That was the worst attempt at haggling I've ever witnessed. I'm raising the price out of principle."
+    ],
+    "quest_accept": [
+        "Excellent! I knew I could count on you. Come back when the job's done.",
+        "A brave soul indeed! Off you go — and try not to get killed.",
+        "Deal struck! I'll have your reward waiting when you return."
+    ],
+    "quest_complete": [
+        "You actually did it! I never doubted you. Well, maybe a little. Here's your reward!",
+        "Magnificent work! The tales they'll tell of this day... Here, you've earned every coin.",
+        "Contract fulfilled! It's a pleasure doing business with a professional."
+    ],
+    "quest_progress": [
+        "Still working on that quest? Keep at it — I believe in you!",
+        "Not done yet? The reward isn't going anywhere, but neither should you be dawdling."
+    ],
+    "quest_abandon": [
+        "Giving up? Well, I won't judge... much. The quest board is always here if you change your mind.",
+        "A shame, but I understand. Not every quest is for every adventurer."
+    ],
+    "quest_full": [
+        "Three quests is plenty, adventurer. Finish one before taking on more!",
+        "You're already juggling three tasks. Complete one first, then we'll talk."
+    ]
+}

@@ -6,10 +6,7 @@ A D&D 5e-inspired text adventure game built in Python with a modern web UI.
 
 AIVentures is a single-player RPG set in the realm of Eldoria, where the dark sorcerer Malachar is gathering fragments of the Shattered Crown. Players create a character, explore a 3-act campaign world, battle monsters, collect loot, complete quests, and level up — all driven by D&D 5e-style mechanics.
 
-Started as an experiment using AI as a co-coder, it has grown into a full-featured game with two interfaces:
-
-- **Web UI** (active focus): FastAPI + Jinja2 server-rendered HTML with a polished dark fantasy theme
-- **CLI** (legacy): Terminal-based game with ANSI colors
+Started as an experiment using AI as a co-coder, it has grown into a full-featured game with a FastAPI + Jinja2 web interface featuring a polished dark fantasy theme.
 
 ## Quick Start
 
@@ -94,10 +91,10 @@ Then open http://localhost:8000 in your browser.
 ## Running Tests
 
 ```bash
-pytest                          # all tests (39 tests)
-pytest test/test_abilities.py   # ability system tests
+pytest                          # all tests (148 tests)
 pytest test/test_battle.py      # battle mechanics
-pytest test/test_armor.py       # armor AC calculations
+pytest test/test_session_roundtrip.py  # session serialization
+pytest test/test_engine_combat.py      # engine combat logic
 ```
 
 ## Tech Stack
@@ -111,13 +108,17 @@ pytest test/test_armor.py       # armor AC calculations
 
 ```
 AIVentures/
-├── main.py                    # CLI entry point
 ├── character.py               # Character class (player)
 ├── entity.py                  # Base Entity class (shared stats/mechanics)
 ├── monster.py                 # Monster class (enemies)
 ├── items.py                   # Item, HealingPotion, QuestItem classes
-├── battleAI.py                # CLI battle system
 ├── *Factory.py                # Factory classes for creating game objects
+├── engine/                    # Headless game logic (no I/O, no web deps)
+│   ├── combat.py              # Attack resolution, rewards
+│   ├── effects.py             # Buff/debuff duration and stacking
+│   ├── leveling.py            # PP calculation
+│   ├── quests.py              # Quest progress and turn-in
+│   └── combatant.py           # CombatantState dataclass for battle
 ├── json/                      # Game data files
 │   ├── campaign.json          # World: acts, locations, areas
 │   ├── abilities.json         # 55 class abilities
@@ -126,15 +127,20 @@ AIVentures/
 │   ├── armor_catalog.json     # Armor definitions
 │   ├── classes_properties.json # Class stats, proficiencies
 │   ├── races.json             # Race ability bonuses
-│   └── monster_default_values.json # Monster race stats
+│   ├── monster_default_values.json # Monster race stats
+│   ├── monster_taunts.json    # Monster dialog lines
+│   ├── monster_portraits.json # Monster portrait mappings
+│   ├── shopkeeper.json        # Shopkeeper NPC dialog
+│   └── shop_inventory.json    # Default shop items
 ├── web/
 │   ├── app.py                 # FastAPI application
 │   ├── game_session.py        # Session management, data loaders
+│   ├── dependencies.py        # FastAPI route guards
 │   ├── sessions/              # Server-side session JSON files
 │   ├── routes/
 │   │   ├── character.py       # Character creation flow
 │   │   ├── game.py            # World navigation, exploration, rest
-│   │   ├── battle.py          # Combat system, monster taunts/portraits
+│   │   ├── battle.py          # Combat system
 │   │   ├── shop.py            # Shop, haggling, quests
 │   │   └── inventory.py       # Equipment management
 │   ├── templates/             # Jinja2 HTML templates
@@ -142,7 +148,7 @@ AIVentures/
 │       ├── css/style.css      # Complete design system
 │       ├── js/main.js         # Sound effects, toasts, tabs, animations
 │       └── images/            # Portraits (player, monster, shopkeeper)
-└── test/                      # pytest test suite
+└── test/                      # pytest test suite (148 tests)
 ```
 
 ## Worklist
@@ -164,6 +170,8 @@ Done | Quest system (kill & gather quests, quest board, rewards)
 Done | Monster portraits and taunts
 Done | Player portraits (selection at character creation)
 Done | Server-side session storage (JSON files, no cookie size limits)
+Done | Game engine extraction (engine/ package — combat, effects, quests, leveling)
+Done | CLI removal — web-only codebase
 x | Boss encounters with unique mechanics
 x | Act progression gating
 x | Monster abilities and smarter AI

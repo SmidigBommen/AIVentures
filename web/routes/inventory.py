@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-from fastapi import APIRouter, Request, Form
+from fastapi import APIRouter, Request, Form, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
@@ -8,6 +8,7 @@ from fastapi.templating import Jinja2Templates
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from web.game_session import get_session, save_session, get_classes
+from web.dependencies import require_character
 from character import WeaponSlot
 from equipmentType import EquipmentType
 from weapon import Weapon
@@ -27,13 +28,8 @@ def _can_equip_item(item, weapon_proficiencies, armor_training):
 
 
 @router.get("/", response_class=HTMLResponse)
-async def inventory_view(request: Request):
+async def inventory_view(request: Request, session=Depends(require_character)):
     """Inventory and equipment management page."""
-    session = get_session(request)
-
-    if not session.character:
-        return RedirectResponse("/character/new", status_code=303)
-
     char_data = session._serialize_character()
 
     # Look up class proficiencies
@@ -63,13 +59,8 @@ async def inventory_view(request: Request):
 
 
 @router.post("/equip-weapon")
-async def equip_weapon(request: Request, item_index: int = Form(...)):
+async def equip_weapon(request: Request, item_index: int = Form(...), session=Depends(require_character)):
     """Equip a weapon from inventory."""
-    session = get_session(request)
-
-    if not session.character:
-        return RedirectResponse("/character/new", status_code=303)
-
     character = session.character
     if item_index < 0 or item_index >= len(character.inventory):
         session.set_flash("inventory_error", "Invalid item.")
@@ -101,13 +92,8 @@ async def equip_weapon(request: Request, item_index: int = Form(...)):
 
 
 @router.post("/unequip-weapon")
-async def unequip_weapon(request: Request):
+async def unequip_weapon(request: Request, session=Depends(require_character)):
     """Unequip the main hand weapon."""
-    session = get_session(request)
-
-    if not session.character:
-        return RedirectResponse("/character/new", status_code=303)
-
     character = session.character
     weapon = character.weapon_slots.get(WeaponSlot.MAIN_HAND)
     if not weapon:
@@ -115,7 +101,6 @@ async def unequip_weapon(request: Request):
         save_session(request, session)
         return RedirectResponse("/inventory", status_code=303)
 
-    # unequip_weapon handles inventory (adds weapon back to inventory)
     character.unequip_weapon(WeaponSlot.MAIN_HAND)
     session.character_creation.weapon = None
 
@@ -125,13 +110,8 @@ async def unequip_weapon(request: Request):
 
 
 @router.post("/equip-armor")
-async def equip_armor(request: Request, item_index: int = Form(...)):
+async def equip_armor(request: Request, item_index: int = Form(...), session=Depends(require_character)):
     """Equip armor from inventory."""
-    session = get_session(request)
-
-    if not session.character:
-        return RedirectResponse("/character/new", status_code=303)
-
     character = session.character
     if item_index < 0 or item_index >= len(character.inventory):
         session.set_flash("inventory_error", "Invalid item.")
@@ -167,13 +147,8 @@ async def equip_armor(request: Request, item_index: int = Form(...)):
 
 
 @router.post("/unequip-armor")
-async def unequip_armor(request: Request):
+async def unequip_armor(request: Request, session=Depends(require_character)):
     """Unequip current armor."""
-    session = get_session(request)
-
-    if not session.character:
-        return RedirectResponse("/character/new", status_code=303)
-
     character = session.character
     armor = character.equipment.get(EquipmentType.ARMOR)
     if not armor:
@@ -181,7 +156,6 @@ async def unequip_armor(request: Request):
         save_session(request, session)
         return RedirectResponse("/inventory", status_code=303)
 
-    # Manually add armor back to inventory, then unequip
     character.inventory.append(armor)
     character.unequip(EquipmentType.ARMOR)
     session.character_creation.armor = None

@@ -48,43 +48,29 @@ class Character(Entity):
 
     def equip_weapon(self, weapon, slot=WeaponSlot.MAIN_HAND):
         """Equip a weapon to a specific slot."""
-        # Check if the slot is valid
         if slot not in self.weapon_slots:
-            print(f"Invalid weapon slot: {slot}")
             return False
 
         # Unequip any existing weapon in that slot
         if self.weapon_slots[slot]:
             self.unequip_weapon(slot)
 
-        # Equip the new weapon
         self.weapon_slots[slot] = weapon
-
-        # Apply the weapon's bonuses if needed
-        # This depends on how your weapon bonuses work
 
         # If the weapon was in inventory, remove it
         if weapon in self.inventory:
             self.inventory.remove(weapon)
 
-        print(f"{self.name} equipped {weapon.name} in {slot.name}")
         return True
 
     def unequip_weapon(self, slot):
         """Unequip a weapon from a specific slot."""
         if slot not in self.weapon_slots or not self.weapon_slots[slot]:
-            print(f"No weapon equipped in {slot.name}")
             return False
 
         weapon = self.weapon_slots[slot]
-
-        # Add the weapon back to inventory
         self.inventory.append(weapon)
-
-        # Clear the slot
         self.weapon_slots[slot] = None
-
-        print(f"{self.name} unequipped {weapon.name}")
         return True
 
     def add_item(self, item):
@@ -110,37 +96,41 @@ class Character(Entity):
     def calculate_xp_to_next_level(self):
         return self.level * 150  # Simple calculation, can be adjusted for balance
 
-    def gain_xp(self, xp):
+    def gain_xp(self, xp, roll_hp=False):
+        """Add XP and auto-level. Returns list of level-up results."""
         self.xp += xp
+        results = []
         while self.xp >= self.xp_to_next_level:
-            self.level_up()
+            results.append(self.level_up(roll_hp=roll_hp))
+        return results
 
-    def level_up(self):
+    def level_up(self, roll_hp=False):
+        """Level up the character. Returns dict with level-up details.
+
+        Args:
+            roll_hp: If True, roll hit die for HP. If False, take average (default).
+        """
         self.level += 1
         self.xp -= self.xp_to_next_level
         self.xp_to_next_level = self.calculate_xp_to_next_level()
         self.update_proficiency_bonus()
-        print(f"{self.name} has leveled up to level {self.level} \n")
 
-        # Update constitution modifier as it might have changed
         con_modifier = self.get_constitution_modifier()
-        print(f"Your hit points can increase by a maximum of {self.hit_die}+{con_modifier}")
-        choice = input("Would you like to (r)oll for points or take the (a)verage? ").lower()
 
-        if choice == 'r':
-            # Roll for hit points
-            hit_points_increase = self.roll_hit_die() + con_modifier
-            # Ensure at least 1 hit point gained per level
-            hit_points_increase = max(1, hit_points_increase)
-            print(f"You rolled a {hit_points_increase - con_modifier} + {con_modifier} (CON mod)")
+        if roll_hp:
+            hit_points_increase = max(1, self.roll_hit_die() + con_modifier)
         else:
-            # Take average
-            average = (self.hit_die // 2) + 1  # This is the 5e way to calculate average
-            hit_points_increase = average + con_modifier
-            print(f"You took the average: {average} + {con_modifier} (CON mod)")
+            average = (self.hit_die // 2) + 1
+            hit_points_increase = max(1, average + con_modifier)
 
         self.max_hit_points += hit_points_increase
-        print(f"Hit Points increased by {hit_points_increase}")
+
+        return {
+            "new_level": self.level,
+            "hp_increase": hit_points_increase,
+            "con_modifier": con_modifier,
+            "rolled": roll_hp,
+        }
 
 
     def roll_hit_die(self):

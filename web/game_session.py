@@ -102,6 +102,50 @@ def get_abilities() -> dict:
     return _abilities_cache
 
 
+_taunts_cache = None
+
+
+def get_monster_taunts() -> dict:
+    """Get all monster taunts."""
+    global _taunts_cache
+    if _taunts_cache is None:
+        _taunts_cache = load_json("monster_taunts.json")
+    return _taunts_cache
+
+
+_portraits_cache = None
+
+
+def get_monster_portraits() -> dict:
+    """Get monster portrait mappings."""
+    global _portraits_cache
+    if _portraits_cache is None:
+        _portraits_cache = load_json("monster_portraits.json")
+    return _portraits_cache
+
+
+_shopkeeper_cache = None
+
+
+def get_shopkeeper() -> dict:
+    """Get shopkeeper dialog data."""
+    global _shopkeeper_cache
+    if _shopkeeper_cache is None:
+        _shopkeeper_cache = load_json("shopkeeper.json")
+    return _shopkeeper_cache
+
+
+_shop_inventory_cache = None
+
+
+def get_default_shop_inventory() -> list:
+    """Get default shop inventory."""
+    global _shop_inventory_cache
+    if _shop_inventory_cache is None:
+        _shop_inventory_cache = load_json("shop_inventory.json")
+    return _shop_inventory_cache
+
+
 def get_class_abilities(class_name: str, level: int) -> list:
     """Get unlocked abilities for a class at a given level."""
     abilities = get_abilities()
@@ -114,16 +158,9 @@ def get_class_abilities(class_name: str, level: int) -> list:
 
 
 def calculate_max_pp(class_name: str, level: int, primary_modifier: int) -> int:
-    """Calculate max power points for a class."""
-    full_casters = {"Wizard", "Sorcerer", "Warlock", "Cleric", "Druid", "Bard"}
-    half_casters = {"Paladin", "Ranger"}
-    if class_name in full_casters:
-        pp = level + primary_modifier
-    elif class_name in half_casters:
-        pp = (level // 2) + primary_modifier
-    else:
-        pp = (level // 3) + primary_modifier
-    return max(2, pp)
+    """Calculate max power points for a class. Delegates to engine."""
+    from engine.leveling import calculate_max_pp as _calc
+    return _calc(class_name, level, primary_modifier)
 
 
 def get_primary_modifier(character) -> int:
@@ -159,27 +196,57 @@ class CharacterCreationState:
 @dataclass
 class BattleState:
     """Tracks current battle state."""
-    monster_name: str = ""
-    monster_race: str = ""
-    monster_level: int = 1
-    monster_hp: int = 0
-    monster_max_hp: int = 0
-    monster_ac: int = 10
-    monster_base_ac: int = 10
-    monster_dex_modifier: int = 0
-    monster_str_modifier: int = 0
-    monster_proficiency_bonus: int = 1
-    monster_weapon_name: str = ""
-    monster_weapon_damage_die: int = 6
-    monster_weapon_damage_dice_count: int = 1
-    monster_weapon_properties: list = field(default_factory=list)
+    monster: "CombatantState" = None
     round_count: int = 0
     initiative_order: list = field(default_factory=list)
     battle_log: list = field(default_factory=list)
     is_player_turn: bool = True
     is_active: bool = False
-    monster_effects: list = field(default_factory=list)  # active effects on monster
-    player_effects: list = field(default_factory=list)   # active effects on player
+    player_effects: list = field(default_factory=list)
+
+    def __post_init__(self):
+        if self.monster is None:
+            from engine.combatant import CombatantState
+            self.monster = CombatantState()
+
+    # --- Backward-compatible properties for gradual migration ---
+    # These let existing code read battle.monster_name etc. without changes.
+    @property
+    def monster_name(self): return self.monster.name
+    @property
+    def monster_race(self): return self.monster.race
+    @property
+    def monster_level(self): return self.monster.level
+    @property
+    def monster_hp(self): return self.monster.hp
+    @monster_hp.setter
+    def monster_hp(self, value): self.monster.hp = value
+    @property
+    def monster_max_hp(self): return self.monster.max_hp
+    @property
+    def monster_ac(self): return self.monster.ac
+    @monster_ac.setter
+    def monster_ac(self, value): self.monster.ac = value
+    @property
+    def monster_base_ac(self): return self.monster.base_ac
+    @property
+    def monster_dex_modifier(self): return self.monster.dex_mod
+    @property
+    def monster_str_modifier(self): return self.monster.str_mod
+    @property
+    def monster_proficiency_bonus(self): return self.monster.proficiency
+    @property
+    def monster_weapon_name(self): return self.monster.weapon.name
+    @property
+    def monster_weapon_damage_die(self): return self.monster.weapon.damage_die
+    @property
+    def monster_weapon_damage_dice_count(self): return self.monster.weapon.damage_dice_count
+    @property
+    def monster_weapon_properties(self): return self.monster.weapon.properties
+    @property
+    def monster_effects(self): return self.monster.effects
+    @monster_effects.setter
+    def monster_effects(self, value): self.monster.effects = value
 
 
 class GameSession:
@@ -233,26 +300,12 @@ class GameSession:
                 "skills": self.character_creation.skills,
             },
             "battle": {
-                "monster_name": self.battle.monster_name,
-                "monster_race": self.battle.monster_race,
-                "monster_level": self.battle.monster_level,
-                "monster_hp": self.battle.monster_hp,
-                "monster_max_hp": self.battle.monster_max_hp,
-                "monster_ac": self.battle.monster_ac,
-                "monster_base_ac": self.battle.monster_base_ac,
-                "monster_dex_modifier": self.battle.monster_dex_modifier,
-                "monster_str_modifier": self.battle.monster_str_modifier,
-                "monster_proficiency_bonus": self.battle.monster_proficiency_bonus,
-                "monster_weapon_name": self.battle.monster_weapon_name,
-                "monster_weapon_damage_die": self.battle.monster_weapon_damage_die,
-                "monster_weapon_damage_dice_count": self.battle.monster_weapon_damage_dice_count,
-                "monster_weapon_properties": self.battle.monster_weapon_properties,
+                "monster": self.battle.monster.to_dict(),
                 "round_count": self.battle.round_count,
                 "initiative_order": self.battle.initiative_order,
                 "battle_log": self.battle.battle_log[-10:],
                 "is_player_turn": self.battle.is_player_turn,
                 "is_active": self.battle.is_active,
-                "monster_effects": self.battle.monster_effects,
                 "player_effects": self.battle.player_effects,
             },
             "location_name": location_name,
@@ -428,28 +481,43 @@ class GameSession:
         )
 
         # Restore battle state
+        from engine.combatant import CombatantState
         battle_data = data.get("battle", {})
+
+        # Support both new format (nested "monster" dict) and legacy (flat fields)
+        monster_data = battle_data.get("monster")
+        if monster_data and isinstance(monster_data, dict) and "name" in monster_data:
+            monster = CombatantState.from_dict(monster_data)
+        else:
+            # Legacy format: reconstruct from flat fields
+            from engine.combatant import WeaponState
+            monster = CombatantState(
+                name=battle_data.get("monster_name", ""),
+                race=battle_data.get("monster_race", ""),
+                level=battle_data.get("monster_level", 1),
+                hp=battle_data.get("monster_hp", 0),
+                max_hp=battle_data.get("monster_max_hp", 0),
+                ac=battle_data.get("monster_ac", 10),
+                base_ac=battle_data.get("monster_base_ac", 10),
+                str_mod=battle_data.get("monster_str_modifier", 0),
+                dex_mod=battle_data.get("monster_dex_modifier", 0),
+                proficiency=battle_data.get("monster_proficiency_bonus", 1),
+                weapon=WeaponState(
+                    name=battle_data.get("monster_weapon_name", ""),
+                    damage_die=battle_data.get("monster_weapon_damage_die", 6),
+                    damage_dice_count=battle_data.get("monster_weapon_damage_dice_count", 1),
+                    properties=battle_data.get("monster_weapon_properties", []),
+                ),
+                effects=battle_data.get("monster_effects", []),
+            )
+
         session.battle = BattleState(
-            monster_name=battle_data.get("monster_name", ""),
-            monster_race=battle_data.get("monster_race", ""),
-            monster_level=battle_data.get("monster_level", 1),
-            monster_hp=battle_data.get("monster_hp", 0),
-            monster_max_hp=battle_data.get("monster_max_hp", 0),
-            monster_ac=battle_data.get("monster_ac", 10),
-            monster_base_ac=battle_data.get("monster_base_ac", 10),
-            monster_dex_modifier=battle_data.get("monster_dex_modifier", 0),
-            monster_str_modifier=battle_data.get("monster_str_modifier", 0),
-            monster_proficiency_bonus=battle_data.get("monster_proficiency_bonus", 1),
-            monster_weapon_name=battle_data.get("monster_weapon_name", ""),
-            monster_weapon_damage_die=battle_data.get("monster_weapon_damage_die", 6),
-            monster_weapon_damage_dice_count=battle_data.get("monster_weapon_damage_dice_count", 1),
-            monster_weapon_properties=battle_data.get("monster_weapon_properties", []),
+            monster=monster,
             round_count=battle_data.get("round_count", 0),
             initiative_order=battle_data.get("initiative_order", []),
             battle_log=battle_data.get("battle_log", []),
             is_player_turn=battle_data.get("is_player_turn", True),
             is_active=battle_data.get("is_active", False),
-            monster_effects=battle_data.get("monster_effects", []),
             player_effects=battle_data.get("player_effects", []),
         )
 

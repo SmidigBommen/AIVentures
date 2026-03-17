@@ -1,272 +1,36 @@
 import sys
 import random
 from pathlib import Path
-from fastapi import APIRouter, Request, Form
+from fastapi import APIRouter, Request, Form, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 # Add parent directories to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from web.game_session import get_session, save_session, get_abilities, get_class_abilities, get_primary_modifier, calculate_max_pp, get_quests
+from web.game_session import get_session, save_session, get_abilities, get_class_abilities, get_primary_modifier, get_quests, get_monster_taunts, get_monster_portraits
 from monsterFactory import MonsterFactory
 from dice import Dice
 from items import HealingPotion, QuestItem
 from character import WeaponSlot
 from lootGenerator import LootGenerator
 from web.routes.shop import restock_shop
+from engine.effects import get_effect_bonus, tick_effects
+from engine.combat import get_weapon_attack_modifier, resolve_weapon_attack, attack_roll, roll_damage, monster_turn_action, calculate_xp_reward, calculate_gold_reward
+from engine.leveling import calculate_max_pp
+from engine.quests import check_quest_progress
+from engine.combatant import CombatantState
+from web.dependencies import require_character, require_battle
 
 router = APIRouter()
 templates = Jinja2Templates(directory=Path(__file__).parent.parent / "templates")
 
-# Monster race → portrait image mapping
-MONSTER_PORTRAITS = {
-    "Goblin": "/static/images/goblin_fighter.png",
-    "Troll": "/static/images/troll_fighter.png",
-}
-DEFAULT_MONSTER_PORTRAIT = "/static/images/orc-creature-battle.jpg"
-
-# Monster taunts by race
-MONSTER_TAUNTS = {
-    "Goblin": {
-        "start": [
-            "Hehe, shiny armor! It'll be mine soon!",
-            "You lost, little human? Goblins own these roads now!",
-            "Stab stab stab! Goblins love stabbing!",
-            "More bones for the pile!",
-        ],
-        "attack": [
-            "Take this, soft-skin!",
-            "Goblin surprise!",
-            "Stab stab!",
-        ],
-        "hurt": [
-            "Ow! That not fair!",
-            "Grrr... you'll pay for that!",
-            "Lucky hit!",
-        ],
-    },
-    "Orc": {
-        "start": [
-            "WAAARGH! Another weakling to crush!",
-            "You smell like fear. Good.",
-            "Orc steel will taste your blood today!",
-            "Stand and fight, or die running. Either way, you die.",
-        ],
-        "attack": [
-            "SMASH!",
-            "Orc strength!",
-            "Feel the fury!",
-        ],
-        "hurt": [
-            "Is that all you've got?",
-            "Pain makes orc ANGRY!",
-            "You'll regret that!",
-        ],
-    },
-    "Troll": {
-        "start": [
-            "Mmm... you look tasty.",
-            "Troll hungry. You food.",
-            "Hrrr... little morsel wanders into troll's den.",
-            "Bones crunch nice. Troll likes crunching.",
-        ],
-        "attack": [
-            "CRUNCH!",
-            "Troll smash!",
-            "Hold still, food!",
-        ],
-        "hurt": [
-            "Grrr... it grows back!",
-            "That tickles!",
-            "Now troll MAD!",
-        ],
-    },
-    "Blighted Dryad": {
-        "start": [
-            "The forest rejects you... as do I.",
-            "Roots and thorns shall be your grave.",
-            "You trespass on corrupted ground. Leave... or become fertilizer.",
-            "The rot spreads, and you shall spread it further.",
-        ],
-        "attack": [
-            "The thorns hunger!",
-            "Decay take you!",
-            "Wither!",
-        ],
-        "hurt": [
-            "The corruption... sustains me...",
-            "Cut one branch, two grow back!",
-            "You cannot kill what is already rotting!",
-        ],
-    },
-    "Fire Salamander": {
-        "start": [
-            "Burn, surface-dweller! BURN!",
-            "The flames of the deep will consume you!",
-            "You dare challenge the children of fire?",
-            "Your flesh will melt like wax before me.",
-        ],
-        "attack": [
-            "Feel the heat!",
-            "BURN!",
-            "Fire consumes!",
-        ],
-        "hurt": [
-            "The flames only grow hotter!",
-            "You cannot quench this fire!",
-            "Ssss... pain fuels the inferno!",
-        ],
-    },
-    "Shadow Wraith": {
-        "start": [
-            "Your warmth... I will take it all...",
-            "The living do not belong here...",
-            "Cold. So cold. You will know this cold soon.",
-            "I was like you once... before the darkness took me...",
-        ],
-        "attack": [
-            "Feel the void...",
-            "Your life... drains...",
-            "Embrace the cold...",
-        ],
-        "hurt": [
-            "I am already dead... you cannot kill me again...",
-            "Light... it burns...",
-            "The shadows will return...",
-        ],
-    },
-    "Sea Serpent": {
-        "start": [
-            "The depths have sent me for you!",
-            "Surface creatures are so... fragile.",
-            "The ocean's fury given form stands before you!",
-            "You will drown in your own blood!",
-        ],
-        "attack": [
-            "The tide crushes!",
-            "Drown!",
-            "The deep strikes!",
-        ],
-        "hurt": [
-            "The sea heals all wounds!",
-            "A scratch!",
-            "The current shifts... but never stops!",
-        ],
-    },
-    "Wind Specter": {
-        "start": [
-            "You cannot strike what you cannot see...",
-            "The wind carries whispers of your death.",
-            "I am the storm that never ends.",
-            "Flesh and bone against the wind? Foolish.",
-        ],
-        "attack": [
-            "The gale strikes!",
-            "Carried by the storm!",
-            "Howl!",
-        ],
-        "hurt": [
-            "You cannot wound the wind!",
-            "I scatter... and reform!",
-            "A gust... nothing more!",
-        ],
-    },
-    "Stone Golem": {
-        "start": [
-            "...",
-            "INTRUDER. DESTROY.",
-            "GUARDIAN PROTOCOL: ENGAGED.",
-            "NONE SHALL PASS.",
-        ],
-        "attack": [
-            "CRUSH.",
-            "DESTROY.",
-            "SMASH.",
-        ],
-        "hurt": [
-            "DAMAGE... INSIGNIFICANT.",
-            "STONE... ENDURES.",
-            "RECALCULATING.",
-        ],
-    },
-    "Crystal Golem": {
-        "start": [
-            "The crystals sing of your destruction.",
-            "REFRACT. REFLECT. REJECT.",
-            "You see yourself in a thousand shards. Each one shows your death.",
-            "The earth's bones will grind you to dust.",
-        ],
-        "attack": [
-            "SHATTER!",
-            "Crystal fury!",
-            "The gems cut deep!",
-        ],
-        "hurt": [
-            "Cracks... heal...",
-            "CRYSTAL INTEGRITY: HOLDING.",
-            "You chip at a mountain!",
-        ],
-    },
-    "Shadow Knight": {
-        "start": [
-            "Malachar sends his regards.",
-            "Your light dies here, hero.",
-            "I have slain a hundred like you. You will be one hundred and one.",
-            "Kneel before the shadow, and I may grant a swift end.",
-        ],
-        "attack": [
-            "For Malachar!",
-            "Shadow strike!",
-            "Darkness falls!",
-        ],
-        "hurt": [
-            "A worthy blow... but futile.",
-            "The shadow does not yield!",
-            "Pain is an old friend.",
-        ],
-    },
-    "Void Fiend": {
-        "start": [
-            "Reality bends around me. You should run.",
-            "I have seen the space between worlds. There is nothing there for you.",
-            "Your existence is a brief flicker. I will snuff it out.",
-            "The void hungers, and I am its mouth.",
-        ],
-        "attack": [
-            "OBLIVION!",
-            "The void takes!",
-            "Reality tears!",
-        ],
-        "hurt": [
-            "Pain is... merely a concept...",
-            "I exist beyond your understanding!",
-            "The void... repairs...",
-        ],
-    },
-}
-
-DEFAULT_TAUNTS = {
-    "start": [
-        "You dare challenge me?",
-        "This will be your last mistake!",
-        "Prepare to meet your end!",
-    ],
-    "attack": [
-        "Take this!",
-        "Ha!",
-    ],
-    "hurt": [
-        "Grrr!",
-        "You'll pay for that!",
-    ],
-}
-
-
 def get_monster_taunt(race: str, context: str) -> str:
     """Get a random monster taunt by race and context."""
-    taunts = MONSTER_TAUNTS.get(race, DEFAULT_TAUNTS)
-    lines = taunts.get(context, DEFAULT_TAUNTS.get(context, [""]))
+    all_taunts = get_monster_taunts()
+    default = all_taunts.get("Default", {})
+    taunts = all_taunts.get(race, default)
+    lines = taunts.get(context, default.get(context, [""]))
     return random.choice(lines)
 
 
@@ -295,13 +59,8 @@ def get_monster_for_area(area, location=None):
 
 
 @router.get("/start")
-async def start_battle(request: Request):
+async def start_battle(request: Request, session=Depends(require_character)):
     """Initialize a new battle encounter."""
-    session = get_session(request)
-
-    if not session.character:
-        return RedirectResponse("/character/new", status_code=303)
-
     area = session.current_area
     if not area:
         return RedirectResponse("/game", status_code=303)
@@ -331,23 +90,11 @@ async def start_battle(request: Request):
     )
 
     # Initialize battle state
+    session.battle.monster = CombatantState.from_monster(monster)
     session.battle.is_active = True
-    session.battle.monster_name = monster.name
-    session.battle.monster_race = monster.race
-    session.battle.monster_level = monster.level
-    session.battle.monster_hp = monster.current_hit_points
-    session.battle.monster_max_hp = monster.max_hit_points
-    session.battle.monster_ac = monster.armor_class
-    session.battle.monster_base_ac = monster.base_ac
-    session.battle.monster_dex_modifier = monster.dexterity_modifier
-    session.battle.monster_str_modifier = monster.strength_modifier
-    session.battle.monster_proficiency_bonus = monster.proficiency_bonus
-    session.battle.monster_weapon_name = monster.weapon.name
-    session.battle.monster_weapon_damage_die = monster.weapon.damage_die
-    session.battle.monster_weapon_damage_dice_count = monster.weapon.damage_dice_count
-    session.battle.monster_weapon_properties = monster.weapon.properties
     session.battle.round_count = 1
     session.battle.battle_log = []
+    session.battle.player_effects = []
 
     # Calculate initiative
     player_init = session.character.dexterity_modifier + Dice.roll_d20()
@@ -372,61 +119,46 @@ async def start_battle(request: Request):
     return RedirectResponse("/battle", status_code=303)
 
 
-def get_monster_attack_modifier(battle):
-    """Return the correct ability modifier for the monster's weapon."""
-    props = battle.monster_weapon_properties
-    if "ammunition" in props:
-        return battle.monster_dex_modifier
-    if "finesse" in props:
-        return max(battle.monster_str_modifier, battle.monster_dex_modifier)
-    return battle.monster_str_modifier
-
-
 def execute_monster_turn(session):
     """Execute the monster's turn."""
-    # Simple AI: 70% attack, 30% defend
-    action = random.random()
+    battle = session.battle
+    action = monster_turn_action()
 
-    if action < 0.7:
-        # Attack (apply monster's active effect bonuses)
-        battle = session.battle
-        ability_mod = get_monster_attack_modifier(battle)
-        monster_atk_bonus = get_effect_bonus(battle.monster_effects, "attack_bonus")
-        player_ac = session.character.armor_class + get_effect_bonus(battle.player_effects, "ac")
-        attack_roll = Dice.roll_d20() + ability_mod + battle.monster_proficiency_bonus + monster_atk_bonus
+    if action == "attack":
+        ability_mod = get_weapon_attack_modifier(
+            battle.monster_str_modifier, battle.monster_dex_modifier,
+            battle.monster_weapon_properties)
+
+        result = resolve_weapon_attack(
+            attacker_mod=ability_mod,
+            attacker_prof=battle.monster_proficiency_bonus,
+            target_ac=session.character.armor_class,
+            damage_dice_count=battle.monster_weapon_damage_dice_count,
+            damage_die=battle.monster_weapon_damage_die,
+            attacker_effects=battle.monster_effects,
+            target_effects=battle.player_effects,
+        )
+
         taunt = get_monster_taunt(battle.monster_race, "attack")
-        session.battle.battle_log.append(f'{battle.monster_name}: "{taunt}"')
-        session.battle.battle_log.append(f"{battle.monster_name} attacks with {battle.monster_weapon_name}! (Roll: {attack_roll} vs AC {player_ac})")
+        battle.battle_log.append(f'{battle.monster_name}: "{taunt}"')
+        battle.battle_log.append(
+            f"{battle.monster_name} attacks with {battle.monster_weapon_name}! "
+            f"(Roll: {result['attack_roll']} vs AC {result['target_ac']})")
 
-        if attack_roll >= player_ac:
-            # Hit - calculate damage using actual weapon dice
-            damage = 0
-            for _ in range(battle.monster_weapon_damage_dice_count):
-                damage += Dice.roll(battle.monster_weapon_damage_die)
-            monster_dmg_bonus = get_effect_bonus(battle.monster_effects, "damage_bonus")
-            damage = max(1, damage + ability_mod + monster_dmg_bonus)
-            player_dr = get_effect_bonus(battle.player_effects, "damage_reduction")
-            damage = max(1, damage - player_dr)
-            session.character.current_hit_points = max(0, session.character.current_hit_points - damage)
-            session.battle.battle_log.append(f"{battle.monster_name} hits for {damage} damage!")
+        if result["hit"]:
+            session.character.current_hit_points = max(
+                0, session.character.current_hit_points - result["damage"])
+            battle.battle_log.append(f"{battle.monster_name} hits for {result['damage']} damage!")
         else:
-            session.battle.battle_log.append(f"{battle.monster_name}'s attack misses!")
+            battle.battle_log.append(f"{battle.monster_name}'s attack misses!")
     else:
-        # Defend
-        session.battle.monster_ac += 2
-        session.battle.battle_log.append(f"{session.battle.monster_name} takes a defensive stance (+2 AC).")
+        battle.monster_ac += 2
+        battle.battle_log.append(f"{battle.monster_name} takes a defensive stance (+2 AC).")
 
 
 @router.get("/", response_class=HTMLResponse)
-async def battle_view(request: Request):
+async def battle_view(request: Request, session=Depends(require_battle)):
     """Battle view - show combat arena."""
-    session = get_session(request)
-
-    if not session.character:
-        return RedirectResponse("/character/new", status_code=303)
-
-    if not session.battle.is_active:
-        return RedirectResponse("/game", status_code=303)
 
     char_data = session._serialize_character()
 
@@ -441,7 +173,8 @@ async def battle_view(request: Request):
     char = session.character
     abilities = get_class_abilities(char.class_name, char.level)
 
-    monster_portrait = MONSTER_PORTRAITS.get(session.battle.monster_race, DEFAULT_MONSTER_PORTRAIT)
+    portraits = get_monster_portraits()
+    monster_portrait = portraits.get(session.battle.monster_race, portraits.get("default", "/static/images/orc-creature-battle.jpg"))
     monster_taunt = get_monster_taunt(session.battle.monster_race, "start") if session.battle.round_count <= 1 else None
 
     return templates.TemplateResponse("battle/arena.html", {
@@ -469,46 +202,39 @@ async def battle_view(request: Request):
 
 
 @router.post("/attack")
-async def player_attack(request: Request):
+async def player_attack(request: Request, session=Depends(require_battle)):
     """Player attacks the monster."""
-    session = get_session(request)
-
-    if not session.battle.is_active or not session.battle.is_player_turn:
+    if not session.battle.is_player_turn:
         return RedirectResponse("/battle", status_code=303)
 
     char = session.character
 
-    # Get weapon damage
     weapon = char.weapon_slots.get(WeaponSlot.MAIN_HAND)
     if weapon:
+        ability_mod = char.get_attack_modifier(weapon)
         damage_die = weapon.damage_die
         damage_dice_count = weapon.damage_dice_count
     else:
+        ability_mod = char.strength_modifier
         damage_die = 4
         damage_dice_count = 1
 
-    # Attack roll (apply active effect bonuses)
-    if weapon:
-        ability_mod = char.get_attack_modifier(weapon)
-    else:
-        ability_mod = char.strength_modifier
-    atk_bonus = get_effect_bonus(session.battle.player_effects, "attack_bonus")
-    effective_monster_ac = session.battle.monster_ac + get_effect_bonus(session.battle.monster_effects, "ac")
-    attack_roll = Dice.roll_d20() + ability_mod + char.proficiency_bonus + atk_bonus
-    session.battle.battle_log.append(f"{char.name} attacks! (Roll: {attack_roll} vs AC {effective_monster_ac})")
+    result = resolve_weapon_attack(
+        attacker_mod=ability_mod,
+        attacker_prof=char.proficiency_bonus,
+        target_ac=session.battle.monster_ac,
+        damage_dice_count=damage_dice_count,
+        damage_die=damage_die,
+        attacker_effects=session.battle.player_effects,
+        target_effects=session.battle.monster_effects,
+    )
 
-    if attack_roll >= effective_monster_ac:
-        # Calculate damage (apply damage bonus effects)
-        damage = 0
-        for _ in range(damage_dice_count):
-            damage += Dice.roll(damage_die)
-        dmg_bonus = get_effect_bonus(session.battle.player_effects, "damage_bonus")
-        damage = max(1, damage + ability_mod + dmg_bonus)
+    session.battle.battle_log.append(
+        f"{char.name} attacks! (Roll: {result['attack_roll']} vs AC {result['target_ac']})")
 
-        dr = get_effect_bonus(session.battle.monster_effects, "damage_reduction")
-        damage = max(1, damage - dr)
-        session.battle.monster_hp = max(0, session.battle.monster_hp - damage)
-        session.battle.battle_log.append(f"{char.name} hits for {damage} damage!")
+    if result["hit"]:
+        session.battle.monster_hp = max(0, session.battle.monster_hp - result["damage"])
+        session.battle.battle_log.append(f"{char.name} hits for {result['damage']} damage!")
         if session.battle.monster_hp > 0:
             hurt_taunt = get_monster_taunt(session.battle.monster_race, "hurt")
             session.battle.battle_log.append(f'{session.battle.monster_name}: "{hurt_taunt}"')
@@ -528,7 +254,7 @@ async def player_attack(request: Request):
         return await end_battle(request, session, player_won=False)
 
     # Reset monster AC, tick effects, advance round
-    session.battle.monster_ac = session.battle.monster_base_ac + session.battle.monster_dex_modifier
+    session.battle.monster.reset_ac()
     session.battle.player_effects = tick_effects(session.battle.player_effects)
     session.battle.monster_effects = tick_effects(session.battle.monster_effects)
     session.battle.round_count += 1
@@ -539,11 +265,9 @@ async def player_attack(request: Request):
 
 
 @router.post("/defend")
-async def player_defend(request: Request):
+async def player_defend(request: Request, session=Depends(require_battle)):
     """Player takes a defensive stance."""
-    session = get_session(request)
-
-    if not session.battle.is_active or not session.battle.is_player_turn:
+    if not session.battle.is_player_turn:
         return RedirectResponse("/battle", status_code=303)
 
     char = session.character
@@ -563,7 +287,7 @@ async def player_defend(request: Request):
 
     # Reset AC bonus, tick effects, advance round
     char.armor_class -= ac_bonus
-    session.battle.monster_ac = session.battle.monster_base_ac + session.battle.monster_dex_modifier
+    session.battle.monster.reset_ac()
     session.battle.player_effects = tick_effects(session.battle.player_effects)
     session.battle.monster_effects = tick_effects(session.battle.monster_effects)
     session.battle.round_count += 1
@@ -574,11 +298,9 @@ async def player_defend(request: Request):
 
 
 @router.post("/item")
-async def use_item(request: Request, item_index: int = Form(...)):
+async def use_item(request: Request, item_index: int = Form(...), session=Depends(require_battle)):
     """Use an item during battle."""
-    session = get_session(request)
-
-    if not session.battle.is_active or not session.battle.is_player_turn:
+    if not session.battle.is_player_turn:
         return RedirectResponse("/battle", status_code=303)
 
     char = session.character
@@ -603,7 +325,7 @@ async def use_item(request: Request, item_index: int = Form(...)):
         return await end_battle(request, session, player_won=False)
 
     # Advance round, tick effects
-    session.battle.monster_ac = session.battle.monster_base_ac + session.battle.monster_dex_modifier
+    session.battle.monster.reset_ac()
     session.battle.player_effects = tick_effects(session.battle.player_effects)
     session.battle.monster_effects = tick_effects(session.battle.monster_effects)
     session.battle.round_count += 1
@@ -611,23 +333,6 @@ async def use_item(request: Request, item_index: int = Form(...)):
 
     save_session(request, session)
     return RedirectResponse("/battle", status_code=303)
-
-
-def get_effect_bonus(effects, stat):
-    """Sum all active effect bonuses for a stat."""
-    return sum(e["value"] for e in effects if e["stat"] == stat)
-
-
-def tick_effects(effects):
-    """Decrement durations and remove expired effects. Duration 0 = lasts entire combat."""
-    remaining = []
-    for e in effects:
-        if e["duration"] == 0:
-            remaining.append(e)
-        elif e["duration"] > 1:
-            remaining.append({**e, "duration": e["duration"] - 1})
-        # duration == 1 means it expires this round, so we drop it
-    return remaining
 
 
 def resolve_ability(session, ability, ability_id):
@@ -752,11 +457,9 @@ def resolve_ability(session, ability, ability_id):
 
 
 @router.post("/ability")
-async def use_ability(request: Request, ability_id: str = Form(...)):
+async def use_ability(request: Request, ability_id: str = Form(...), session=Depends(require_battle)):
     """Use a class ability in battle."""
-    session = get_session(request)
-
-    if not session.battle.is_active or not session.battle.is_player_turn:
+    if not session.battle.is_player_turn:
         return RedirectResponse("/battle", status_code=303)
 
     abilities = get_abilities()
@@ -806,36 +509,26 @@ async def end_battle(request: Request, session, player_won: bool):
         session.character.active_effects = []
 
     if player_won:
-        # Calculate rewards
-        base_xp = 100 * session.battle.monster_level
-        round_bonus = max(0, 10 * (10 - session.battle.round_count))
-        xp_reward = base_xp + round_bonus
+        xp_reward = calculate_xp_reward(session.battle.monster_level, session.battle.round_count)
+        gold_reward = calculate_gold_reward(session.battle.monster_level)
 
-        base_gold = session.battle.monster_level * 5
-        gold_reward = base_gold + Dice.roll_d8()
-
-        # Apply rewards
         old_level = session.character.level
-        total_hp_increase = 0
         abilities_before = get_class_abilities(session.character.class_name, old_level)
         abilities_before_ids = {a["id"] for a in abilities_before}
 
-        session.character.xp += xp_reward
-        # Check for level up
-        while session.character.xp >= session.character.xp_to_next_level:
-            session.character.level += 1
-            session.character.xp -= session.character.xp_to_next_level
-            session.character.xp_to_next_level = session.character.level * 150
-            # Auto increase HP on level up
-            hp_increase = max(1, (session.character.hit_die // 2) + 1 + session.character.constitution_modifier)
-            session.character.max_hit_points += hp_increase
-            session.character.current_hit_points += hp_increase
-            total_hp_increase += hp_increase
+        # Apply XP (handles leveling automatically)
+        level_ups = session.character.gain_xp(xp_reward)
+        total_hp_increase = sum(lu["hp_increase"] for lu in level_ups)
+
+        # Also heal on level up
+        for lu in level_ups:
+            session.character.current_hit_points += lu["hp_increase"]
 
         # Recalculate PP on level up
         if session.character.level > old_level:
             primary_mod = get_primary_modifier(session.character)
-            session.character.max_power_points = calculate_max_pp(session.character.class_name, session.character.level, primary_mod)
+            session.character.max_power_points = calculate_max_pp(
+                session.character.class_name, session.character.level, primary_mod)
             session.character.power_points = session.character.max_power_points
 
         # Find newly unlocked abilities
@@ -858,34 +551,11 @@ async def end_battle(request: Request, session, player_won: bool):
             else:
                 session.character.add_item(loot["item"])
 
-        # Quest progress tracking
-        quest_updates = []
+        # Quest progress tracking via engine
         all_quests = get_quests()
-        monster_race = session.battle.monster_race
-        for quest_id, quest_state in list(session.active_quests.items()):
-            if quest_state["status"] != "active":
-                continue
-            quest_def = all_quests.get(quest_id)
-            if not quest_def or quest_def["target_monster"] != monster_race:
-                continue
-
-            if quest_def["type"] == "kill":
-                quest_state["progress"] = quest_state.get("progress", 0) + 1
-                quest_updates.append(f"{quest_def['name']}: {quest_state['progress']}/{quest_def['target_count']}")
-            elif quest_def["type"] == "gather":
-                qi = quest_def.get("quest_item", {})
-                if random.random() < qi.get("drop_chance", 0.5):
-                    item = QuestItem(qi["name"], qi.get("description", ""), quest_id)
-                    session.character.add_item(item)
-                    # Count matching quest items in inventory
-                    count = sum(1 for it in session.character.inventory if isinstance(it, QuestItem) and it.quest_id == quest_id)
-                    quest_state["progress"] = count
-                    quest_updates.append(f"{quest_def['name']}: found {qi['name']}! ({count}/{quest_def['target_count']})")
-                else:
-                    quest_updates.append(f"{quest_def['name']}: no {qi['name']} dropped this time")
-
-            if quest_state["progress"] >= quest_def["target_count"]:
-                quest_state["status"] = "ready"
+        quest_updates = check_quest_progress(
+            session.active_quests, all_quests,
+            session.battle.monster_race, session.character.inventory)
 
         # Store rewards for display
         session.battle_rewards = {
@@ -914,9 +584,8 @@ async def end_battle(request: Request, session, player_won: bool):
 
 
 @router.get("/victory", response_class=HTMLResponse)
-async def victory_screen(request: Request):
+async def victory_screen(request: Request, session=Depends(require_character)):
     """Display victory screen with rewards."""
-    session = get_session(request)
     rewards = session.battle_rewards or {}
     session.battle_rewards = None
     save_session(request, session)
@@ -932,9 +601,8 @@ async def victory_screen(request: Request):
 
 
 @router.get("/defeat", response_class=HTMLResponse)
-async def defeat_screen(request: Request):
+async def defeat_screen(request: Request, session=Depends(require_character)):
     """Display defeat screen."""
-    session = get_session(request)
     session.battle_rewards = None
     save_session(request, session)
     char_data = session._serialize_character() if session.character else None

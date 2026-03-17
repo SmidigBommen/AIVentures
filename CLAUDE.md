@@ -4,9 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AIVentures is a D&D 5e-inspired text adventure game built in Python. It has two interfaces:
-- **CLI** (`main.py`): Terminal-based game using `input()`/`print()` with ANSI colors
-- **Web UI** (`web/`): FastAPI + Jinja2 server-rendered HTML interface (the active development focus)
+AIVentures is a D&D 5e-inspired text adventure game built in Python with a FastAPI + Jinja2 web interface.
 
 ## Commands
 
@@ -21,11 +19,6 @@ uvicorn web.app:app --reload --host 0.0.0.0 --port 8000
 pytest                          # all tests
 pytest test/test_battle.py      # single test file
 pytest -k "test_name"           # single test by name
-```
-
-### Run the CLI game
-```bash
-python main.py
 ```
 
 ## Architecture
@@ -50,14 +43,24 @@ All entity/item creation goes through factories that read from `json/` data file
 - **`ArmorFactory`** → reads `armor_catalog.json`. Call: `factory.get_armor_by_name(name)`
 - **`LootGenerator`** → tier-based loot drops (potion/gold/weapon/armor) with weighted chances
 
+### Game Engine (`engine/`)
+
+Headless game logic shared across the application — no I/O, no web framework imports:
+
+- **`engine/combat.py`** → `resolve_weapon_attack()`, `get_weapon_attack_modifier()`, `roll_initiative()`, `monster_turn_action()`, `calculate_xp_reward()`, `calculate_gold_reward()`
+- **`engine/effects.py`** → `get_effect_bonus()`, `tick_effects()`, `apply_effect()`, `clear_effects()` — active effect duration, stacking, expiry
+- **`engine/leveling.py`** → `calculate_max_pp()` — power point calculation (full caster/half caster/martial tiers)
+- **`engine/quests.py`** → `check_quest_progress()`, `turn_in_quest()` — quest state mutations after kills and turn-ins
+- **`engine/combatant.py`** → `CombatantState`, `WeaponState` dataclasses — serializable battle state for monsters (replaces flat fields)
+
 ### Ability / Magic System
 
 All 11 classes have unique abilities powered by **Power Points (PP)**:
 - **Data**: `json/abilities.json` — 55 abilities (5 per class), each with cost, unlock_level, attack_method, damage/heal/effects
-- **PP calculation** in `web/game_session.py`: `calculate_max_pp(class_name, level, primary_modifier)` — full casters get `level + mod`, half casters `level//2 + mod`, martial `level//3 + mod` (min 2)
+- **PP calculation** in `engine/leveling.py`: `calculate_max_pp(class_name, level, primary_modifier)` — full casters get `level + mod`, half casters `level//2 + mod`, martial `level//3 + mod` (min 2)
 - **Helpers** in `web/game_session.py`: `get_abilities()`, `get_class_abilities(class_name, level)`, `get_primary_modifier(character)`
 - **Combat resolution** in `web/routes/battle.py`: `resolve_ability()` handles all attack methods (melee_attack, spell_attack, spell_save, auto_hit), damage, healing, and effect application
-- **Active effects**: stored as lists on `BattleState` (`player_effects`, `monster_effects`). Each effect has `stat`, `value`, `duration`, `source`. Duration 0 = lasts entire combat, positive = rounds remaining. `tick_effects()` decrements each round. `get_effect_bonus(effects, stat)` sums bonuses.
+- **Active effects**: stored on `BattleState` (`player_effects`) and `CombatantState` (`effects`). Each effect has `stat`, `value`, `duration`, `source`. Duration 0 = lasts entire combat, positive = rounds remaining. `tick_effects()` decrements each round. `get_effect_bonus(effects, stat)` sums bonuses.
 - **Stat modifiers**: `ac`, `attack_bonus`, `damage_bonus`, `damage_reduction` — applied in weapon attacks, ability attacks, and monster turns
 - PP initialized on character creation, restored on rest, recalculated on level up
 
@@ -66,33 +69,31 @@ All 11 classes have unique abilities powered by **Power Points (PP)**:
 JSON-driven quest system with kill and gather quest types:
 - **Data**: `json/quests.json` — 9 quests across 3 acts (4 Act 1, 3 Act 2, 2 Act 3)
 - **Quest types**: Kill quests track monster kills; gather quests drop `QuestItem`s with a % chance on matching monster kills
+- **Engine**: `engine/quests.py` — `check_quest_progress()` called after each kill, `turn_in_quest()` handles rewards and inventory cleanup
 - **Session state**: `active_quests: dict` (`{quest_id: {"progress": int, "status": "active"|"ready"}}`), `completed_quests: list` (max 3 active)
-- **Battle integration**: In `end_battle()`, loops active quests and matches `target_monster` against `session.battle.monster_race`. Kill quests increment progress; gather quests roll `drop_chance` and create `QuestItem` instances
 - **Shop UI**: 3-tab interface (Wares/Sell/Quests) in `web/templates/shop/index.html`. Quest board shows available + active quests with progress bars, accept/turn-in/abandon actions
 - **Routes**: `POST /shop/quest/accept`, `POST /shop/quest/turn-in`, `POST /shop/quest/abandon`
 - **Rewards**: Gold + XP granted on turn-in; gather quest items removed from inventory on completion
-- **Dialog**: Shopkeeper Elara has quest-specific dialog lines (`quest_accept`, `quest_complete`, `quest_progress`, `quest_abandon`, `quest_full`)
+- **Dialog**: Shopkeeper Elara has quest-specific dialog lines in `json/shopkeeper.json`
 
 ### Battle System
 
-Two separate battle implementations exist:
-- **`battleAI.py` (`Battle` class)** → CLI version, interactive `input()` turns, used by `main.py`
-- **`web/routes/battle.py`** → Web version, reimplements combat via HTTP POST endpoints, monster state stored in `BattleState` dataclass (not a `Monster` object)
+Combat is handled via `web/routes/battle.py` with game logic in `engine/combat.py`:
 
-Combat mechanics: d20 attack roll + ability modifier + proficiency vs AC. Weapon properties (`finesse`, `ammunition`) determine which ability modifier to use. Monster AI: 70% attack, 30% defend. Active effects from abilities modify attack/damage/AC/DR for both sides.
-
-Battle actions: `POST /battle/attack`, `POST /battle/defend`, `POST /battle/ability` (with `ability_id` form field), `POST /battle/item`.
-
-**Monster portraits**: `MONSTER_PORTRAITS` dict in `battle.py` maps race → image path. Falls back to `orc-creature-battle.jpg`. Portraits display on the monster combatant card.
-
-**Monster taunts**: `MONSTER_TAUNTS` dict with `start`, `attack`, `hurt` line arrays for all 12 monster races. Start taunts show as a speech bubble on round 1; attack/hurt taunts appear in the battle log.
-
-**Player portraits**: Selected during character creation (3 options: Knight, Berserker, Wizard). Stored in `CharacterCreationState.portrait`. Displayed on the player combatant card in battle and on the character summary page.
+- **Monster state**: `CombatantState` dataclass (in `engine/combatant.py`) with `to_dict()`/`from_dict()`/`from_monster()` for serialization
+- **Attack resolution**: `engine/combat.py` `resolve_weapon_attack()` — d20 + ability mod + proficiency + effect bonuses vs AC + effect bonuses. Returns `{hit, attack_roll, target_ac, damage}`
+- **Weapon modifiers**: `get_weapon_attack_modifier()` — finesse uses max(STR,DEX), ammunition uses DEX, else STR
+- **Monster AI**: `monster_turn_action()` — 70% attack, 30% defend
+- **Effects**: `engine/effects.py` — `tick_effects()` per round, `get_effect_bonus()` for stat queries
+- **Battle actions**: `POST /battle/attack`, `POST /battle/defend`, `POST /battle/ability` (with `ability_id` form field), `POST /battle/item`
+- **Monster data**: Taunts in `json/monster_taunts.json`, portraits in `json/monster_portraits.json`
+- **Player portraits**: Selected during character creation (3 options: Knight, Berserker, Wizard). Stored in `CharacterCreationState.portrait`
 
 ### Web Application (`web/`)
 
 - **`web/app.py`** → FastAPI app, mounts static files, includes route blueprints at `/character`, `/game`, `/battle`, `/shop`, `/inventory`
-- **`web/game_session.py`** → `GameSession` class with server-side file storage. Contains `CharacterCreationState`, `BattleState`, quest state, shop state, and references to campaign location/area data. Character objects are recreated from factory on each request via `_restore_character()`. Also contains ability system helpers and JSON data loaders.
+- **`web/game_session.py`** → `GameSession` class with server-side file storage. Contains `CharacterCreationState`, `BattleState`, quest state, shop state, and references to campaign location/area data. Character objects are recreated from factory on each request via `_restore_character()`. Also contains JSON data loaders with caching.
+- **`web/dependencies.py`** → FastAPI dependencies `require_character` and `require_battle` for route guards (replaces boilerplate `if not session.character` checks)
 - **Routes** use server-side rendering with Jinja2 templates and POST/Redirect/GET pattern (303 redirects)
 - **Templates** in `web/templates/` extend `base.html` — all styling in `web/static/css/style.css`, all JS in `web/static/js/main.js` (no inline styles/scripts in templates)
 
@@ -108,7 +109,8 @@ Game state uses **server-side file storage**:
 
 ### Shop System
 
-- **Shopkeeper NPC** (Elara) with portrait, dialog system, and context-sensitive lines
+- **Shopkeeper NPC** (Elara) with portrait and dialog system — all dialog lines in `json/shopkeeper.json`
+- **Default inventory** in `json/shop_inventory.json`
 - **Haggling**: Persuasion skill check → tiered discounts (nat20: 40% off, nat1: 25% markup). Each item can only be haggled once per restock
 - **Buy/sell** with price calculation (sell = 50% of buy price)
 - **Restocking**: After 10 monster kills or player death
@@ -145,11 +147,12 @@ Campaign data defines acts → locations → areas. Each area has `connections` 
 - Factories load JSON config once and create domain objects
 - Ability modifiers derived as `(score - 10) // 2` everywhere
 - `sys.path.insert(0, ...)` used in web modules to import root-level game modules
-- Web battle stores monster stats as flat fields in `BattleState` (not a `Monster` object) for serialization
+- `CombatantState` dataclass stores monster battle state with `to_dict()`/`from_dict()` for serialization
+- `BattleState` has backward-compatible properties proxying to `CombatantState` for gradual migration
 - Shop restocks after 10 monster kills or player death
-- All ability/spell data is JSON-driven (`json/abilities.json`) — no hardcoded spell logic
-- All quest data is JSON-driven (`json/quests.json`) — quest types, targets, rewards, dialog
+- All game data is JSON-driven — abilities, quests, taunts, portraits, shopkeeper dialog, shop inventory
 - Active effects are flat stat modifiers (`{stat, value, duration, source}`) applied per-round via `get_effect_bonus()`
 - Server-side session files replace cookie storage — no 4KB limit, state persists across browser restarts
-- Flash messages (`set_flash`/`pop_flash`) replace direct `request.session` manipulation for one-time notifications
-- `Character.add_item()` preserves each item's `is_usable_in_battle` flag (QuestItems are not usable in battle)
+- Flash messages (`set_flash`/`pop_flash`) for one-time notifications
+- FastAPI `Depends()` for route guards (`require_character`, `require_battle`)
+- `Character.level_up()` and `gain_xp()` return result dicts instead of printing — callers decide presentation

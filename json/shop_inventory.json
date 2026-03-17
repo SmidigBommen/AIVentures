@@ -1,0 +1,5 @@
+[
+    {"name": "Minor Healing Potion", "healing": 5, "price": 10, "description": "Restores 5 HP"},
+    {"name": "Healing Potion", "healing": 10, "price": 25, "description": "Restores 10 HP"},
+    {"name": "Greater Healing Potion", "healing": 20, "price": 50, "description": "Restores 20 HP"}
+]

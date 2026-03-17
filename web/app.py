@@ -38,6 +38,10 @@ async def health_check():
     return {"status": "healthy", "game": "AIVentures"}
 
 
+# Register dependency redirect handler
+from web.dependencies import add_redirect_handler
+add_redirect_handler(app)
+
 # Import and include routers
 from web.routes import character, game, battle, shop, inventory
 

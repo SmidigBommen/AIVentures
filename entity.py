@@ -112,7 +112,6 @@ class Entity:
             self.equipment[item.equipment_type] = item
             if isinstance(item, Armor):
                 self.armor_class = self.calculate_total_ac()
-            print(f"{self.name} has equipped {item.name}.")
 
     def unequip(self, equipment_type):
         item = self.equipment[equipment_type]
@@ -120,7 +119,6 @@ class Entity:
             self.equipment[equipment_type] = None
             if isinstance(item, Armor):
                 self.armor_class = self.calculate_total_ac()
-            print(f"{self.name} has unequipped {item.name}.")
 
     def update_stats(self, item, equip=True):
         factor = 1 if equip else -1

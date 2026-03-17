@@ -22,6 +22,4 @@ class HealingPotion(Item):
         self.healing_amount = healing_amount
 
     def use(self, character):
-        healed_amount = character.heal(self.healing_amount)
-        print(f"{character.name} used {self.name} and healed for {healed_amount} hit points!")
-        print(f"Current HP: {character.current_hit_points}/{character.max_hit_points}")
+        return character.heal(self.healing_amount)

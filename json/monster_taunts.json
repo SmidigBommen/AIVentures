@@ -1,0 +1,233 @@
+{
+    "Goblin": {
+        "start": [
+            "Hehe, shiny armor! It'll be mine soon!",
+            "You lost, little human? Goblins own these roads now!",
+            "Stab stab stab! Goblins love stabbing!",
+            "More bones for the pile!"
+        ],
+        "attack": [
+            "Take this, soft-skin!",
+            "Goblin surprise!",
+            "Stab stab!"
+        ],
+        "hurt": [
+            "Ow! That not fair!",
+            "Grrr... you'll pay for that!",
+            "Lucky hit!"
+        ]
+    },
+    "Orc": {
+        "start": [
+            "WAAARGH! Another weakling to crush!",
+            "You smell like fear. Good.",
+            "Orc steel will taste your blood today!",
+            "Stand and fight, or die running. Either way, you die."
+        ],
+        "attack": [
+            "SMASH!",
+            "Orc strength!",
+            "Feel the fury!"
+        ],
+        "hurt": [
+            "Is that all you've got?",
+            "Pain makes orc ANGRY!",
+            "You'll regret that!"
+        ]
+    },
+    "Troll": {
+        "start": [
+            "Mmm... you look tasty.",
+            "Troll hungry. You food.",
+            "Hrrr... little morsel wanders into troll's den.",
+            "Bones crunch nice. Troll likes crunching."
+        ],
+        "attack": [
+            "CRUNCH!",
+            "Troll smash!",
+            "Hold still, food!"
+        ],
+        "hurt": [
+            "Grrr... it grows back!",
+            "That tickles!",
+            "Now troll MAD!"
+        ]
+    },
+    "Blighted Dryad": {
+        "start": [
+            "The forest rejects you... as do I.",
+            "Roots and thorns shall be your grave.",
+            "You trespass on corrupted ground. Leave... or become fertilizer.",
+            "The rot spreads, and you shall spread it further."
+        ],
+        "attack": [
+            "The thorns hunger!",
+            "Decay take you!",
+            "Wither!"
+        ],
+        "hurt": [
+            "The corruption... sustains me...",
+            "Cut one branch, two grow back!",
+            "You cannot kill what is already rotting!"
+        ]
+    },
+    "Fire Salamander": {
+        "start": [
+            "Burn, surface-dweller! BURN!",
+            "The flames of the deep will consume you!",
+            "You dare challenge the children of fire?",
+            "Your flesh will melt like wax before me."
+        ],
+        "attack": [
+            "Feel the heat!",
+            "BURN!",
+            "Fire consumes!"
+        ],
+        "hurt": [
+            "The flames only grow hotter!",
+            "You cannot quench this fire!",
+            "Ssss... pain fuels the inferno!"
+        ]
+    },
+    "Shadow Wraith": {
+        "start": [
+            "Your warmth... I will take it all...",
+            "The living do not belong here...",
+            "Cold. So cold. You will know this cold soon.",
+            "I was like you once... before the darkness took me..."
+        ],
+        "attack": [
+            "Feel the void...",
+            "Your life... drains...",
+            "Embrace the cold..."
+        ],
+        "hurt": [
+            "I am already dead... you cannot kill me again...",
+            "Light... it burns...",
+            "The shadows will return..."
+        ]
+    },
+    "Sea Serpent": {
+        "start": [
+            "The depths have sent me for you!",
+            "Surface creatures are so... fragile.",
+            "The ocean's fury given form stands before you!",
+            "You will drown in your own blood!"
+        ],
+        "attack": [
+            "The tide crushes!",
+            "Drown!",
+            "The deep strikes!"
+        ],
+        "hurt": [
+            "The sea heals all wounds!",
+            "A scratch!",
+            "The current shifts... but never stops!"
+        ]
+    },
+    "Wind Specter": {
+        "start": [
+            "You cannot strike what you cannot see...",
+            "The wind carries whispers of your death.",
+            "I am the storm that never ends.",
+            "Flesh and bone against the wind? Foolish."
+        ],
+        "attack": [
+            "The gale strikes!",
+            "Carried by the storm!",
+            "Howl!"
+        ],
+        "hurt": [
+            "You cannot wound the wind!",
+            "I scatter... and reform!",
+            "A gust... nothing more!"
+        ]
+    },
+    "Stone Golem": {
+        "start": [
+            "...",
+            "INTRUDER. DESTROY.",
+            "GUARDIAN PROTOCOL: ENGAGED.",
+            "NONE SHALL PASS."
+        ],
+        "attack": [
+            "CRUSH.",
+            "DESTROY.",
+            "SMASH."
+        ],
+        "hurt": [
+            "DAMAGE... INSIGNIFICANT.",
+            "STONE... ENDURES.",
+            "RECALCULATING."
+        ]
+    },
+    "Crystal Golem": {
+        "start": [
+            "The crystals sing of your destruction.",
+            "REFRACT. REFLECT. REJECT.",
+            "You see yourself in a thousand shards. Each one shows your death.",
+            "The earth's bones will grind you to dust."
+        ],
+        "attack": [
+            "SHATTER!",
+            "Crystal fury!",
+            "The gems cut deep!"
+        ],
+        "hurt": [
+            "Cracks... heal...",
+            "CRYSTAL INTEGRITY: HOLDING.",
+            "You chip at a mountain!"
+        ]
+    },
+    "Shadow Knight": {
+        "start": [
+            "Malachar sends his regards.",
+            "Your light dies here, hero.",
+            "I have slain a hundred like you. You will be one hundred and one.",
+            "Kneel before the shadow, and I may grant a swift end."
+        ],
+        "attack": [
+            "For Malachar!",
+            "Shadow strike!",
+            "Darkness falls!"
+        ],
+        "hurt": [
+            "A worthy blow... but futile.",
+            "The shadow does not yield!",
+            "Pain is an old friend."
+        ]
+    },
+    "Void Fiend": {
+        "start": [
+            "Reality bends around me. You should run.",
+            "I have seen the space between worlds. There is nothing there for you.",
+            "Your existence is a brief flicker. I will snuff it out.",
+            "The void hungers, and I am its mouth."
+        ],
+        "attack": [
+            "OBLIVION!",
+            "The void takes!",
+            "Reality tears!"
+        ],
+        "hurt": [
+            "Pain is... merely a concept...",
+            "I exist beyond your understanding!",
+            "The void... repairs..."
+        ]
+    },
+    "Default": {
+        "start": [
+            "You dare challenge me?",
+            "This will be your last mistake!",
+            "Prepare to meet your end!"
+        ],
+        "attack": [
+            "Take this!",
+            "Ha!"
+        ],
+        "hurt": [
+            "Grrr!",
+            "You'll pay for that!"
+        ]
+    }
+}

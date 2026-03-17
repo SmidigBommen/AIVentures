@@ -1,7 +1,7 @@
 import sys
 import random
 from pathlib import Path
-from fastapi import APIRouter, Request, Form
+from fastapi import APIRouter, Request, Form, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
@@ -9,18 +9,15 @@ from fastapi.templating import Jinja2Templates
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from web.game_session import get_session, save_session, get_campaign
+from web.dependencies import require_character
 
 router = APIRouter()
 templates = Jinja2Templates(directory=Path(__file__).parent.parent / "templates")
 
 
 @router.get("/", response_class=HTMLResponse)
-async def game_view(request: Request):
+async def game_view(request: Request, session=Depends(require_character)):
     """Main game view - show current location."""
-    session = get_session(request)
-
-    if not session.character:
-        return RedirectResponse("/character/new", status_code=303)
 
     # Check if in battle
     if session.battle.is_active:
@@ -60,12 +57,8 @@ async def game_view(request: Request):
 
 
 @router.post("/move")
-async def move_to_area(request: Request, area_id: str = Form(...)):
+async def move_to_area(request: Request, area_id: str = Form(...), session=Depends(require_character)):
     """Move to a connected area."""
-    session = get_session(request)
-
-    if not session.character:
-        return RedirectResponse("/character/new", status_code=303)
 
     location = session.current_location
     current_area = session.current_area
@@ -82,12 +75,8 @@ async def move_to_area(request: Request, area_id: str = Form(...)):
 
 
 @router.post("/explore")
-async def explore_area(request: Request):
+async def explore_area(request: Request, session=Depends(require_character)):
     """Explore the current area - may trigger an encounter."""
-    session = get_session(request)
-
-    if not session.character:
-        return RedirectResponse("/character/new", status_code=303)
 
     area = session.current_area
     if not area:
@@ -106,12 +95,8 @@ async def explore_area(request: Request):
 
 
 @router.post("/rest")
-async def rest(request: Request):
+async def rest(request: Request, session=Depends(require_character)):
     """Rest to recover HP."""
-    session = get_session(request)
-
-    if not session.character:
-        return RedirectResponse("/character/new", status_code=303)
 
     area = session.current_area
     special = area.get("special", "") if area else ""
@@ -129,12 +114,8 @@ async def rest(request: Request):
 
 
 @router.get("/travel", response_class=HTMLResponse)
-async def travel_menu(request: Request):
+async def travel_menu(request: Request, session=Depends(require_character)):
     """Show available locations to travel to."""
-    session = get_session(request)
-
-    if not session.character:
-        return RedirectResponse("/character/new", status_code=303)
 
     act = session.act
     current_location = session.current_location
@@ -155,12 +136,8 @@ async def travel_menu(request: Request):
 
 
 @router.post("/travel")
-async def travel_to_location(request: Request, location_name: str = Form(...)):
+async def travel_to_location(request: Request, location_name: str = Form(...), session=Depends(require_character)):
     """Travel to a different location."""
-    session = get_session(request)
-
-    if not session.character:
-        return RedirectResponse("/character/new", status_code=303)
 
     act = session.act
 
