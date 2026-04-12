@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="saves-container">
+    <h1 class="page-title">Save / Load Game</h1>
+
+    {% if message %}
+    <div data-toast="{{ message }}" data-toast-type="success" hidden></div>
+    {% endif %}
+    {% if error %}
+    <div data-toast="{{ error }}" data-toast-type="error" hidden></div>
+    {% endif %}
+
+    {% if can_save %}
+    <div class="panel save-action-panel">
+        <h3>Save Current Game</h3>
+        {% if save_count >= max_saves %}
+        <p class="text-muted">Maximum saves reached ({{ max_saves }}). Delete an old save first.</p>
+        {% else %}
+        <form action="/saves/save" method="post" class="inline-form">
+            <button type="submit" class="btn btn-success" data-sound="save">Create New Save</button>
+        </form>
+        {% endif %}
+    </div>
+    {% elif in_battle %}
+    <div class="panel save-action-panel">
+        <p class="text-muted">Cannot save during battle. Finish the fight first!</p>
+    </div>
+    {% endif %}
+
+    <div class="panel">
+        <h3>Saved Games</h3>
+        {% if saves %}
+        <div class="save-slot-list">
+            {% for save in saves %}
+            <div class="save-slot glass">
+                {% if save.metadata.portrait %}
+                <img src="{{ save.metadata.portrait }}" alt="" class="save-portrait">
+                {% else %}
+                <div class="save-portrait save-portrait-empty"></div>
+                {% endif %}
+                <div class="save-info">
+                    <span class="save-name">{{ save.metadata.character_name }}</span>
+                    <span class="save-detail">
+                        Lv{{ save.metadata.character_level }}
+                        {{ save.metadata.character_race }}
+                        {{ save.metadata.character_class }}
+                    </span>
+                    <span class="save-location">{{ save.metadata.location_name }}</span>
+                    <span class="save-meta">
+                        {{ save.metadata.monster_kills }} kills
+                        &middot;
+                        {{ save.updated_at[:16] | replace("T", " ") }}
+                    </span>
+                </div>
+                <div class="save-actions">
+                    <form action="/saves/load/{{ save.save_id }}" method="post" class="inline-form">
+                        <button type="submit" class="btn btn-primary btn-small">Load</button>
+                    </form>
+                    {% if can_save %}
+                    <form action="/saves/save/{{ save.save_id }}" method="post" class="inline-form">
+                        <button type="submit" class="btn btn-secondary btn-small" data-confirm="Overwrite this save?">Overwrite</button>
+                    </form>
+                    {% endif %}
+                    <form action="/saves/delete/{{ save.save_id }}" method="post" class="inline-form">
+                        <button type="submit" class="btn btn-danger btn-small" data-confirm="Delete this save?">Delete</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted">No saved games yet.</p>
+        {% endif %}
+    </div>
+
+    <div class="btn-group mt-3" style="text-align: center;">
+        {% if character %}
+        <a href="/game" class="btn btn-secondary">Back to Game</a>
+        {% else %}
+        <a href="/" class="btn btn-secondary">Back to Home</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

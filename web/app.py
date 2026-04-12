@@ -24,10 +24,15 @@ templates = Jinja2Templates(directory=web_dir / "templates")
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     """Home page with game start options."""
+    from web.game_session import get_session
+    from web.save_manager import get_save_count
+    session = get_session(request)
     return templates.TemplateResponse("base.html", {
         "request": request,
         "title": "AIVentures",
-        "content": "home"
+        "content": "home",
+        "has_character": session.character is not None,
+        "has_saves": get_save_count() > 0,
     })
 
 
@@ -42,10 +47,11 @@ from web.dependencies import add_redirect_handler
 add_redirect_handler(app)
 
 # Import and include routers
-from web.routes import character, game, battle, shop, inventory
+from web.routes import character, game, battle, shop, inventory, saves
 
 app.include_router(character.router, prefix="/character", tags=["character"])
 app.include_router(game.router, prefix="/game", tags=["game"])
 app.include_router(battle.router, prefix="/battle", tags=["battle"])
 app.include_router(shop.router, prefix="/shop", tags=["shop"])
 app.include_router(inventory.router, prefix="/inventory", tags=["inventory"])
+app.include_router(saves.router, prefix="/saves", tags=["saves"])

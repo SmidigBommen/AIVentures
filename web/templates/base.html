@@ -19,6 +19,7 @@
                 <a href="/game">World</a>
                 <a href="/inventory">Inventory</a>
                 <a href="/character/summary">Character</a>
+                <a href="/saves">Save/Load</a>
             </div>
             {% endif %}
             <div class="nav-spacer"></div>
@@ -52,6 +53,12 @@
                 can stop him from plunging the world into eternal darkness.</p>
             </div>
             <a href="/character/new" class="btn btn-primary">Begin Your Adventure</a>
+            {% if has_character %}
+            <a href="/game" class="btn btn-secondary">Continue Adventure</a>
+            {% endif %}
+            {% if has_saves %}
+            <a href="/saves" class="btn btn-secondary">Load Saved Game</a>
+            {% endif %}
         </div>
         {% endif %}
         {% endblock %}

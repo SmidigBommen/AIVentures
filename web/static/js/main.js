@@ -103,6 +103,12 @@ const SFX = {
         this._osc(440, 'sine', 0.15, 0.08);
         setTimeout(() => this._osc(660, 'sine', 0.15, 0.08), 80);
         setTimeout(() => this._osc(880, 'triangle', 0.2, 0.06), 160);
+    },
+
+    _save() {
+        this._osc(800, 'sine', 0.08, 0.08);
+        setTimeout(() => this._osc(1000, 'sine', 0.1, 0.06), 60);
+        setTimeout(() => this._osc(1200, 'sine', 0.08, 0.06), 120);
     }
 };
 
@@ -318,6 +324,18 @@ function initActiveNav() {
 }
 
 
+// ===== Confirm Dialogs =====
+function initConfirmDialogs() {
+    document.querySelectorAll('[data-confirm]').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            if (!confirm(this.dataset.confirm)) {
+                e.preventDefault();
+            }
+        });
+    });
+}
+
+
 // ===== Init =====
 document.addEventListener('DOMContentLoaded', function() {
     initSelectionCards();
@@ -328,4 +346,5 @@ document.addEventListener('DOMContentLoaded', function() {
     initAutoEffects();
     initActiveNav();
     initShopTabs();
+    initConfirmDialogs();
 });

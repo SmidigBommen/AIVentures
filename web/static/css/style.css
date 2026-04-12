@@ -2506,6 +2506,89 @@ nav {
     .btn-attack, .btn-defend { min-width: 110px; flex: 1; }
 }
 
+/* ===== Save/Load ===== */
+.saves-container {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.save-action-panel {
+    text-align: center;
+}
+
+.save-slot-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-sm);
+}
+
+.save-slot {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-md);
+    padding: var(--sp-md);
+}
+
+.save-portrait {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--gold);
+    flex-shrink: 0;
+}
+
+.save-portrait-empty {
+    background: var(--panel-bg);
+}
+
+.save-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.save-name {
+    font-family: 'Cinzel', serif;
+    font-weight: 600;
+    color: var(--gold);
+    font-size: 1rem;
+}
+
+.save-detail {
+    color: var(--text);
+    font-size: 0.85rem;
+}
+
+.save-location {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.save-meta {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+
+.save-actions {
+    display: flex;
+    gap: var(--sp-xs);
+    flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+    .save-slot {
+        flex-wrap: wrap;
+    }
+
+    .save-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+
 @media (max-width: 480px) {
     main { padding: var(--sp-md); }
     .home-hero { margin: calc(-1 * var(--sp-md)); padding: var(--sp-md); }
