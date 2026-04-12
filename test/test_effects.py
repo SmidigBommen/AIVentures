@@ -114,4 +114,3 @@ class TestApplyEffect:
 class TestClearEffects:
     def test_returns_empty(self):
         assert clear_effects() == []
-        assert clear_effects([{"stat": "ac", "value": 1, "duration": 0, "source": "x"}]) == []

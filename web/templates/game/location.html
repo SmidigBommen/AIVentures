@@ -20,6 +20,10 @@
     <div data-toast="You rest and recover all your hit points." data-toast-type="success" hidden></div>
     {% endif %}
 
+    {% if request.query_params.get('revived') == 'true' %}
+    <div data-toast="A healer nursed you back to health. You've been returned to safety." data-toast-type="warning" hidden></div>
+    {% endif %}
+
     {% if connected_areas %}
     <div class="panel area-connections">
         <h3>Nearby Areas</h3>

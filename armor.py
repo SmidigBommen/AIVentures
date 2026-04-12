@@ -8,4 +8,3 @@ class Armor(Equipment):
         self.category = category  # "Light", "Medium", or "Heavy"
 
 
-        

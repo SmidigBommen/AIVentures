@@ -272,7 +272,7 @@ async def character_summary(request: Request):
     if not session.character:
         return RedirectResponse("/character/new", status_code=303)
 
-    char_data = session._serialize_character()
+    char_data = session.serialize_character()
 
     return templates.TemplateResponse("character/summary.html", {
         "request": request,

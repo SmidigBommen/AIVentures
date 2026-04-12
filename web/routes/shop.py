@@ -8,7 +8,7 @@ from fastapi.templating import Jinja2Templates
 # Add parent directories to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from web.game_session import get_session, save_session, get_all_weapons_flat, get_all_armors_flat, get_quests, get_shopkeeper, get_default_shop_inventory
+from web.game_session import save_session, get_all_weapons_flat, get_all_armors_flat, get_quests, get_shopkeeper, get_default_shop_inventory
 from web.dependencies import require_character
 from items import HealingPotion, QuestItem
 from weapon import Weapon
@@ -75,7 +75,7 @@ async def shop_view(request: Request, session=Depends(require_character)):
     if not area or not has_shop:
         return RedirectResponse("/game", status_code=303)
 
-    char_data = session._serialize_character()
+    char_data = session.serialize_character()
     inventory = get_shop_inventory(session)
     haggle_state = session.haggled_items
 

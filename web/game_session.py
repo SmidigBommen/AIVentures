@@ -16,7 +16,7 @@ JSON_DIR = Path(__file__).parent.parent / "json"
 
 def load_json(filename: str) -> dict:
     """Load a JSON file from the json directory."""
-    with open(JSON_DIR / filename) as f:
+    with open(JSON_DIR / filename, encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -289,7 +289,7 @@ class GameSession:
 
         return {
             "session_id": self.session_id,
-            "character": self._serialize_character(),
+            "character": self.serialize_character(),
             "character_creation": {
                 "race": self.character_creation.race,
                 "class_name": self.character_creation.class_name,
@@ -334,7 +334,7 @@ class GameSession:
         armor = c.equipment.get(EquipmentType.ARMOR)
         return armor.name if armor else None
 
-    def _serialize_character(self) -> Optional[dict]:
+    def serialize_character(self) -> Optional[dict]:
         """Serialize character object to dict."""
         if not self.character:
             return None
@@ -618,7 +618,7 @@ class GameSession:
                     character.add_item(HealingPotion(item_data["name"], healing))
 
             return character
-        except Exception as e:
+        except (KeyError, ValueError, AttributeError) as e:
             print(f"Error restoring character: {e}")
             return None
 
@@ -640,10 +640,10 @@ def get_session(request) -> GameSession:
         path = _session_file(session_id)
         if path.exists():
             try:
-                with open(path) as f:
+                with open(path, encoding="utf-8") as f:
                     data = json.load(f)
                 return GameSession.from_dict(data)
-            except (json.JSONDecodeError, Exception):
+            except (json.JSONDecodeError, OSError):
                 pass
     return GameSession()
 
@@ -652,6 +652,6 @@ def save_session(request, session: GameSession):
     """Save GameSession to server-side file. Cookie stores only the session ID."""
     SESSIONS_DIR.mkdir(exist_ok=True)
     path = _session_file(session.session_id)
-    with open(path, "w") as f:
+    with open(path, "w", encoding="utf-8") as f:
         json.dump(session.to_dict(), f)
     request.session["session_id"] = session.session_id

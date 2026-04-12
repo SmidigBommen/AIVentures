@@ -33,6 +33,6 @@ def apply_effect(effects, stat, value, duration, source):
     return effects
 
 
-def clear_effects(effects=None):
+def clear_effects():
     """Return an empty effects list."""
     return []

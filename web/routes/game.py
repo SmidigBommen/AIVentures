@@ -8,7 +8,7 @@ from fastapi.templating import Jinja2Templates
 # Add parent directories to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from web.game_session import get_session, save_session, get_campaign
+from web.game_session import get_session, save_session
 from web.dependencies import require_character
 
 router = APIRouter()
@@ -23,7 +23,7 @@ async def game_view(request: Request, session=Depends(require_character)):
     if session.battle.is_active:
         return RedirectResponse("/battle", status_code=303)
 
-    char_data = session._serialize_character()
+    char_data = session.serialize_character()
     location = session.current_location
     area = session.current_area
 
@@ -123,7 +123,7 @@ async def travel_menu(request: Request, session=Depends(require_character)):
     # Filter out current location (use name as identifier since locations don't have id)
     available_locations = [loc for loc in act["locations"] if loc["name"] != current_location["name"]]
 
-    char_data = session._serialize_character()
+    char_data = session.serialize_character()
 
     return templates.TemplateResponse("game/travel.html", {
         "request": request,
@@ -164,7 +164,7 @@ async def game_status(request: Request):
     if not session.character:
         return {"error": "No character"}
 
-    char_data = session._serialize_character()
+    char_data = session.serialize_character()
 
     return {
         "character": char_data,

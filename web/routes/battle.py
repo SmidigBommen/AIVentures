@@ -11,12 +11,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from web.game_session import get_session, save_session, get_abilities, get_class_abilities, get_primary_modifier, get_quests, get_monster_taunts, get_monster_portraits
 from monsterFactory import MonsterFactory
 from dice import Dice
-from items import HealingPotion, QuestItem
+from items import HealingPotion
 from character import WeaponSlot
 from lootGenerator import LootGenerator
 from web.routes.shop import restock_shop
 from engine.effects import get_effect_bonus, tick_effects
-from engine.combat import get_weapon_attack_modifier, resolve_weapon_attack, attack_roll, roll_damage, monster_turn_action, calculate_xp_reward, calculate_gold_reward
+from engine.combat import get_weapon_attack_modifier, resolve_weapon_attack, monster_turn_action, calculate_xp_reward, calculate_gold_reward
 from engine.leveling import calculate_max_pp
 from engine.quests import check_quest_progress
 from engine.combatant import CombatantState
@@ -160,7 +160,7 @@ def execute_monster_turn(session):
 async def battle_view(request: Request, session=Depends(require_battle)):
     """Battle view - show combat arena."""
 
-    char_data = session._serialize_character()
+    char_data = session.serialize_character()
 
     # Get usable items
     usable_items = [
@@ -335,7 +335,7 @@ async def use_item(request: Request, item_index: int = Form(...), session=Depend
     return RedirectResponse("/battle", status_code=303)
 
 
-def resolve_ability(session, ability, ability_id):
+def resolve_ability(session, ability):
     """Resolve an ability use. Returns True if the ability was successfully used."""
     char = session.character
     battle = session.battle
@@ -475,7 +475,7 @@ async def use_ability(request: Request, ability_id: str = Form(...), session=Dep
     if char.level < ability.get("unlock_level", 1):
         return RedirectResponse("/battle", status_code=303)
 
-    if not resolve_ability(session, ability, ability_id):
+    if not resolve_ability(session, ability):
         return RedirectResponse("/battle", status_code=303)
 
     # Check for victory
@@ -589,7 +589,7 @@ async def victory_screen(request: Request, session=Depends(require_character)):
     rewards = session.battle_rewards or {}
     session.battle_rewards = None
     save_session(request, session)
-    char_data = session._serialize_character() if session.character else None
+    char_data = session.serialize_character() if session.character else None
 
     return templates.TemplateResponse("battle/victory.html", {
         "request": request,
@@ -605,14 +605,48 @@ async def defeat_screen(request: Request, session=Depends(require_character)):
     """Display defeat screen."""
     session.battle_rewards = None
     save_session(request, session)
-    char_data = session._serialize_character() if session.character else None
+    char_data = session.serialize_character() if session.character else None
+
+    gold = session.character.gold if session.character else 0
+    gold_cost = gold // 2
 
     return templates.TemplateResponse("battle/defeat.html", {
         "request": request,
         "title": "Defeat",
         "character": char_data,
-        "monster_name": session.battle.monster_name
+        "monster_name": session.battle.monster_name,
+        "gold_cost": gold_cost,
+        "current_gold": gold,
     })
+
+
+@router.post("/revive")
+async def revive(request: Request, session=Depends(require_character)):
+    """Revive the character at the current location's starting area."""
+    char = session.character
+    if not char or char.current_hit_points > 0:
+        return RedirectResponse("/game", status_code=303)
+
+    # Gold penalty: lose 50%
+    char.gold = char.gold - (char.gold // 2)
+
+    # Heal to full
+    char.current_hit_points = char.max_hit_points
+    char.power_points = char.max_power_points
+    char.active_effects = []
+
+    # Move to starting area of current location
+    location = session.current_location
+    if location:
+        starting_id = location.get("starting_area")
+        if starting_id:
+            for area in location.get("areas", []):
+                if area["id"] == starting_id:
+                    session.current_area = area
+                    break
+
+    save_session(request, session)
+    return RedirectResponse("/game?revived=true", status_code=303)
 
 
 @router.get("/status")

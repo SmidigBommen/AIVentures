@@ -26,8 +26,9 @@ class Entity:
         self.armor_class = 10
         self.damage_reduction = 0
         self.equipment = {eq_type: None for eq_type in EquipmentType}
-        self.skill_proficiencies = set()  
+        self.skill_proficiencies = set()
         self.saving_throw_proficiencies = set()
+        self.base_ac = 10  # Default base AC, overridden by subclasses
         self.proficiency_bonus = 2  # Default proficiency bonus at level 1
 
     def get_stats(self):
@@ -64,7 +65,7 @@ class Entity:
         actual_damage = max(0, amount - self.damage_reduction)
         self.current_hit_points = max(0, self.current_hit_points - actual_damage)
         return actual_damage
-    
+
     def calculate_total_ac(self):
         """Calculate total AC using D&D 5e armor rules."""
         armor = self.equipment.get(EquipmentType.ARMOR)
@@ -103,8 +104,6 @@ class Entity:
 
     def gain_xp(self, xp):
         self.xp += xp
-        while self.level < len(self.XP_TABLE) and self.xp >= self.XP_TABLE[self.level]:
-            self.level_up()
 
     def equip(self, item):
         if item.equipment_type in self.equipment:
@@ -169,23 +168,23 @@ class Entity:
         """Make a skill check"""
         from skills import make_skill_check
         return make_skill_check(self, skill_name, difficulty_class)
-    
+
     def make_saving_throw(self, ability, difficulty_class=10):
         """Make a saving throw"""
         from dice import Dice
-        
+
         # Get ability modifier
         ability_modifier = getattr(self, f"{ability.lower()}_modifier")
-        
+
         # Add proficiency bonus if proficient
         proficiency_bonus = 0
         if ability in self.saving_throw_proficiencies:
             proficiency_bonus = self.proficiency_bonus
-        
+
         # Roll the dice
         roll = Dice.roll_d20()
         total = roll + ability_modifier + proficiency_bonus
-        
+
         success = total >= difficulty_class
         return {
             "ability": ability,
@@ -196,5 +195,4 @@ class Entity:
             "dc": difficulty_class,
             "success": success
         }
-        
-    
+

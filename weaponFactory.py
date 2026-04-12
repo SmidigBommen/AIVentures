@@ -4,7 +4,7 @@ from weapon import Weapon
 
 class WeaponFactory:
     def __init__(self):
-        with open("json/weapon-catalog.json") as f:
+        with open("json/weapon-catalog.json", encoding="utf-8") as f:
             self.weapon_catalog = json.load(f)
 
         # Combine all weapons into a single dictionary for easy access

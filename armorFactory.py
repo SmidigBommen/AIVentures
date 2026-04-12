@@ -3,7 +3,7 @@ from armor import Armor
 
 class ArmorFactory:
     def __init__(self):
-        with open("json/armor_catalog.json") as f:
+        with open("json/armor_catalog.json", encoding="utf-8") as f:
             self.armor_catalog = json.load(f)
 
         # Combine all armors into a single dictionary for easy access
@@ -17,14 +17,14 @@ class ArmorFactory:
     def get_armor_list(self):
         """Returns a list of all armor names."""
         return list(self.all_armors.keys())
-    
+
     def get_armor_by_name(self, armor_name):
         """Creates and returns an Armor object based on the armor name."""
         if armor_name not in self.all_armors:
             raise ValueError(f"Armor {armor_name} not found in the catalog")
 
         armor_data = self.all_armors[armor_name]
-        
+
         return Armor(
             name=armor_name,
             base_ac=armor_data["base_ac"],

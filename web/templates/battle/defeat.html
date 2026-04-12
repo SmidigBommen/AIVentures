@@ -6,13 +6,28 @@
     <p class="page-subtitle">You have been slain by {{ monster_name }}...</p>
 
     <div class="defeat-msg">
-        <p>Your adventure has come to an end. But fear not, brave adventurer -
-        you may rise again to face the challenges that await.</p>
+        <p>A wandering healer found you at death's door and carried you to safety...
+        for a price.</p>
     </div>
 
+    {% if gold_cost > 0 %}
+    <div class="panel" style="margin: 1.5rem auto; max-width: 400px; text-align: center;">
+        <p>The healer demands <strong>{{ gold_cost }} gold</strong> for their services.</p>
+        <p class="text-muted">You will be returned to safety with full health.</p>
+    </div>
+    {% else %}
+    <div class="panel" style="margin: 1.5rem auto; max-width: 400px; text-align: center;">
+        <p>The healer takes pity on your empty purse and tends your wounds for free.</p>
+    </div>
+    {% endif %}
+
     <div class="btn-group mt-3">
-        <a href="/character/new" class="btn btn-primary">Create New Character</a>
-        <a href="/" class="btn btn-secondary">Return Home</a>
+        <form method="post" action="/battle/revive">
+            <button type="submit" class="btn btn-primary">
+                Rise Again{% if gold_cost > 0 %} (-{{ gold_cost }} gold){% endif %}
+            </button>
+        </form>
+        <a href="/character/new" class="btn btn-secondary">Start Over</a>
     </div>
 </div>
 {% endblock %}

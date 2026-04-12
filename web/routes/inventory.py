@@ -7,7 +7,7 @@ from fastapi.templating import Jinja2Templates
 # Add parent directories to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from web.game_session import get_session, save_session, get_classes
+from web.game_session import save_session, get_classes
 from web.dependencies import require_character
 from character import WeaponSlot
 from equipmentType import EquipmentType
@@ -30,7 +30,7 @@ def _can_equip_item(item, weapon_proficiencies, armor_training):
 @router.get("/", response_class=HTMLResponse)
 async def inventory_view(request: Request, session=Depends(require_character)):
     """Inventory and equipment management page."""
-    char_data = session._serialize_character()
+    char_data = session.serialize_character()
 
     # Look up class proficiencies
     classes = get_classes()
