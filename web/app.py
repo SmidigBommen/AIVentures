@@ -27,7 +27,7 @@ async def home(request: Request):
     from web.game_session import get_session
     from web.save_manager import get_save_count
     session = get_session(request)
-    return templates.TemplateResponse("base.html", {
+    return templates.TemplateResponse(request, "base.html", {
         "request": request,
         "title": "AIVentures",
         "content": "home",

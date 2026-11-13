@@ -1,0 +1,288 @@
+{
+  "races": {
+    "Goblin": ["dirty_trick"],
+    "Orc": ["savage_cleave", "war_cry"],
+    "Troll": ["regenerate"],
+    "Blighted Dryad": ["thorn_lash", "blight_spores"],
+    "Fire Salamander": ["fire_breath"],
+    "Shadow Wraith": ["life_drain"],
+    "Sea Serpent": ["constrict", "venom_spit"],
+    "Wind Specter": ["howling_gale"],
+    "Stone Golem": ["crushing_blow", "stone_skin"],
+    "Crystal Golem": ["prism_beam", "stone_skin"],
+    "Shadow Knight": ["dark_smite", "unholy_ward"],
+    "Void Fiend": ["void_bolt"]
+  },
+  "abilities": {
+    "dirty_trick": {
+      "name": "Dirty Trick",
+      "text": "{name} flings a fistful of grit at your eyes!",
+      "kind": "attack", "stat": "dex",
+      "damage": {"dice_count": 1, "dice_size": 4, "type": "piercing"},
+      "effects": [{"stat": "attack_bonus", "value": -2, "duration": 2, "target": "player"}],
+      "cooldown": 3
+    },
+    "savage_cleave": {
+      "name": "Savage Cleave",
+      "text": "{name} winds up for a savage, two-handed cleave!",
+      "kind": "attack", "stat": "str",
+      "damage": {"dice_count": 2, "dice_size": 6, "type": "slashing", "scale_levels": 5},
+      "effects": [{"stat": "bleed", "value": 2, "duration": 2, "target": "player"}],
+      "cooldown": 3
+    },
+    "war_cry": {
+      "name": "War Cry",
+      "text": "{name} bellows a blood-curdling war cry!",
+      "kind": "self",
+      "effects": [{"stat": "damage_bonus", "value": 2, "duration": 3, "target": "self"}],
+      "cooldown": 5
+    },
+    "regenerate": {
+      "name": "Regenerate",
+      "text": "{name}'s wounds knit themselves closed before your eyes!",
+      "kind": "self",
+      "heal": {"dice_count": 1, "dice_size": 8, "level_bonus": true},
+      "cooldown": 4, "use_below_hp": 0.5
+    },
+    "crushing_blow": {
+      "name": "Crushing Blow",
+      "text": "{name} brings down a bone-shattering overhead blow!",
+      "kind": "attack", "stat": "str",
+      "damage": {"dice_count": 2, "dice_size": 6, "type": "bludgeoning", "scale_levels": 5},
+      "effects": [{"stat": "ac", "value": -2, "duration": 2, "target": "player"}],
+      "cooldown": 4
+    },
+    "thorn_lash": {
+      "name": "Thorn Lash",
+      "text": "{name} lashes out with a whip of barbed vines!",
+      "kind": "attack", "stat": "dex",
+      "damage": {"dice_count": 1, "dice_size": 8, "type": "piercing", "scale_levels": 4},
+      "effects": [{"stat": "bleed", "value": 2, "duration": 3, "target": "player"}],
+      "cooldown": 3
+    },
+    "blight_spores": {
+      "name": "Blight Spores",
+      "text": "{name} exhales a cloud of choking, sickly spores!",
+      "kind": "save", "stat": "wis", "save_ability": "Constitution",
+      "effects": [{"stat": "poison", "value": 3, "duration": 3, "target": "player"}],
+      "cooldown": 4
+    },
+    "fire_breath": {
+      "name": "Fire Breath",
+      "text": "{name} exhales a cone of searing flame!",
+      "kind": "save", "stat": "con", "save_ability": "Dexterity", "half_on_save": true,
+      "damage": {"dice_count": 2, "dice_size": 6, "type": "fire", "scale_levels": 4},
+      "effects": [{"stat": "burn", "value": 3, "duration": 2, "target": "player"}],
+      "cooldown": 3
+    },
+    "life_drain": {
+      "name": "Life Drain",
+      "text": "{name} reaches through your chest with a hand of freezing shadow!",
+      "kind": "save", "stat": "cha", "save_ability": "Constitution", "half_on_save": true,
+      "damage": {"dice_count": 2, "dice_size": 6, "type": "necrotic", "scale_levels": 4},
+      "lifesteal": true,
+      "cooldown": 3
+    },
+    "constrict": {
+      "name": "Constrict",
+      "text": "{name} whips its coils around you and squeezes!",
+      "kind": "attack", "stat": "str",
+      "damage": {"dice_count": 2, "dice_size": 6, "type": "bludgeoning", "scale_levels": 5},
+      "effects": [{"stat": "ac", "value": -2, "duration": 2, "target": "player"}],
+      "cooldown": 3
+    },
+    "venom_spit": {
+      "name": "Venom Spit",
+      "text": "{name} rears back and spits a stream of venom!",
+      "kind": "save", "stat": "con", "save_ability": "Dexterity",
+      "damage": {"dice_count": 1, "dice_size": 6, "type": "poison"},
+      "effects": [{"stat": "poison", "value": 3, "duration": 3, "target": "player"}],
+      "cooldown": 4
+    },
+    "howling_gale": {
+      "name": "Howling Gale",
+      "text": "{name} unleashes a shrieking blast of wind!",
+      "kind": "save", "stat": "dex", "save_ability": "Strength", "half_on_save": true,
+      "damage": {"dice_count": 2, "dice_size": 6, "type": "thunder", "scale_levels": 4},
+      "effects": [{"stat": "stun", "value": 1, "duration": 1, "target": "player"}],
+      "cooldown": 5
+    },
+    "stone_skin": {
+      "name": "Stone Skin",
+      "text": "{name}'s hide hardens into living rock!",
+      "kind": "self",
+      "effects": [{"stat": "damage_reduction", "value": 3, "duration": 3, "target": "self"}],
+      "cooldown": 6
+    },
+    "prism_beam": {
+      "name": "Prism Beam",
+      "text": "{name} focuses the cavern's light into a blinding lance!",
+      "kind": "save", "stat": "con", "save_ability": "Dexterity", "half_on_save": true,
+      "damage": {"dice_count": 2, "dice_size": 6, "type": "radiant", "scale_levels": 6},
+      "effects": [{"stat": "attack_bonus", "value": -2, "duration": 2, "target": "player"}],
+      "cooldown": 3
+    },
+    "dark_smite": {
+      "name": "Dark Smite",
+      "text": "{name}'s blade ignites with black fire!",
+      "kind": "attack", "stat": "str",
+      "damage": {"dice_count": 2, "dice_size": 6, "type": "necrotic", "scale_levels": 6},
+      "cooldown": 3
+    },
+    "unholy_ward": {
+      "name": "Unholy Ward",
+      "text": "{name} raises a ward of roiling shadow!",
+      "kind": "self",
+      "effects": [{"stat": "ac", "value": 2, "duration": 3, "target": "self"}],
+      "cooldown": 6
+    },
+    "void_bolt": {
+      "name": "Void Bolt",
+      "text": "{name} hurls a bolt of screaming nothingness!",
+      "kind": "save", "stat": "int", "save_ability": "Wisdom", "half_on_save": true,
+      "damage": {"dice_count": 2, "dice_size": 8, "type": "force", "scale_levels": 6},
+      "effects": [{"stat": "attack_bonus", "value": -2, "duration": 2, "target": "player"}],
+      "cooldown": 3
+    },
+
+    "corrupting_roots": {
+      "name": "Corrupting Roots",
+      "text": "{name} drives blackened roots up through the earth beneath you!",
+      "kind": "save", "stat": "wis", "save_ability": "Dexterity", "half_on_save": true,
+      "damage": {"dice_count": 1, "dice_size": 8, "type": "necrotic"},
+      "effects": [{"stat": "poison", "value": 2, "duration": 3, "target": "player"}],
+      "cooldown": 3
+    },
+    "grove_renewal": {
+      "name": "Grove's Renewal",
+      "text": "{name} draws life from the twisted grove itself!",
+      "kind": "self",
+      "heal": {"dice_count": 1, "dice_size": 8, "level_bonus": true},
+      "cooldown": 6, "use_below_hp": 0.5
+    },
+    "commanders_wrath": {
+      "name": "Commander's Wrath",
+      "text": "{name} bellows a long-dead order and charges!",
+      "kind": "attack", "stat": "str",
+      "damage": {"dice_count": 2, "dice_size": 8, "type": "slashing"},
+      "effects": [{"stat": "bleed", "value": 2, "duration": 2, "target": "player"}],
+      "cooldown": 3
+    },
+    "grave_chill": {
+      "name": "Grave Chill",
+      "text": "{name}'s hollow gaze floods you with the cold of the grave!",
+      "kind": "save", "stat": "cha", "save_ability": "Wisdom",
+      "damage": {"dice_count": 1, "dice_size": 6, "type": "cold"},
+      "effects": [{"stat": "attack_bonus", "value": -2, "duration": 3, "target": "player"}],
+      "cooldown": 4
+    },
+    "pillar_of_flame": {
+      "name": "Pillar of Flame",
+      "text": "{name} calls a roaring pillar of flame down upon you!",
+      "kind": "save", "stat": "wis", "save_ability": "Dexterity", "half_on_save": true,
+      "damage": {"dice_count": 2, "dice_size": 6, "type": "fire"},
+      "effects": [{"stat": "burn", "value": 2, "duration": 3, "target": "player"}],
+      "cooldown": 3
+    },
+    "molten_aegis": {
+      "name": "Molten Aegis",
+      "text": "{name} wreathes himself in a mantle of molten rock!",
+      "kind": "self",
+      "effects": [{"stat": "ac", "value": 2, "duration": 3, "target": "self"},
+                  {"stat": "damage_bonus", "value": 3, "duration": 3, "target": "self"}],
+      "cooldown": 6
+    },
+    "drowning_tide": {
+      "name": "Drowning Tide",
+      "text": "{name} raises his hands and the sea itself crashes over you!",
+      "kind": "save", "stat": "wis", "save_ability": "Strength", "half_on_save": true,
+      "damage": {"dice_count": 2, "dice_size": 8, "type": "cold"},
+      "effects": [{"stat": "stun", "value": 1, "duration": 1, "target": "player"}],
+      "cooldown": 5
+    },
+    "profane_mending": {
+      "name": "Profane Mending",
+      "text": "{name} whispers a twisted prayer; brine seals his wounds!",
+      "kind": "self",
+      "heal": {"dice_count": 2, "dice_size": 8, "level_bonus": true},
+      "cooldown": 7, "use_below_hp": 0.4
+    },
+    "spectral_charge": {
+      "name": "Spectral Charge",
+      "text": "{name} spurs his ghostly steed straight through you!",
+      "kind": "attack", "stat": "dex",
+      "damage": {"dice_count": 2, "dice_size": 8, "type": "force"},
+      "effects": [{"stat": "ac", "value": -2, "duration": 2, "target": "player"}],
+      "cooldown": 3
+    },
+    "storm_of_arrows": {
+      "name": "Storm of Arrows",
+      "text": "{name} looses a volley of spectral arrows that blot out the sky!",
+      "kind": "save", "stat": "dex", "save_ability": "Dexterity", "half_on_save": true,
+      "damage": {"dice_count": 2, "dice_size": 6, "type": "piercing"},
+      "effects": [{"stat": "bleed", "value": 2, "duration": 2, "target": "player"}],
+      "cooldown": 4
+    },
+    "earthshatter": {
+      "name": "Earthshatter",
+      "text": "{name} slams both fists down and the cavern floor erupts!",
+      "kind": "save", "stat": "str", "save_ability": "Dexterity", "half_on_save": true,
+      "damage": {"dice_count": 2, "dice_size": 8, "type": "bludgeoning"},
+      "effects": [{"stat": "stun", "value": 1, "duration": 1, "target": "player"}],
+      "cooldown": 5
+    },
+    "crystal_carapace": {
+      "name": "Crystal Carapace",
+      "text": "{name} sheathes itself in plates of living crystal!",
+      "kind": "self",
+      "effects": [{"stat": "damage_reduction", "value": 3, "duration": 2, "target": "self"}],
+      "cooldown": 6
+    },
+    "shadow_lance": {
+      "name": "Shadow Lance",
+      "text": "{name} conjures a lance of solid darkness and hurls it!",
+      "kind": "attack", "stat": "cha",
+      "damage": {"dice_count": 2, "dice_size": 8, "type": "necrotic", "scale_levels": 6},
+      "cooldown": 2
+    },
+    "veil_of_night": {
+      "name": "Veil of Night",
+      "text": "{name} vanishes into a swirl of living shadow!",
+      "kind": "self",
+      "effects": [{"stat": "ac", "value": 3, "duration": 2, "target": "self"}],
+      "cooldown": 5
+    },
+    "mind_shatter": {
+      "name": "Mind Shatter",
+      "text": "{name} whispers a word that should not exist!",
+      "kind": "save", "stat": "cha", "save_ability": "Wisdom", "half_on_save": true,
+      "damage": {"dice_count": 2, "dice_size": 8, "type": "psychic", "scale_levels": 6},
+      "effects": [{"stat": "attack_bonus", "value": -3, "duration": 2, "target": "player"}],
+      "cooldown": 4
+    },
+    "void_rupture": {
+      "name": "Void Rupture",
+      "text": "{name} tears a wound in reality and the void pours through!",
+      "kind": "save", "stat": "int", "save_ability": "Constitution", "half_on_save": true,
+      "damage": {"dice_count": 3, "dice_size": 8, "type": "force"},
+      "effects": [{"stat": "burn", "value": 2, "duration": 3, "target": "player"}],
+      "cooldown": 4
+    },
+    "crown_of_ruin": {
+      "name": "Crown of Ruin",
+      "text": "{name} draws on the stolen power of the crown shards!",
+      "kind": "self",
+      "heal": {"dice_count": 2, "dice_size": 8, "level_bonus": true},
+      "effects": [{"stat": "damage_bonus", "value": 2, "duration": 3, "target": "self"}],
+      "cooldown": 8, "use_below_hp": 0.4
+    },
+    "planar_collapse": {
+      "name": "Planar Collapse",
+      "text": "{name} folds the planes together around you!",
+      "kind": "save", "stat": "int", "save_ability": "Wisdom",
+      "damage": {"dice_count": 2, "dice_size": 8, "type": "psychic"},
+      "effects": [{"stat": "stun", "value": 1, "duration": 1, "target": "player"}],
+      "cooldown": 6
+    }
+  }
+}

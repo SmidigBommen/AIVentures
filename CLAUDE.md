@@ -16,6 +16,7 @@ uvicorn web.app:app --reload --host 0.0.0.0 --port 8000
 
 ### Run tests
 ```bash
+pip install pytest httpx         # test deps (httpx only for test/test_web_flow.py)
 pytest                          # all tests
 pytest test/test_battle.py      # single test file
 pytest -k "test_name"           # single test by name
@@ -47,9 +48,13 @@ All entity/item creation goes through factories that read from `json/` data file
 
 Headless game logic shared across the application — no I/O, no web framework imports:
 
-- **`engine/combat.py`** → `resolve_weapon_attack()`, `get_weapon_attack_modifier()`, `roll_initiative()`, `monster_turn_action()`, `calculate_xp_reward()`, `calculate_gold_reward()`
-- **`engine/effects.py`** → `get_effect_bonus()`, `tick_effects()`, `apply_effect()`, `clear_effects()` — active effect duration, stacking, expiry
-- **`engine/leveling.py`** → `calculate_max_pp()` — power point calculation (full caster/half caster/martial tiers)
+- **`engine/combat.py`** → `resolve_attack_roll()` (nat 20 crit / nat 1 miss), `resolve_weapon_attack()`, `resolve_flee()`, `get_weapon_attack_modifier()`, `roll_initiative()`, `calculate_xp_reward()`, `calculate_gold_reward()`
+- **`engine/abilities.py`** → `resolve_player_ability()` — player class abilities (all attack methods, damage, healing, effects)
+- **`engine/monster_ai.py`** → `choose_monster_action()`, `resolve_monster_ability()`, `tick_cooldowns()` — monster decisions and special abilities
+- **`engine/effects.py`** → `get_effect_bonus()`, `tick_effects()`, `is_stunned()`, `resolve_round_conditions()`, `describe_effect()` — effect duration, stacking, conditions
+- **`engine/leveling.py`** → `calculate_max_pp()`, `grant_xp()` — power points; XP award with level-up HP and PP handling
+- **`engine/campaign.py`** → `highest_unlocked_act()`, `is_act_complete()`, `get_area_boss()`, `collected_shards()`, `pending_ambush()` — pure progression rules derived from the defeated-boss list
+- **`engine/events.py`** → `pick_event()`, `resolve_event_choice()`, `apply_outcome()` — exploration skill-check events
 - **`engine/quests.py`** → `check_quest_progress()`, `turn_in_quest()` — quest state mutations after kills and turn-ins
 - **`engine/combatant.py`** → `CombatantState`, `WeaponState` dataclasses — serializable battle state for monsters (replaces flat fields)
 
@@ -59,9 +64,10 @@ All 11 classes have unique abilities powered by **Power Points (PP)**:
 - **Data**: `json/abilities.json` — 55 abilities (5 per class), each with cost, unlock_level, attack_method, damage/heal/effects
 - **PP calculation** in `engine/leveling.py`: `calculate_max_pp(class_name, level, primary_modifier)` — full casters get `level + mod`, half casters `level//2 + mod`, martial `level//3 + mod` (min 2)
 - **Helpers** in `web/game_session.py`: `get_abilities()`, `get_class_abilities(class_name, level)`, `get_primary_modifier(character)`
-- **Combat resolution** in `web/routes/battle.py`: `resolve_ability()` handles all attack methods (melee_attack, spell_attack, spell_save, auto_hit), damage, healing, and effect application
+- **Combat resolution** in `engine/abilities.py`: `resolve_player_ability()` handles all attack methods (melee_attack, spell_attack, spell_save, auto_hit), crits, damage, healing, and effect application. Enemy-targeted effects only apply if the ability lands (hit / failed save)
 - **Active effects**: stored on `BattleState` (`player_effects`) and `CombatantState` (`effects`). Each effect has `stat`, `value`, `duration`, `source`. Duration 0 = lasts entire combat, positive = rounds remaining. `tick_effects()` decrements each round. `get_effect_bonus(effects, stat)` sums bonuses.
 - **Stat modifiers**: `ac`, `attack_bonus`, `damage_bonus`, `damage_reduction` — applied in weapon attacks, ability attacks, and monster turns
+- **Conditions** (same effect dict, special `stat`): `poison`/`burn`/`bleed` deal `value` damage at end of each round, `regen` heals, `stun` skips the bearer's turn. Bosses are immune to stun
 - PP initialized on character creation, restored on rest, recalculated on level up
 
 ### Quest System
@@ -78,16 +84,41 @@ JSON-driven quest system with kill and gather quest types:
 
 ### Battle System
 
-Combat is handled via `web/routes/battle.py` with game logic in `engine/combat.py`:
+Combat is handled via `web/routes/battle.py` with game logic in `engine/`:
 
+- **Round loop**: every player action ends in `finish_player_turn()` — monster turn (skipped if stunned) → end-of-round conditions (DoT/regen) → tick effects and cooldowns → next round. A stunned player loops again and loses their turn. Add new player actions by mutating state and returning `await finish_player_turn(request, session)`
+- **Critical hits**: natural 20 always hits and doubles damage dice; natural 1 always misses (weapon attacks and attack-roll abilities, both sides)
+- **Monster abilities**: `json/monster_abilities.json` (`races` → ability ids, `abilities` → definitions with `kind` attack/save/self, `cooldown`, `use_below_hp`, `lifesteal`, effects). Timed effects applied on the monster's turn get +1 duration because the monster acts last in the round
+- **Bosses**: `json/bosses.json`, keyed by the `boss` id on a `campaign.json` area. Built with `CombatantState.from_boss()` (authored HP/AC/scores, no factory). Enrage once at ≤50% HP, cannot be fled, fixed XP/gold rewards, guaranteed loot. Started via `POST /battle/boss` or `begin_boss_battle()` (travel ambush)
+- **Flee**: `POST /battle/flee` — d20 + DEX vs DC 10 + monster level // 2; failure costs the turn
+- **Player defend** is a 1-round `ac` effect, not a mutation of `armor_class`
 - **Monster state**: `CombatantState` dataclass (in `engine/combatant.py`) with `to_dict()`/`from_dict()`/`from_monster()` for serialization
 - **Attack resolution**: `engine/combat.py` `resolve_weapon_attack()` — d20 + ability mod + proficiency + effect bonuses vs AC + effect bonuses. Returns `{hit, attack_roll, target_ac, damage}`
 - **Weapon modifiers**: `get_weapon_attack_modifier()` — finesse uses max(STR,DEX), ammunition uses DEX, else STR
-- **Monster AI**: `monster_turn_action()` — 70% attack, 30% defend
+- **Monster AI**: `choose_monster_action()` — heal when wounded, use abilities off cooldown (chance rises with level; higher for bosses), otherwise attack/defend
 - **Effects**: `engine/effects.py` — `tick_effects()` per round, `get_effect_bonus()` for stat queries
-- **Battle actions**: `POST /battle/attack`, `POST /battle/defend`, `POST /battle/ability` (with `ability_id` form field), `POST /battle/item`
+- **Battle actions**: `POST /battle/attack`, `POST /battle/defend`, `POST /battle/ability` (with `ability_id` form field), `POST /battle/item`, `POST /battle/flee`
 - **Monster data**: Taunts in `json/monster_taunts.json`, portraits in `json/monster_portraits.json`
 - **Player portraits**: Selected during character creation (3 options: Knight, Berserker, Wizard). Stored in `CharacterCreationState.portrait`
+
+### Campaign Progression
+
+- `GameSession.defeated_bosses` is the only stored progression state; unlocked act, shards and completion are **derived** by `engine/campaign.py`
+- An act is complete when every boss placed on one of its areas is defeated → next act unlocks for travel (`/game/travel` lists all acts, locked ones greyed out)
+- Bosses may declare `requires` (other bosses first — Malachar needs Lady Vex), `shard` (crown shard awarded), `ambush` (`{"act", "after_act_bosses"}` — sprung on travel; Lady Vex in Act 2)
+- `GET /game/journal` shows main quest, shards, bosses, stats; `GET /game/ending` is the epilogue once all acts are complete
+
+### Exploration Events
+
+- `POST /game/explore`: encounter roll first; otherwise `EVENT_CHANCE` (65%) to pick an event from `json/events.json`
+- Events are filtered by `location_types`; events with `special` only fire in areas with that `special` string, take priority, and are `once`
+- Each choice is a skill check (`skill`, `dc`, `success`/`failure` outcomes) or a no-check `outcome`. Outcome keys: `text`, `gold`, `xp`, `heal_pct`, `pp`, `damage` `[count, size]`, `potion`, `battle`. Rewards and DCs scale with the location tier (low end of `encounterLevel`)
+- State: `pending_event` (awaiting choice — `/game` redirects to `/game/event`), `event_result` (shown once), `completed_events`
+- Routes: `GET /game/event`, `POST /game/event/choose`, `POST /game/event/continue`
+
+### Balance
+
+Boss and monster numbers were tuned with `tools/balance_sim.py`, which plays fights through the real routes (`python tools/balance_sim.py bosses` / `monsters`, see its docstring). Targets: bosses ~40–80% win rate at-level with 3 potions, regular fights 75–100%. Player damage scales slowly (no ability score increases) and classes are uneven (casters out-damage martials; Monk and Druid are weakest), so boss HP is deliberately modest — re-run the simulator after changing combat numbers.
 
 ### Web Application (`web/`)
 
@@ -95,6 +126,7 @@ Combat is handled via `web/routes/battle.py` with game logic in `engine/combat.p
 - **`web/game_session.py`** → `GameSession` class with server-side file storage. Contains `CharacterCreationState`, `BattleState`, quest state, shop state, and references to campaign location/area data. Character objects are recreated from factory on each request via `_restore_character()`. Also contains JSON data loaders with caching.
 - **`web/dependencies.py`** → FastAPI dependencies `require_character` and `require_battle` for route guards (replaces boilerplate `if not session.character` checks)
 - **Routes** use server-side rendering with Jinja2 templates and POST/Redirect/GET pattern (303 redirects)
+- **Templates** are rendered with `templates.TemplateResponse(request, "name.html", {...})` (request first — required by current Starlette)
 - **Templates** in `web/templates/` extend `base.html` — all styling in `web/static/css/style.css`, all JS in `web/static/js/main.js` (no inline styles/scripts in templates)
 
 ### Session / Save System
@@ -128,11 +160,14 @@ Consolidated CSS design system with:
 - Shop tabs: `.shop-tabs`, `.shop-tab`, `.shop-tab-panel`
 - Quest board: `.quest-card`, `.quest-progress-bar`, `.quest-type-badge`
 - Monster taunt bubble: `.monster-taunt`
+- Bosses: `.boss-panel` (location), `.boss-banner`, `.combatant.boss`/`.enraged`, `.boss-defeat-panel`, `.shard-gem`
+- Events: `.event-card`, `.event-choice`, `.outcome-chip`; reuses `.haggle-roll-result` for the d20 breakdown
+- Journal/travel: `.journal-act`, `.shard-row`, `.travel-act`, `.loc-tag`
 - Responsive breakpoints at 768px and 480px
 
 ### JavaScript (`web/static/js/main.js`)
 
-- `SFX` object: Web Audio API synthesized sounds (hit, miss, heal, defend, spell, victory, defeat, levelup, coin, click)
+- `SFX` object: Web Audio API synthesized sounds (hit, crit, miss, heal, defend, spell, victory, defeat, levelup, coin, click)
 - Toast notification system (`showToast`, `initToasts` — reads `data-toast` elements)
 - Confetti effect (`showConfetti`) and screen shake (`screenShake`) triggered by `data-confetti`/`data-screen-shake` attributes
 - `initShopTabs()`: Tab switching with URL param auto-select (`?tab=quests`)
@@ -140,7 +175,7 @@ Consolidated CSS design system with:
 
 ### Game World (`json/campaign.json`)
 
-Campaign data defines acts → locations → areas. Each area has `connections` (list of area IDs for navigation), `encounters` (0-10 rating for encounter chance), `monster_types`, and optional `special` strings (e.g., "shop", "inn" which enable shop/rest features in the web UI).
+Campaign data defines acts → locations → areas. Each area has `connections` (list of area IDs for navigation), `encounters` (0-10 rating for encounter chance), `monster_types`, optional `special` strings (e.g., "shop", "inn" which enable shop/rest features in the web UI, or a key matched by one-time events), and optional `boss` (id into `json/bosses.json`).
 
 ### Key Design Patterns
 

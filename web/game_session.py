@@ -146,6 +146,39 @@ def get_default_shop_inventory() -> list:
     return _shop_inventory_cache
 
 
+_bosses_cache = None
+
+
+def get_bosses() -> dict:
+    """Get boss definitions keyed by the boss id used in campaign.json areas."""
+    global _bosses_cache
+    if _bosses_cache is None:
+        _bosses_cache = load_json("bosses.json")
+    return _bosses_cache
+
+
+_monster_abilities_cache = None
+
+
+def get_monster_abilities() -> dict:
+    """Get monster special abilities: {"races": {race: [ids]}, "abilities": {id: def}}."""
+    global _monster_abilities_cache
+    if _monster_abilities_cache is None:
+        _monster_abilities_cache = load_json("monster_abilities.json")
+    return _monster_abilities_cache
+
+
+_events_cache = None
+
+
+def get_events() -> dict:
+    """Get exploration event definitions."""
+    global _events_cache
+    if _events_cache is None:
+        _events_cache = load_json("events.json")
+    return _events_cache
+
+
 def get_class_abilities(class_name: str, level: int) -> list:
     """Get unlocked abilities for a class at a given level."""
     abilities = get_abilities()
@@ -171,6 +204,21 @@ def get_primary_modifier(character) -> int:
     return getattr(character, f"{primary}_modifier", 0)
 
 
+def get_save_modifiers(character) -> dict:
+    """Total saving throw modifier per ability: {"strength": int, ...}.
+
+    Adds the proficiency bonus for the class's proficient saves.
+    """
+    proficient = get_classes().get(character.class_name, {}).get("saving_throw_proficiencies", [])
+    mods = {}
+    for ability in ("Strength", "Dexterity", "Constitution", "Intelligence", "Wisdom", "Charisma"):
+        mod = getattr(character, f"{ability.lower()}_modifier", 0)
+        if ability in proficient:
+            mod += character.proficiency_bonus
+        mods[ability.lower()] = mod
+    return mods
+
+
 def get_all_armors_flat() -> dict:
     """Get all armors as a flat dictionary."""
     armors = get_armors()
@@ -179,6 +227,20 @@ def get_all_armors_flat() -> dict:
         for name, data in armor_list.items():
             flat[name] = {**data, "type": category}
     return flat
+
+
+# Number of battle log lines kept in the session and shown in the arena
+BATTLE_LOG_LIMIT = 16
+
+# Healing by potion name, for saves written before potions stored healing_amount
+LEGACY_POTION_HEALING = {
+    "Minor Healing Potion": 5,
+    "Small Healing Potion": 10,
+    "Healing Potion": 10,
+    "Medium Healing Potion": 25,
+    "Greater Healing Potion": 20,
+    "Superior Healing Potion": 50,
+}
 
 
 @dataclass
@@ -270,6 +332,13 @@ class GameSession:
         self.haggle_result = None
         # Battle reward display (previously in request.session)
         self.battle_rewards = None
+        # Campaign progression — acts/shards are derived from this (see engine/campaign.py)
+        self.defeated_bosses = []     # [boss_id, ...] in the order they fell
+        # Exploration events
+        self.pending_event = None     # event id awaiting the player's choice
+        self.event_result = None      # result dict of the last resolved event (shown once)
+        self.completed_events = []    # ids of one-time events already resolved
+        self.events_resolved = 0      # lifetime counter for the journal
         # Flash messages (one-time display, cleared after read)
         self._flash = {}
 
@@ -303,7 +372,7 @@ class GameSession:
                 "monster": self.battle.monster.to_dict(),
                 "round_count": self.battle.round_count,
                 "initiative_order": self.battle.initiative_order,
-                "battle_log": self.battle.battle_log[-10:],
+                "battle_log": self.battle.battle_log[-BATTLE_LOG_LIMIT:],
                 "is_player_turn": self.battle.is_player_turn,
                 "is_active": self.battle.is_active,
                 "player_effects": self.battle.player_effects,
@@ -319,6 +388,11 @@ class GameSession:
             "haggled_items": self.haggled_items,
             "haggle_result": self.haggle_result,
             "battle_rewards": self.battle_rewards,
+            "defeated_bosses": self.defeated_bosses,
+            "pending_event": self.pending_event,
+            "event_result": self.event_result,
+            "completed_events": self.completed_events,
+            "events_resolved": self.events_resolved,
             "_flash": self._flash,
         }
 
@@ -391,6 +465,7 @@ class GameSession:
                 entry["category"] = item.category
             else:
                 entry["type"] = "potion"
+                entry["healing_amount"] = getattr(item, "healing_amount", 10)
             inventory.append(entry)
 
         return {
@@ -438,6 +513,11 @@ class GameSession:
         session.haggled_items = data.get("haggled_items", {})
         session.haggle_result = data.get("haggle_result")
         session.battle_rewards = data.get("battle_rewards")
+        session.defeated_bosses = data.get("defeated_bosses", [])
+        session.pending_event = data.get("pending_event")
+        session.event_result = data.get("event_result")
+        session.completed_events = data.get("completed_events", [])
+        session.events_resolved = data.get("events_resolved", 0)
         session._flash = data.get("_flash", {})
 
         # Restore location from campaign data
@@ -552,6 +632,7 @@ class GameSession:
             character.max_hit_points = char_data.get("max_hit_points", character.max_hit_points)
             character.armor_class = char_data.get("armor_class", character.armor_class)
             character.xp_to_next_level = character.level * 150
+            character.update_proficiency_bonus()
 
             # Restore power points
             primary_mod = get_primary_modifier(character)
@@ -604,17 +685,10 @@ class GameSession:
                     quest_id = item_data.get("quest_id", "")
                     character.add_item(QuestItem(item_data["name"], item_data.get("description", ""), quest_id))
                 elif "Healing Potion" in item_data["name"]:
-                    # Parse healing amount from name or description
-                    if "Minor" in item_data["name"]:
-                        healing = 5
-                    elif "Greater" in item_data["name"]:
-                        healing = 20
-                    elif "Small" in item_data["name"]:
-                        healing = 10
-                    elif "Medium" in item_data["name"]:
-                        healing = 25
-                    else:
-                        healing = 10
+                    healing = item_data.get("healing_amount")
+                    if healing is None:
+                        # Saves from before healing_amount was stored: infer from the name
+                        healing = LEGACY_POTION_HEALING.get(item_data["name"], 10)
                     character.add_item(HealingPotion(item_data["name"], healing))
 
             return character

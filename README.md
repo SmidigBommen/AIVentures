@@ -33,6 +33,7 @@ Then open http://localhost:8000 in your browser.
 - **55 unique abilities** across all 11 classes (5 per class), defined in `json/abilities.json`
 - Each class has a free cantrip/basic ability (0 PP) plus 4 costed abilities (1-3 PP) unlocking at levels 1, 2, 4, and 6
 - Ability types: damage (melee/spell attack, spell save, auto-hit), healing, buffs (self), debuffs (enemy)
+- Conditions: some abilities leave the target Poisoned, Burning or Bleeding (damage every round) or Stunned (lose a turn)
 - Cantrips scale with level (more dice at levels 5, 11)
 - Active effects modify attack rolls, damage, AC, and damage reduction
 - Effects tick down each round; duration 0 = lasts entire combat
@@ -43,13 +44,30 @@ Then open http://localhost:8000 in your browser.
 - Turn-based battle system with D&D 5e mechanics
 - d20 attack rolls + ability modifier + proficiency vs AC
 - Initiative system (d20 + DEX modifier)
-- Actions: Attack, Defend, Abilities, Items
-- Monster AI: 70% attack, 30% defend
-- Active buff/debuff effects from abilities apply to both sides
+- **Critical hits**: a natural 20 always hits and doubles the damage dice; a natural 1 always misses
+- Actions: Attack, Defend, Abilities, Items, Flee (DEX check vs DC 10 + half the monster's level)
+- **Monster abilities**: every monster race has its own special moves (Fire Breath, Life Drain, Regenerate, Howling Gale...) with cooldowns, saving throws and conditions — defined in `json/monster_abilities.json`
+- **Monster AI**: uses abilities when off cooldown, heals when wounded, turtles when nearly dead, presses the attack when you are
+- Active buff/debuff effects and conditions apply to both sides
 - Tier-based loot drops (potions, gold, weapons, armor)
 - Victory rewards: XP, gold, loot, quest progress, level-up notifications
 - Monster portraits and taunts — each of the 12 monster races has unique start, attack, and hurt dialog lines
 - Player portraits displayed on the battle arena
+
+### Bosses & Campaign Progression
+- **9 hand-authored bosses** (`json/bosses.json`) guard the boss areas of the campaign, each with unique abilities, an intro, taunts and a defeat scene
+- Bosses **enrage at half health**, cannot be fled from, and shrug off stuns
+- Five of them hold the **shards of the Crown of Unity** — collect all five
+- **Act gating**: defeating every boss in an act unlocks travel to the next one
+- **Lady Vex** ambushes you on the road once you hold two of Act 2's shards; her seal bars Malachar's door until you beat her again in Act 3
+- Defeat Malachar to restore the Crown and see the **epilogue**
+- **Journal** page tracks the main quest, shards, bosses and your deeds
+
+### Exploration Events
+- Exploring can now turn up **skill-check events** instead of only fights or nothing: locked chests, wounded travelers, shrines, traps, spirits...
+- 23 events in `json/events.json`, each with several approaches using different skills (your modifier and the DC are shown before you choose)
+- Natural 20s always succeed, natural 1s always fail; outcomes grant gold, XP, healing, power points, potions — or cost HP, gold, or start a fight
+- **One-time discoveries** tied to special areas (the bridge runes, the dwarven forge, Malachar's laboratory...)
 
 ### Quest System
 - Shopkeeper Elara offers kill quests and gather quests
@@ -73,7 +91,7 @@ Then open http://localhost:8000 in your browser.
 - Area-based navigation with encounter chance ratings
 - 12 monster races with unique stats, weapons, and personalities
 - Rest at inns/taverns to recover HP and PP
-- Location travel between zones within each act
+- Location travel between zones in every act you have unlocked
 
 ### Web UI
 - Dark fantasy theme with Cinzel heading font
@@ -91,10 +109,12 @@ Then open http://localhost:8000 in your browser.
 ## Running Tests
 
 ```bash
-pytest                          # all tests (148 tests)
+pip install pytest httpx         # httpx is only needed for the route tests
+pytest                          # all tests (286 tests)
 pytest test/test_battle.py      # battle mechanics
 pytest test/test_session_roundtrip.py  # session serialization
 pytest test/test_engine_combat.py      # engine combat logic
+pytest test/test_web_flow.py           # end-to-end flows through the routes
 ```
 
 ## Tech Stack
@@ -114,8 +134,12 @@ AIVentures/
 ├── items.py                   # Item, HealingPotion, QuestItem classes
 ├── *Factory.py                # Factory classes for creating game objects
 ├── engine/                    # Headless game logic (no I/O, no web deps)
-│   ├── combat.py              # Attack resolution, rewards
-│   ├── effects.py             # Buff/debuff duration and stacking
+│   ├── combat.py              # Attack resolution, crits, flee, rewards
+│   ├── abilities.py           # Player class ability resolution
+│   ├── monster_ai.py          # Monster action choice and special abilities
+│   ├── effects.py             # Buff/debuff duration, stacking, conditions
+│   ├── campaign.py            # Boss, shard and act progression rules
+│   ├── events.py              # Exploration skill-check events
 │   ├── leveling.py            # PP calculation
 │   ├── quests.py              # Quest progress and turn-in
 │   └── combatant.py           # CombatantState dataclass for battle
@@ -123,6 +147,9 @@ AIVentures/
 │   ├── campaign.json          # World: acts, locations, areas
 │   ├── abilities.json         # 55 class abilities
 │   ├── quests.json            # 9 quests across 3 acts
+│   ├── bosses.json            # 9 bosses: stats, abilities, story text
+│   ├── monster_abilities.json # Monster and boss special abilities
+│   ├── events.json            # Exploration events
 │   ├── weapon-catalog.json    # Weapon definitions
 │   ├── armor_catalog.json     # Armor definitions
 │   ├── classes_properties.json # Class stats, proficiencies
@@ -139,7 +166,7 @@ AIVentures/
 │   ├── sessions/              # Server-side session JSON files
 │   ├── routes/
 │   │   ├── character.py       # Character creation flow
-│   │   ├── game.py            # World navigation, exploration, rest
+│   │   ├── game.py            # World navigation, exploration, events, travel, journal
 │   │   ├── battle.py          # Combat system
 │   │   ├── shop.py            # Shop, haggling, quests
 │   │   └── inventory.py       # Equipment management
@@ -148,7 +175,9 @@ AIVentures/
 │       ├── css/style.css      # Complete design system
 │       ├── js/main.js         # Sound effects, toasts, tabs, animations
 │       └── images/            # Portraits (player, monster, shopkeeper)
-└── test/                      # pytest test suite (148 tests)
+├── tools/
+│   └── balance_sim.py         # Simulates boss/monster fights to check balance
+└── test/                      # pytest test suite (286 tests)
 ```
 
 ## Worklist
@@ -172,8 +201,13 @@ Done | Player portraits (selection at character creation)
 Done | Server-side session storage (JSON files, no cookie size limits)
 Done | Game engine extraction (engine/ package — combat, effects, quests, leveling)
 Done | CLI removal — web-only codebase
-x | Boss encounters with unique mechanics
-x | Act progression gating
-x | Monster abilities and smarter AI
+Done | Boss encounters with unique mechanics (enrage, abilities, no fleeing)
+Done | Act progression gating, crown shards, journal and ending
+Done | Monster abilities and smarter AI
+Done | Critical hits, conditions (poison/burn/bleed/stun) and fleeing
+Done | Exploration events driven by skill checks
+x | Class balance pass (casters far out-damage martials at high level; Monk and Druid are weakest)
+x | Ability score improvements on level-up
+x | Boss and remaining monster portraits
 x | Spells/abilities for exploration (outside combat)
 x | Off-hand / dual wielding

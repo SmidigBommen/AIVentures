@@ -1,0 +1,176 @@
+{
+  "Shard Guardian": {
+    "name": "The Shard Guardian",
+    "title": "Corrupted Spirit of the Whispering Woods",
+    "type": "Blighted Dryad",
+    "level": 5, "hp": 40, "ac": 13,
+    "scores": {"str": 14, "dex": 16, "con": 14, "int": 12, "wis": 16, "cha": 16},
+    "weapon": {"name": "Thorned Limbs", "damage_die": 8, "damage_dice_count": 1, "properties": ["finesse"]},
+    "abilities": ["thorn_lash", "corrupting_roots", "grove_renewal"],
+    "shard": "Shard of Verdance",
+    "rewards": {"xp": 600, "gold": 120},
+    "intro": "At the heart of the grove, a figure of bark and thorn kneels before a pulsing green light. Once she tended these woods. Now her eyes weep black sap, and the trees lean in to listen as she rises.",
+    "enrage_text": "The Shard Guardian shrieks — the shard's light floods her veins and the whole grove thrashes in fury!",
+    "defeat_text": "The corruption drains from the dryad's eyes. \"Thank you,\" she whispers, as bark crumbles to green leaves. Where she fell lies a fragment of the Crown, warm as spring sunlight.",
+    "taunts": {
+      "start": ["The grove does not want you here. Neither do I."],
+      "attack": ["Feed the roots!", "The woods remember every axe!", "You will make fine mulch."],
+      "hurt": ["The shard... it burns...", "You cut what you do not understand!"]
+    }
+  },
+  "Corrupted Captain": {
+    "name": "Captain Aldric the Unresting",
+    "title": "Corrupted Captain of the Watch",
+    "type": "Undead Warrior",
+    "level": 6, "hp": 50, "ac": 14,
+    "scores": {"str": 18, "dex": 12, "con": 16, "int": 10, "wis": 12, "cha": 14},
+    "weapon": {"name": "Rusted Greatsword", "damage_die": 6, "damage_dice_count": 1, "properties": []},
+    "abilities": ["commanders_wrath", "grave_chill", "unholy_ward"],
+    "shard": null,
+    "rewards": {"xp": 800, "gold": 160},
+    "intro": "A figure in corroded plate stands at the dead beacon, staring east. \"Report,\" it rasps without turning. \"...No. You are not my relief. Thirty years, and still no relief.\" The greatsword scrapes free of its scabbard.",
+    "enrage_text": "The Captain's helm splits, pale fire pouring from within. \"THE TOWER DOES NOT FALL!\"",
+    "defeat_text": "The Captain sinks to one knee. \"Watch... ended. At last.\" His armor collapses, empty. In his gauntlet is a dispatch sealed in black wax — orders bearing the sigil of someone named Malachar, and a map of four roads leading out of the valley.",
+    "taunts": {
+      "start": ["None pass the watch. None."],
+      "attack": ["Hold the line!", "For a kingdom that forgot us!", "Deserters hang!"],
+      "hurt": ["I do not... feel that.", "The watch endures!"]
+    }
+  },
+  "Lady Vex": {
+    "name": "Lady Vex",
+    "title": "Malachar's Shadow",
+    "type": "Shadow Sorceress",
+    "level": 10, "hp": 72, "ac": 15,
+    "scores": {"str": 10, "dex": 18, "con": 14, "int": 16, "wis": 14, "cha": 20},
+    "weapon": {"name": "Shadowglass Rapier", "damage_die": 8, "damage_dice_count": 1, "properties": ["finesse"]},
+    "abilities": ["shadow_lance", "veil_of_night", "mind_shatter"],
+    "shard": null,
+    "ambush": {"act": 2, "after_act_bosses": 2},
+    "rewards": {"xp": 1500, "gold": 300},
+    "intro": "The road ahead darkens though the sun is high. A woman in a coat the color of midnight steps out of your own shadow, rapier already drawn. \"Two shards. You've been busy. My master would like them back — and I would like to see what all the fuss is about.\"",
+    "enrage_text": "Lady Vex wipes blood from her lip and smiles for the first time. \"Oh, you're actually dangerous. Good.\"",
+    "defeat_text": "Vex staggers back, clutching her side, and laughs. \"Keep them, then. Carry them all the way to the Convergence for us.\" She folds into her own shadow and is gone. You have not seen the last of her.",
+    "taunts": {
+      "start": ["Do try to make this interesting."],
+      "attack": ["Too slow.", "Is that all the hero of Rivermeet has?", "Mind your shadow."],
+      "hurt": ["Hm. That one I felt.", "Careful — this coat was expensive."]
+    }
+  },
+  "Flame Cultist Leader": {
+    "name": "High Flamecaller Ssarak",
+    "title": "Priest of the Salamander Cult",
+    "type": "Fire Cultist",
+    "level": 8, "hp": 62, "ac": 14,
+    "scores": {"str": 16, "dex": 14, "con": 18, "int": 12, "wis": 18, "cha": 14},
+    "weapon": {"name": "Magma Glaive", "damage_die": 10, "damage_dice_count": 1, "properties": []},
+    "abilities": ["pillar_of_flame", "molten_aegis", "fire_breath"],
+    "shard": "Shard of Embers",
+    "rewards": {"xp": 1200, "gold": 240},
+    "intro": "Around the lava pool the cultists fall silent. Their priest — scaled, crowned in cinders — lifts a glowing red shard from the molten rock with his bare hand. \"The mountain hungers, warm-blood. You will do.\"",
+    "enrage_text": "Ssarak plunges his arm into the lava and rises wreathed in fire. \"BURN WITH ME!\"",
+    "defeat_text": "Ssarak topples backward into the pool, and the mountain's angry glow dims to embers. The fire shard rests on the temple floor, no longer scalding to the touch.",
+    "taunts": {
+      "start": ["The flame takes all offerings."],
+      "attack": ["Ash and cinders!", "Feel the mountain's heart!", "Your bones will be charcoal!"],
+      "hurt": ["The fire does not fear you!", "Hssss — impudent!"]
+    }
+  },
+  "Corrupted High Priest": {
+    "name": "High Priest Oren",
+    "title": "Drowned Voice of Dariel",
+    "type": "Corrupted Cleric",
+    "level": 9, "hp": 62, "ac": 15,
+    "scores": {"str": 14, "dex": 12, "con": 16, "int": 14, "wis": 20, "cha": 16},
+    "weapon": {"name": "Coral Mace", "damage_die": 8, "damage_dice_count": 1, "properties": []},
+    "abilities": ["drowning_tide", "profane_mending", "venom_spit"],
+    "shard": "Shard of Tides",
+    "rewards": {"xp": 1400, "gold": 280},
+    "intro": "Waist-deep in black water, a priest in barnacled vestments sings to a shard that pulses like a heartbeat. He turns, and seawater pours from his smiling mouth. \"Dariel was silent for so long. The shard answers every prayer.\"",
+    "enrage_text": "The sanctum floods to the pillars as Oren rises on a column of dark water. \"KNEEL BEFORE THE DEEP!\"",
+    "defeat_text": "The water drains away through cracks in the old stone. Oren, an old man once more, lies still upon the altar steps, his face finally at peace. The water shard is cool and calm in your hand.",
+    "taunts": {
+      "start": ["Come, child. Be baptized."],
+      "attack": ["The tide takes all!", "Breathe deep!", "The deep is patient!"],
+      "hurt": ["Blasphemer!", "The sea does not bleed!"]
+    }
+  },
+  "Ancient Wind Rider": {
+    "name": "Khal Toruun, the First Rider",
+    "title": "Ancient Wind Rider",
+    "type": "Undead Nomad",
+    "level": 11, "hp": 74, "ac": 15,
+    "scores": {"str": 18, "dex": 20, "con": 16, "int": 12, "wis": 16, "cha": 16},
+    "weapon": {"name": "Skyreaver Lance", "damage_die": 10, "damage_dice_count": 1, "properties": ["finesse"]},
+    "abilities": ["spectral_charge", "storm_of_arrows", "howling_gale"],
+    "shard": "Shard of Gales",
+    "rewards": {"xp": 1800, "gold": 360},
+    "intro": "The Great Mound splits. Out of it rides a warrior of wind and bone on a horse made of storm, a shard of pale sky bound to his brow. He levels his lance at you — not in malice, but in challenge. The plains have always tested those who would carry their treasures.",
+    "enrage_text": "The First Rider throws back his head and the sky answers — the storm descends to ride beside him!",
+    "defeat_text": "Khal Toruun dismounts, salutes you with his lance across his chest, and scatters into a warm wind that bends the grass for miles. The air shard drifts down into your open hand.",
+    "taunts": {
+      "start": ["Show the sky your worth."],
+      "attack": ["Ride or fall!", "The wind is never caught!", "Stand, little one!"],
+      "hurt": ["Hah! A worthy strike!", "The plains will sing of this!"]
+    }
+  },
+  "Primordial Earth Elemental": {
+    "name": "Ghorrum, the Mountain's Heart",
+    "title": "Primordial Earth Elemental",
+    "type": "Earth Elemental",
+    "level": 13, "hp": 84, "ac": 16,
+    "scores": {"str": 22, "dex": 8, "con": 22, "int": 8, "wis": 14, "cha": 10},
+    "weapon": {"name": "Boulder Fists", "damage_die": 10, "damage_dice_count": 2, "properties": []},
+    "abilities": ["earthshatter", "crystal_carapace", "crushing_blow"],
+    "shard": "Shard of Stone",
+    "rewards": {"xp": 2200, "gold": 440},
+    "intro": "The chamber wall opens two eyes of molten amber. What you took for the cavern itself unfolds — shoulders of granite, a chest of raw crystal with the earth shard beating inside it like a heart. It does not speak. Mountains do not need to.",
+    "enrage_text": "Cracks race across Ghorrum's body and blaze with inner light — the whole cavern begins to come down!",
+    "defeat_text": "Ghorrum settles slowly back into the wall, becoming stone, becoming mountain, becoming still. The earth shard rolls gently to your feet. All the shards you carry hum together, one chord short of complete.",
+    "taunts": {
+      "start": ["..."],
+      "attack": ["*The grinding of continents*", "*A sound like an avalanche*"],
+      "hurt": ["*Stone cracks like thunder*", "*A deep, tectonic groan*"]
+    }
+  },
+  "Lady Vex (Final Battle)": {
+    "name": "Lady Vex, Unbound",
+    "title": "Shadow Sorceress of the Convergence",
+    "type": "Shadow Sorceress",
+    "level": 12, "hp": 76, "ac": 15,
+    "scores": {"str": 10, "dex": 20, "con": 16, "int": 16, "wis": 14, "cha": 22},
+    "weapon": {"name": "Shadowglass Rapier", "damage_die": 8, "damage_dice_count": 2, "properties": ["finesse"]},
+    "abilities": ["shadow_lance", "veil_of_night", "mind_shatter"],
+    "shard": null,
+    "rewards": {"xp": 2400, "gold": 500},
+    "intro": "Lady Vex lounges sideways on a throne that is not hers. \"You carried them all the way here. I did say you would.\" She stands, and every shadow in the hall stands with her. \"No running this time. For either of us.\"",
+    "enrage_text": "Vex's form unravels at the edges into pure shadow. \"I gave him everything. I will NOT lose to you!\"",
+    "defeat_text": "Vex falls against the throne, her shadows guttering out like candles. \"He promised me... a world without masters.\" She looks toward the ritual chamber. \"The seal on his door was mine. It dies with me. Go — ruin his day.\"",
+    "taunts": {
+      "start": ["Shall we finish our dance?"],
+      "attack": ["Faster!", "You've learned nothing!", "Every shadow here is mine!"],
+      "hurt": ["Better than last time.", "Is that fear, or is it me?"]
+    }
+  },
+  "Malachar the Void-touched": {
+    "name": "Malachar the Void-touched",
+    "title": "Sorcerer of the Shattered Crown",
+    "type": "Corrupted Mage",
+    "level": 15, "hp": 92, "ac": 16,
+    "scores": {"str": 12, "dex": 14, "con": 18, "int": 20, "wis": 18, "cha": 20},
+    "weapon": {"name": "Staff of the Sundered Crown", "damage_die": 10, "damage_dice_count": 2, "properties": []},
+    "abilities": ["void_rupture", "crown_of_ruin", "planar_collapse", "void_bolt"],
+    "shard": null,
+    "requires": ["Lady Vex (Final Battle)"],
+    "locked_text": "A seal of living shadow bars the chamber door, woven in Lady Vex's hand. While she lives, none may enter.",
+    "rewards": {"xp": 5000, "gold": 1000},
+    "intro": "The Convergence Chamber has no ceiling — only a wound in the sky where another world presses through. Malachar floats at its center, half man and half absence. \"The Crown kept five provinces in polite chains,\" he says, almost kindly. \"I am offering them infinity. Give me the shards, and watch.\"",
+    "enrage_text": "Malachar's body tears open like paper, the void behind it screaming. \"THEN BE UNMADE WITH EVERYTHING ELSE!\"",
+    "defeat_text": "The shards in your pack blaze and leap free, circling Malachar faster and faster — and close. The Crown of Unity, whole once more, falls ringing to the floor. Above, the wound in the sky heals like a held breath released. Malachar is simply gone.",
+    "taunts": {
+      "start": ["You stand at the end of the world. Try to appreciate it."],
+      "attack": ["Witness!", "There is no 'after' for you.", "The void is patient. I am not."],
+      "hurt": ["Pain. How... nostalgic.", "You delay the inevitable!"]
+    }
+  }
+}

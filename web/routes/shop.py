@@ -8,7 +8,8 @@ from fastapi.templating import Jinja2Templates
 # Add parent directories to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from web.game_session import save_session, get_all_weapons_flat, get_all_armors_flat, get_quests, get_shopkeeper, get_default_shop_inventory
+from web.game_session import save_session, get_all_weapons_flat, get_all_armors_flat, get_quests, get_shopkeeper, get_default_shop_inventory, get_primary_modifier
+from engine.leveling import calculate_max_pp
 from web.dependencies import require_character
 from items import HealingPotion, QuestItem
 from weapon import Weapon
@@ -157,7 +158,7 @@ async def shop_view(request: Request, session=Depends(require_character)):
     # Save to persist flash pops and haggle_result clear
     save_session(request, session)
 
-    return templates.TemplateResponse("shop/index.html", {
+    return templates.TemplateResponse(request, "shop/index.html", {
         "request": request,
         "title": "Shop",
         "character": char_data,
@@ -374,8 +375,19 @@ async def turn_in_quest_route(request: Request, quest_id: str = Form(...), sessi
         save_session(request, session)
         return RedirectResponse("/shop?tab=quests", status_code=303)
 
-    session.set_flash("shop_message",
-        f"Quest complete: {result['quest_name']}! +{result['gold']} gold, +{result['xp']} XP")
+    # Quest XP can level the character up: grant the new HP and refresh power points
+    message = f"Quest complete: {result['quest_name']}! +{result['gold']} gold, +{result['xp']} XP"
+    if result["level_ups"]:
+        char = session.character
+        char.current_hit_points = min(
+            char.max_hit_points,
+            char.current_hit_points + sum(lu["hp_increase"] for lu in result["level_ups"]))
+        char.max_power_points = calculate_max_pp(
+            char.class_name, char.level, get_primary_modifier(char))
+        char.power_points = char.max_power_points
+        message += f" — Level up! You are now level {char.level}."
+
+    session.set_flash("shop_message", message)
     session.set_flash("shop_dialog_context", "quest_complete")
     save_session(request, session)
 

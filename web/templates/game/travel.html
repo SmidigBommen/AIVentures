@@ -9,23 +9,41 @@
         Current Location: <strong>{{ current_location.name }}</strong>
     </div>
 
-    <div class="loc-grid">
-        {% for loc in locations %}
-        <div class="loc-card">
-            <h3>{{ loc.name }}</h3>
-            <p class="desc">{{ loc.description }}</p>
-            {% if loc.level_range %}
-            <p class="level-range">Recommended Level: {{ loc.level_range }}</p>
-            {% endif %}
-            <form action="/game/travel" method="post">
-                <input type="hidden" name="location_name" value="{{ loc.name }}">
-                <button type="submit" class="btn btn-primary">Travel Here</button>
-            </form>
-        </div>
+    {% for act in acts %}
+    <section class="travel-act{% if act.locked %} travel-act-locked{% endif %}">
+        <h2 class="travel-act-title">
+            <span class="act-label">Act {{ act.number }}</span>
+            {{ act.title if not act.locked else "Beyond the Horizon" }}
+        </h2>
+
+        {% if act.locked %}
+        <p class="empty-state">These lands remain closed to you. Defeat the guardians of the previous act to open the way.</p>
         {% else %}
-        <p class="empty-state">No other locations available to travel to.</p>
-        {% endfor %}
-    </div>
+        <div class="loc-grid">
+            {% for loc in act.locations %}
+            <div class="loc-card">
+                <h3>{{ loc.name }}</h3>
+                <p class="loc-tags">
+                    <span class="loc-tag">{{ loc.type | capitalize }}</span>
+                    {% if loc.cleared %}<span class="loc-tag loc-tag-cleared">Guardian defeated</span>
+                    {% elif loc.has_boss %}<span class="loc-tag loc-tag-boss">Boss</span>{% endif %}
+                </p>
+                <p class="desc">{{ loc.description }}</p>
+                {% if loc.level_range %}
+                <p class="level-range">Recommended Level: {{ loc.level_range }}</p>
+                {% endif %}
+                <form action="/game/travel" method="post">
+                    <input type="hidden" name="location_name" value="{{ loc.name }}">
+                    <button type="submit" class="btn btn-primary">Travel Here</button>
+                </form>
+            </div>
+            {% else %}
+            <p class="empty-state">You are already here, and there is nowhere else in this act to go.</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </section>
+    {% endfor %}
 
     <div class="btn-group mt-3 text-center">
         <a href="/game" class="btn btn-secondary">Stay Here</a>

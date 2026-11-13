@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="event-container">
+    {% if event %}
+    <div class="event-card glass">
+        <span class="act-label">While exploring&hellip;</span>
+        <h1 class="event-title">{{ event.title }}</h1>
+        <p class="event-text">{{ event.text }}</p>
+
+        <div class="event-choices">
+            {% for choice in event.choices %}
+            <form action="/game/event/choose" method="post">
+                <input type="hidden" name="choice" value="{{ choice.index }}">
+                <button type="submit" class="event-choice">
+                    <span class="event-choice-label">{{ choice.label }}</span>
+                    {% if choice.skill %}
+                    <span class="event-choice-check">
+                        <span class="skill-name{% if choice.proficient %} skill-proficient{% endif %}">{{ choice.skill }}{% if choice.proficient %} &#9733;{% endif %}</span>
+                        <span class="skill-odds">d20 {{ '%+d' % choice.modifier }} vs DC {{ choice.dc }}</span>
+                    </span>
+                    {% else %}
+                    <span class="event-choice-check"><span class="skill-odds">No check</span></span>
+                    {% endif %}
+                </button>
+            </form>
+            {% endfor %}
+        </div>
+        <p class="hint">&#9733; marks skills you are proficient in.</p>
+    </div>
+
+    {% elif result %}
+    <div class="event-card glass event-result {{ 'event-success' if result.success else 'event-failure' }}"
+         {% if result.damage %}data-screen-shake{% endif %}
+         data-sound="{{ 'levelup' if result.leveled_up else ('coin' if result.success else 'miss') }}">
+        <span class="act-label">{{ result.label }}</span>
+        <h1 class="event-title">{{ result.title }}</h1>
+
+        {% if result.check %}
+        <div class="haggle-roll-result">
+            <div class="roll-dice">
+                <span class="roll-d20">d20</span>
+                <span class="roll-value">{{ result.check.roll }}</span>
+                <span class="roll-mod">{{ '%+d' % result.check.modifier }}</span>
+                <span class="roll-eq">=</span>
+                <span class="roll-total">{{ result.check.total }}</span>
+                <span class="roll-mod">vs DC {{ result.check.dc }}</span>
+            </div>
+            <div class="roll-outcome">
+                <span class="roll-label">{{ result.check.skill }}</span>
+                {% if result.check.roll == 20 %}
+                <span class="roll-tag tag-crit">NAT 20!</span>
+                {% elif result.check.roll == 1 %}
+                <span class="roll-tag tag-fumble">NAT 1!</span>
+                {% elif result.success %}
+                <span class="roll-tag tag-success">SUCCESS</span>
+                {% else %}
+                <span class="roll-tag tag-fumble">FAILURE</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <p class="event-text">{{ result.text }}</p>
+
+        <div class="event-outcomes">
+            {% if result.gold > 0 %}<span class="outcome-chip chip-gold">+{{ result.gold }} gold</span>{% endif %}
+            {% if result.gold < 0 %}<span class="outcome-chip chip-bad">{{ result.gold }} gold</span>{% endif %}
+            {% if result.xp %}<span class="outcome-chip chip-xp">+{{ result.xp }} XP</span>{% endif %}
+            {% if result.heal %}<span class="outcome-chip chip-good">+{{ result.heal }} HP</span>{% endif %}
+            {% if result.pp %}<span class="outcome-chip chip-pp">+{{ result.pp }} PP</span>{% endif %}
+            {% if result.item %}<span class="outcome-chip chip-good">{{ result.item }}</span>{% endif %}
+            {% if result.damage %}<span class="outcome-chip chip-bad">-{{ result.damage }} HP</span>{% endif %}
+            {% if result.leveled_up %}<span class="outcome-chip chip-gold">Level {{ result.new_level }}!</span>{% endif %}
+        </div>
+
+        <form action="/game/event/continue" method="post" class="mt-3">
+            {% if result.battle %}
+            <button type="submit" class="btn btn-attack">To Arms!</button>
+            {% else %}
+            <button type="submit" class="btn btn-primary">Continue</button>
+            {% endif %}
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -3,7 +3,7 @@
 {% block content %}
 <div class="location-container">
     <div class="location-header">
-        <span class="act-label">{{ act.name }}</span>
+        <span class="act-label">Act {{ act.number }} &middot; {{ act.title }}</span>
         <h1>{{ area.name if area else location.name }}</h1>
         <p class="location-sub">{{ location.name }}</p>
     </div>
@@ -22,6 +22,30 @@
 
     {% if request.query_params.get('revived') == 'true' %}
     <div data-toast="A healer nursed you back to health. You've been returned to safety." data-toast-type="warning" hidden></div>
+    {% endif %}
+
+    {% if message %}
+    <div data-toast="{{ message.text }}" data-toast-type="{{ message.type }}" hidden></div>
+    {% endif %}
+
+    {% if boss %}
+    <div class="panel boss-panel{% if boss.locked %} boss-locked{% endif %}">
+        <span class="boss-panel-label">{% if boss.locked %}Sealed{% else %}A powerful foe awaits{% endif %}</span>
+        <h2 class="boss-panel-name">{{ boss.name }}</h2>
+        <p class="boss-panel-title">{{ boss.title }} &middot; Level {{ boss.level }}</p>
+        {% if boss.locked %}
+        <p class="boss-panel-text">{{ boss.locked_text }}</p>
+        {% else %}
+        {% if boss.shard %}
+        <p class="boss-panel-text">The <strong>{{ boss.shard }}</strong> pulses somewhere close.</p>
+        {% endif %}
+        <p class="boss-panel-text text-muted">There is no fleeing this fight. Rest and stock up first.</p>
+        <form action="/battle/boss" method="post" class="inline-form">
+            <button type="submit" class="btn btn-boss"
+                    data-confirm="Challenge {{ boss.name }}? You cannot flee a boss battle.">Confront {{ boss.name }}</button>
+        </form>
+        {% endif %}
+    </div>
     {% endif %}
 
     {% if connected_areas %}
@@ -56,6 +80,7 @@
 
         <a href="/inventory" class="btn btn-secondary">Inventory</a>
         <a href="/game/travel" class="btn btn-secondary">Travel</a>
+        <a href="/game/journal" class="btn btn-secondary">Journal</a>
         <a href="/saves" class="btn btn-secondary">Save Game</a>
     </div>
 

@@ -5,6 +5,28 @@
     <h1>Victory!</h1>
     <p class="page-subtitle">You have defeated {{ monster_name }}!</p>
 
+    {% if rewards and rewards.boss %}
+    <div class="boss-defeat-panel">
+        <p class="boss-defeat-text">{{ rewards.boss.defeat_text }}</p>
+        {% if rewards.boss.shard %}
+        <div class="shard-award">
+            <span class="shard-gem"></span>
+            <div>
+                <p class="shard-award-name">{{ rewards.boss.shard }} recovered</p>
+                <p class="text-muted">Crown shards: {{ rewards.boss.shards_collected }} / {{ rewards.boss.shards_total }}</p>
+            </div>
+        </div>
+        {% endif %}
+        {% if rewards.boss.act_unlocked %}
+        <div class="act-unlock">
+            <span class="act-label">New lands open</span>
+            <h3>Act {{ rewards.boss.act_unlocked.number }}: {{ rewards.boss.act_unlocked.title }}</h3>
+            <p>{{ rewards.boss.act_unlocked.description }}</p>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
     {% if rewards %}
     <div class="rewards-panel">
         <h3>Rewards</h3>
@@ -64,7 +86,14 @@
     {% endif %}
 
     <div class="btn-group mt-3">
+        {% if rewards and rewards.boss and rewards.boss.campaign_complete %}
+        <a href="/game/ending" class="btn btn-primary">Witness the Ending</a>
+        {% elif rewards and rewards.boss and rewards.boss.act_unlocked %}
+        <a href="/game/travel" class="btn btn-primary">Travel Onward</a>
+        <a href="/game" class="btn btn-secondary">Stay Here</a>
+        {% else %}
         <a href="/game" class="btn btn-primary">Continue Adventure</a>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

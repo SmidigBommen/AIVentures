@@ -1,0 +1,325 @@
+{
+  "abandoned_chest": {
+    "title": "The Abandoned Chest",
+    "text": "Half-buried beneath debris you spot an iron-banded chest. The lock is old but stubborn, and something about the latch looks... deliberate.",
+    "location_types": ["wilderness", "dungeon"],
+    "choices": [
+      {"label": "Pick the lock", "skill": "Sleight of Hand", "dc": 12,
+       "success": {"text": "The tumblers click. Inside: a purse of coins someone never came back for.", "gold": 25, "xp": 15},
+       "failure": {"text": "A needle springs from the latch and jabs your thumb. Trapped!", "damage": [1, 6]}},
+      {"label": "Search it for traps first", "skill": "Investigation", "dc": 11,
+       "success": {"text": "You find and disarm a spring needle, then open the chest at your leisure. Coins — and a stoppered vial.", "gold": 20, "xp": 20, "potion": true},
+       "failure": {"text": "You find nothing amiss... until the needle finds you.", "damage": [1, 4]}},
+      {"label": "Smash it open", "skill": "Athletics", "dc": 13,
+       "success": {"text": "The lid splinters. A few coins scatter, most of them still spendable.", "gold": 18, "xp": 10},
+       "failure": {"text": "The chest wins. You bruise your shoulder and your pride.", "damage": [1, 4]}},
+      {"label": "Leave it be", "outcome": {"text": "Some chests are better left closed. You move on."}}
+    ]
+  },
+  "wounded_traveler": {
+    "title": "The Wounded Traveler",
+    "text": "A merchant lies propped against a rock, clutching a bloodied leg. \"Bandits,\" he gasps. \"Please — I can pay.\"",
+    "location_types": ["wilderness", "town"],
+    "choices": [
+      {"label": "Treat his wounds", "skill": "Medicine", "dc": 11,
+       "success": {"text": "You clean and bind the wound properly. He presses a pouch into your hands and refuses to take it back.", "gold": 22, "xp": 25},
+       "failure": {"text": "Your bandage is clumsy, but it holds. He thanks you anyway and limps off.", "xp": 8}},
+      {"label": "Question his story", "skill": "Insight", "dc": 13,
+       "success": {"text": "The 'blood' is berry juice. You grab his wrist just as his hidden friends stand up — and they think better of it, dropping their takings as they flee.", "gold": 30, "xp": 25},
+       "failure": {"text": "He seems honest enough. You help him up; later you notice your purse feels lighter.", "gold": -12}},
+      {"label": "Walk on", "outcome": {"text": "You have your own troubles. His calls fade behind you."}}
+    ]
+  },
+  "mossy_shrine": {
+    "title": "A Forgotten Shrine",
+    "text": "A small stone shrine stands swallowed by moss, its god's face worn smooth. Offerings rotted away long ago, yet the air here feels hushed and expectant.",
+    "location_types": ["wilderness", "dungeon"],
+    "choices": [
+      {"label": "Offer a proper prayer", "skill": "Religion", "dc": 12,
+       "success": {"text": "You recall the old rite and speak it true. Warmth floods your limbs, and your weariness lifts.", "heal_pct": 40, "pp": 2, "xp": 20},
+       "failure": {"text": "You mumble something half-remembered. The shrine remains politely silent.", "xp": 5}},
+      {"label": "Study the carvings", "skill": "History", "dc": 12,
+       "success": {"text": "This was a waystone of the old kingdom — and waystones kept a traveler's cache. You find the loose stone.", "gold": 20, "xp": 20, "potion": true},
+       "failure": {"text": "The carvings are too worn to read. You learn only that moss is damp.", "xp": 5}},
+      {"label": "Rest here a moment", "outcome": {"text": "You sit in the quiet for a while. It helps, a little.", "heal_pct": 10}}
+    ]
+  },
+  "rope_bridge": {
+    "title": "The Rotten Crossing",
+    "text": "The way ahead crosses a ravine by way of a bridge that has seen better centuries. Something glints on a ledge partway down the far side.",
+    "location_types": ["wilderness"],
+    "choices": [
+      {"label": "Cross nimbly and climb down", "skill": "Acrobatics", "dc": 13,
+       "success": {"text": "Light feet, quick hands. The glint is a dead adventurer's satchel — they weren't as nimble.", "gold": 28, "xp": 20, "potion": true},
+       "failure": {"text": "A plank gives way. You catch yourself on the rope, but not before slamming into the cliff.", "damage": [2, 4]}},
+      {"label": "Haul yourself across by the ropes", "skill": "Athletics", "dc": 12,
+       "success": {"text": "You go hand over hand, ignoring the planks entirely, and scoop up the satchel on the way.", "gold": 24, "xp": 20},
+       "failure": {"text": "The rope burns through your grip and you drop hard onto the ledge.", "damage": [2, 4]}},
+      {"label": "Find another way around", "outcome": {"text": "It costs you an hour, but you keep all your bones."}}
+    ]
+  },
+  "strange_tracks": {
+    "title": "Strange Tracks",
+    "text": "Fresh tracks cross your path — heavy, clawed, and dragging something. They lead off into the undergrowth.",
+    "location_types": ["wilderness"],
+    "choices": [
+      {"label": "Follow the tracks", "skill": "Survival", "dc": 12,
+       "success": {"text": "You trail the creature to its den while it is away, and help yourself to what it had been hoarding.", "gold": 26, "xp": 25},
+       "failure": {"text": "You lose the trail — and then find the creature. It found you first.", "battle": true}},
+      {"label": "Identify the beast", "skill": "Nature", "dc": 11,
+       "success": {"text": "You know this spoor, and exactly which paths such beasts avoid. You travel on wiser and unbothered.", "xp": 30},
+       "failure": {"text": "You've no idea what made these. Probably best not to find out.", "xp": 5}},
+      {"label": "Set an ambush", "skill": "Stealth", "dc": 13,
+       "success": {"text": "You wait in the brush. When it returns, one clean strike sends it fleeing, leaving its prize behind.", "gold": 20, "xp": 35},
+       "failure": {"text": "A twig snaps under your boot. The thing in the brush turns toward you.", "battle": true}}
+    ]
+  },
+  "trapped_corridor": {
+    "title": "The Too-Quiet Corridor",
+    "text": "The passage ahead is clean. Suspiciously clean — no dust, no debris, and a faint line of holes along both walls.",
+    "location_types": ["dungeon"],
+    "choices": [
+      {"label": "Scan for the trigger", "skill": "Perception", "dc": 12,
+       "success": {"text": "There — a pressure plate, barely raised. You step over it and pocket the fine darts from the wall for sale later.", "gold": 18, "xp": 25},
+       "failure": {"text": "You see nothing. Your foot finds the plate. The walls find you.", "damage": [2, 6]}},
+      {"label": "Sprint through", "skill": "Acrobatics", "dc": 14,
+       "success": {"text": "Darts hiss behind you, each a half-step too slow. You don't stop grinning for a minute.", "xp": 30},
+       "failure": {"text": "You are fast. The darts are faster.", "damage": [2, 6]}},
+      {"label": "Disarm the mechanism", "skill": "Sleight of Hand", "dc": 13,
+       "success": {"text": "You jam the mechanism and strip it for parts — a tinker would pay well for these springs.", "gold": 30, "xp": 25},
+       "failure": {"text": "Something goes *click* that should not have gone *click*.", "damage": [2, 4]}}
+    ]
+  },
+  "restless_spirit": {
+    "title": "The Restless Spirit",
+    "text": "A pale figure flickers into being ahead of you — not hostile, but sorrowful. It gestures again and again at the ground, mouthing words you cannot hear.",
+    "location_types": ["dungeon"],
+    "choices": [
+      {"label": "Speak the rites of rest", "skill": "Religion", "dc": 13,
+       "success": {"text": "The spirit bows its head as you speak. Before it fades, it touches your brow — and your wounds close.", "heal_pct": 50, "xp": 30},
+       "failure": {"text": "The words come out wrong. The spirit wails and passes straight through you, cold as a grave.", "damage": [1, 8]}},
+      {"label": "Reason out what it wants", "skill": "Insight", "dc": 12,
+       "success": {"text": "It's pointing at a flagstone. Beneath it: a locket and a soldier's pay. You take the coins and bury the locket. The spirit smiles and is gone.", "gold": 32, "xp": 25},
+       "failure": {"text": "You can't make sense of it. Eventually the spirit gives up on you and drifts away.", "xp": 5}},
+      {"label": "Sense the magic binding it", "skill": "Arcana", "dc": 13,
+       "success": {"text": "A decaying ward tethers it here. You unpick the last threads; the released energy rushes into you.", "pp": 3, "xp": 30},
+       "failure": {"text": "The ward snaps back like a whip.", "damage": [1, 6]}}
+    ]
+  },
+  "gambling_stranger": {
+    "title": "A Friendly Wager",
+    "text": "A grinning stranger rattles three cups on an upturned crate. \"Find the pea, double your coin! Easy money for sharp eyes like yours.\"",
+    "location_types": ["town"],
+    "choices": [
+      {"label": "Watch his hands, not the cups", "skill": "Perception", "dc": 13,
+       "success": {"text": "The pea's in his palm. You call it, loudly. He pays you to go away before the crowd catches on.", "gold": 25, "xp": 15},
+       "failure": {"text": "You were so sure it was the middle one.", "gold": -10}},
+      {"label": "Beat him at his own game", "skill": "Deception", "dc": 14,
+       "success": {"text": "You swap in your own pea while he's patter-ing. His face when all three cups 'win' is worth more than the coin.", "gold": 35, "xp": 20},
+       "failure": {"text": "He catches your hand. \"Amateur,\" he sighs, and the price of his silence is steep.", "gold": -15}},
+      {"label": "Keep your coin", "outcome": {"text": "\"Suit yourself!\" he calls, already looking for the next mark."}}
+    ]
+  },
+  "tavern_tale": {
+    "title": "Tall Tales",
+    "text": "A knot of locals argue over ale about the troubles in the land. They glance your way — an adventurer must have a story worth hearing.",
+    "location_types": ["town"],
+    "choices": [
+      {"label": "Tell a rousing tale", "skill": "Performance", "dc": 12,
+       "success": {"text": "By the end they're pounding the table. Someone passes a hat around, and your next meal is on the house.", "gold": 18, "heal_pct": 15, "xp": 15},
+       "failure": {"text": "You lose the thread around the second goblin. Polite coughs. Someone changes the subject.", "xp": 5}},
+      {"label": "Ask what they've heard", "skill": "Persuasion", "dc": 11,
+       "success": {"text": "A round of drinks loosens tongues. You learn which roads are watched and where the monsters den.", "xp": 35},
+       "failure": {"text": "They clam up. Strangers asking questions make folk nervous these days.", "xp": 5}},
+      {"label": "Listen from the corner", "outcome": {"text": "Mostly crop prices and whose goat ate whose washing. Peaceful, at least."}}
+    ]
+  },
+  "caged_beast": {
+    "title": "The Snared Beast",
+    "text": "A great grey wolf lies caught in a poacher's snare, wire cutting deep into its leg. It watches you approach with flat yellow eyes and a low, continuous growl.",
+    "location_types": ["wilderness"],
+    "choices": [
+      {"label": "Calm it and cut it free", "skill": "Animal Handling", "dc": 13,
+       "success": {"text": "Slow breath, soft voice. It lets you work. Freed, it vanishes — and returns to drop a dead poacher's coin-purse at your feet.", "gold": 28, "xp": 30},
+       "failure": {"text": "It lunges the moment the wire loosens, bites deep, and is gone.", "damage": [2, 4]}},
+      {"label": "Stare it down, then free it", "skill": "Intimidation", "dc": 14,
+       "success": {"text": "You hold its gaze until it looks away. It endures your help in sullen silence, then limps off.", "xp": 30},
+       "failure": {"text": "Wolves do not respect bluster.", "damage": [2, 4]}},
+      {"label": "Leave it to its fate", "outcome": {"text": "The growl follows you for a long way down the trail."}}
+    ]
+  },
+  "unstable_ceiling": {
+    "title": "Falling Stone",
+    "text": "Dust sifts down from above. With a groan like a dying giant, the ceiling begins to give way!",
+    "location_types": ["dungeon"],
+    "choices": [
+      {"label": "Dive clear", "skill": "Acrobatics", "dc": 12,
+       "success": {"text": "You roll out as tons of rock crash down behind you. The collapse has cracked open a hidden alcove.", "gold": 22, "xp": 20},
+       "failure": {"text": "Not quite fast enough. A slab clips you on the way down.", "damage": [2, 6]}},
+      {"label": "Brace the beam", "skill": "Athletics", "dc": 14,
+       "success": {"text": "You catch the falling beam on your shoulders and hold — just long enough to step clear. You feel mighty.", "xp": 35},
+       "failure": {"text": "The beam is heavier than your confidence.", "damage": [2, 6]}}
+    ]
+  },
+  "herb_patch": {
+    "title": "Healer's Bounty",
+    "text": "Among the weeds you notice a cluster of small silver-leafed plants. They look familiar — though several deadly things look familiar, too.",
+    "location_types": ["wilderness"],
+    "choices": [
+      {"label": "Identify the herbs", "skill": "Nature", "dc": 11,
+       "success": {"text": "Moonleaf — a healer's staple. You brew a quick draught and bottle the rest.", "heal_pct": 20, "potion": true, "xp": 15},
+       "failure": {"text": "You chew a leaf to check. It was not moonleaf.", "damage": [1, 6]}},
+      {"label": "Prepare a poultice", "skill": "Medicine", "dc": 12,
+       "success": {"text": "You crush the leaves into a poultice that draws the ache out of every bruise.", "heal_pct": 45, "xp": 15},
+       "failure": {"text": "The poultice does nothing but smell.", "xp": 5}},
+      {"label": "Don't risk it", "outcome": {"text": "You leave the plants for someone who knows what they're doing."}}
+    ]
+  },
+
+  "bridge_runes": {
+    "title": "Runes of the Stone Bridge",
+    "text": "The carvings on the bridge supports are older than Rivermeet itself. In the right light, one sequence seems to glow faintly — five symbols around a broken circle.",
+    "special": "mysterious_runes", "once": true,
+    "choices": [
+      {"label": "Decipher the runes", "skill": "Arcana", "dc": 12,
+       "success": {"text": "Five provinces, five elements, one Crown. The runes tell of the Crown of Unity — and that its shards call to one another. As understanding dawns, the runes flare and their stored power flows into you.", "xp": 60, "pp": 3},
+       "failure": {"text": "The symbols swim before your eyes. You copy them down to puzzle over later.", "xp": 15}},
+      {"label": "Recall the old legends", "skill": "History", "dc": 12,
+       "success": {"text": "The bridge was built by the first king to mark where the provinces swore their oath. Tradition says he hid a traveler's gift in the keystone. Tradition is right.", "xp": 50, "gold": 40},
+       "failure": {"text": "You remember there was a king. Probably several.", "xp": 15}}
+    ]
+  },
+  "cellar_cache": {
+    "title": "The Quartermaster's Cache",
+    "text": "Behind rotted barrels you find a section of cellar wall where the mortar is newer than the rest. Someone sealed something in here in a hurry.",
+    "special": "hidden_treasure", "once": true,
+    "choices": [
+      {"label": "Find the hidden catch", "skill": "Investigation", "dc": 13,
+       "success": {"text": "A false stone swings aside on a counterweight. The watchtower's pay chest, untouched for thirty years.", "gold": 80, "xp": 50, "potion": true},
+       "failure": {"text": "You pry stones loose until one drops on your foot. Behind it: a smaller stash than you'd hoped.", "gold": 25, "damage": [1, 6]}},
+      {"label": "Break down the wall", "skill": "Athletics", "dc": 14,
+       "success": {"text": "The wall comes down in a roar of dust. The pay chest of the old garrison sits behind it.", "gold": 70, "xp": 40},
+       "failure": {"text": "Half the ceiling comes down with the wall. You dig out a handful of coins and a lot of bruises.", "gold": 20, "damage": [2, 6]}}
+    ]
+  },
+  "dwarven_forge": {
+    "title": "The Ever-Warm Forge",
+    "text": "The great dwarven forge still glows, fed by the mountain's own heat. Runes of making circle the anvil, waiting for hands that know the craft.",
+    "special": "magical_forge", "once": true,
+    "choices": [
+      {"label": "Wake the forge-runes", "skill": "Arcana", "dc": 14,
+       "success": {"text": "The runes blaze. For one glorious hour the forge is yours: you temper your gear in living fire and melt down scrap into ingots worth a small fortune.", "gold": 90, "xp": 70, "pp": 3},
+       "failure": {"text": "The forge flares in protest and singes your eyebrows off.", "damage": [2, 6], "xp": 20}},
+      {"label": "Work the bellows by hand", "skill": "Athletics", "dc": 14,
+       "success": {"text": "Honest sweat does what magic might have. You hammer abandoned dwarven steel into something very saleable.", "gold": 75, "xp": 60},
+       "failure": {"text": "You wear yourself ragged and produce one lopsided horseshoe.", "gold": 10, "xp": 20}}
+    ]
+  },
+  "priests_passage": {
+    "title": "The Hidden Passage",
+    "text": "The mosaics in the priests' quarters show Dariel parting the waves — and one tile of the sea is a slightly different blue.",
+    "special": "hidden_passage", "once": true,
+    "choices": [
+      {"label": "Press the odd tile", "skill": "Investigation", "dc": 13,
+       "success": {"text": "A panel slides open onto a dry reliquary: temple silver, and healing draughts sealed in wax.", "gold": 80, "xp": 60, "potion": true},
+       "failure": {"text": "You press the wrong tile first. A jet of seawater knocks you flat before the panel opens on a looted shelf.", "gold": 20, "damage": [2, 4]}},
+      {"label": "Recall Dariel's rites", "skill": "Religion", "dc": 13,
+       "success": {"text": "You speak the Tide-Blessing. The panel opens of its own accord, and the sea god's calm settles on you.", "gold": 60, "xp": 60, "heal_pct": 50},
+       "failure": {"text": "Your pronunciation would make a priest weep. Nothing happens.", "xp": 20}}
+    ]
+  },
+  "drowned_treasury": {
+    "title": "The Drowned Treasury",
+    "text": "Gold gleams on the flooded floor of the treasury, a long dive down through dark water. Something large moves at the edge of sight.",
+    "special": "ancient_treasures", "once": true,
+    "choices": [
+      {"label": "Dive for it", "skill": "Athletics", "dc": 14,
+       "success": {"text": "Lungs burning, you surface with both arms full of temple gold.", "gold": 120, "xp": 70},
+       "failure": {"text": "You run out of air halfway and come up with a handful of coins and a chest full of seawater.", "gold": 30, "damage": [2, 6]}},
+      {"label": "Slip past the thing in the water", "skill": "Stealth", "dc": 14,
+       "success": {"text": "You move when it moves, still when it's still. It never knows you were there. The treasury's best is yours.", "gold": 110, "xp": 80, "potion": true},
+       "failure": {"text": "It knows.", "battle": true}}
+    ]
+  },
+  "altar_of_winds": {
+    "title": "The Altar of the Four Winds",
+    "text": "The wind howls from every direction at once inside the stone circle. The nomads say those who can stand at its center and speak their name will be heard by the sky.",
+    "special": "wind_blessing", "once": true,
+    "choices": [
+      {"label": "Stand firm and speak", "skill": "Athletics", "dc": 14,
+       "success": {"text": "You plant your feet and roar your name into the gale. The wind falls utterly still — then wraps around you like a cloak. You have never felt so alive.", "heal_pct": 100, "pp": 5, "xp": 90},
+       "failure": {"text": "The wind picks you up and puts you down somewhere else, hard.", "damage": [2, 6], "xp": 20}},
+      {"label": "Read the wind's pattern", "skill": "Survival", "dc": 14,
+       "success": {"text": "There is a rhythm to it. You walk the spiral between gusts to the center, untouched, and the sky hears you.", "heal_pct": 100, "pp": 5, "xp": 90},
+       "failure": {"text": "You misjudge a gust and are bowled across the circle.", "damage": [2, 4], "xp": 20}}
+    ]
+  },
+  "geode_chamber": {
+    "title": "A Fortune in Stone",
+    "text": "Every surface of the geode glitters with gems. The best of them are set deep in fragile crystal — the wrong blow would shatter stone and gem alike.",
+    "special": "precious_gems", "once": true,
+    "choices": [
+      {"label": "Work the gems free", "skill": "Sleight of Hand", "dc": 15,
+       "success": {"text": "Patient fingers, a thin blade. One by one, flawless stones drop into your palm.", "gold": 150, "xp": 80},
+       "failure": {"text": "A crystal face shears off and takes most of the stones with it. You salvage the chips.", "gold": 35, "damage": [1, 6]}},
+      {"label": "Find the natural fractures", "skill": "Nature", "dc": 14,
+       "success": {"text": "You read the grain of the crystal and tap exactly where it wants to part. A fist-sized ruby rolls free.", "gold": 130, "xp": 80},
+       "failure": {"text": "Crystal is not wood. Your tap produces a small avalanche of worthless shards.", "gold": 25}}
+    ]
+  },
+  "crystal_grove": {
+    "title": "The Singing Grove",
+    "text": "The crystal trees chime softly though no wind stirs. The sound seems to resonate with something inside you — and with the shards you carry.",
+    "special": "crystal_forest", "once": true,
+    "choices": [
+      {"label": "Attune to the resonance", "skill": "Arcana", "dc": 14,
+       "success": {"text": "You let the chord pass through you. Power pools in you like water finding its level.", "pp": 6, "heal_pct": 50, "xp": 90},
+       "failure": {"text": "The chord turns dissonant, and you stagger out with ringing ears.", "damage": [1, 8], "xp": 20}},
+      {"label": "Simply listen", "skill": "Insight", "dc": 13,
+       "success": {"text": "You sit beneath the crystal boughs until the song makes sense. When you rise, you are whole.", "heal_pct": 100, "xp": 80},
+       "failure": {"text": "It's pretty. That's about all you can say for it.", "heal_pct": 15, "xp": 20}}
+    ]
+  },
+  "shadow_towers": {
+    "title": "The Watchers' Roost",
+    "text": "From the tower's arrow slits you can see the whole fortress laid out below — patrols, gates, and the rhythm of the guard changes.",
+    "special": "tactical_advantage", "once": true,
+    "choices": [
+      {"label": "Memorize the patrol routes", "skill": "Perception", "dc": 14,
+       "success": {"text": "You mark every blind spot and unwatched door, and find the guard captain's strongbox for good measure.", "gold": 100, "xp": 120},
+       "failure": {"text": "You are still counting patrols when one of them finds you.", "battle": true}},
+      {"label": "Raid the armory quietly", "skill": "Stealth", "dc": 15,
+       "success": {"text": "In and out like a rumor. The elite guard's own healing draughts will serve you better than them.", "potion": true, "gold": 80, "xp": 110},
+       "failure": {"text": "A shadow knight is waiting inside. They never sleep.", "battle": true}}
+    ]
+  },
+  "prisoner_cells": {
+    "title": "The Shadow Dungeons",
+    "text": "Behind bars of solidified darkness, prisoners watch you with hollow eyes: soldiers, scholars, a nomad shaman. The locks are made of shadow-magic and malice.",
+    "special": "prisoner_rescue", "once": true,
+    "choices": [
+      {"label": "Unravel the shadow-locks", "skill": "Arcana", "dc": 15,
+       "success": {"text": "The bars dissolve like smoke. The shaman clasps your arm and chants; the scholars press Malachar's stolen gold on you as they flee.", "gold": 140, "heal_pct": 100, "pp": 4, "xp": 150},
+       "failure": {"text": "The lock bites back with cold fire — but the noise draws a jailer, and jailers carry keys.", "damage": [2, 6], "battle": true}},
+      {"label": "Tear the cell doors off", "skill": "Athletics", "dc": 16,
+       "success": {"text": "Hinges shriek and give. The prisoners pour out; the soldiers salute you, and the shaman's blessing knits your wounds.", "gold": 100, "heal_pct": 100, "xp": 150},
+       "failure": {"text": "The bars do not budge, and the racket brings the guard.", "battle": true}},
+      {"label": "Give them hope", "skill": "Persuasion", "dc": 12,
+       "success": {"text": "You cannot open the cells — yet. But you tell them Malachar's lieutenants are falling one by one, and they stand a little straighter. The shaman passes a charm through the bars.", "pp": 3, "xp": 80},
+       "failure": {"text": "They have heard promises before.", "xp": 20}}
+    ]
+  },
+  "malachars_laboratory": {
+    "title": "Malachar's Research",
+    "text": "Notes, diagrams and half-melted instruments cover every surface. Malachar has been studying the Crown for decades — and he wrote down everything.",
+    "special": "magical_research", "once": true,
+    "choices": [
+      {"label": "Study his notes", "skill": "Arcana", "dc": 15,
+       "success": {"text": "There it is, underlined twice: the ritual is unstable while the shards resist him. Understanding how he fights is half of beating him. His reagents are worth a fortune, too.", "gold": 120, "pp": 5, "xp": 180},
+       "failure": {"text": "The notes are warded. Reading them is like staring into the sun.", "damage": [2, 8], "xp": 40}},
+      {"label": "Ransack the place", "skill": "Investigation", "dc": 14,
+       "success": {"text": "False drawer, hollow book, loose flagstone. Sorcerers are so predictable. Potions and gold.", "gold": 150, "potion": true, "xp": 140},
+       "failure": {"text": "You open a jar you really should not have opened.", "battle": true}}
+    ]
+  }
+}

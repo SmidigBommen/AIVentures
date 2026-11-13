@@ -49,7 +49,7 @@ async def inventory_view(request: Request, session=Depends(require_character)):
     if message or error:
         save_session(request, session)
 
-    return templates.TemplateResponse("inventory/index.html", {
+    return templates.TemplateResponse(request, "inventory/index.html", {
         "request": request,
         "title": "Inventory",
         "character": char_data,

@@ -11,12 +11,12 @@
     </div>
 
     {% if gold_cost > 0 %}
-    <div class="panel" style="margin: 1.5rem auto; max-width: 400px; text-align: center;">
+    <div class="panel healer-panel">
         <p>The healer demands <strong>{{ gold_cost }} gold</strong> for their services.</p>
         <p class="text-muted">You will be returned to safety with full health.</p>
     </div>
     {% else %}
-    <div class="panel" style="margin: 1.5rem auto; max-width: 400px; text-align: center;">
+    <div class="panel healer-panel">
         <p>The healer takes pity on your empty purse and tends your wounds for free.</p>
     </div>
     {% endif %}

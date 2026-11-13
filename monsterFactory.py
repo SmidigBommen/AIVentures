@@ -24,5 +24,7 @@ class MonsterFactory:
     def _calculate_max_hp(race_stats, monster_level):
         hit_die = race_stats["hit_die"]
         con_modifier = (race_stats["Constitution"] - 10) // 2
-        hp = monster_level + Dice.roll(hit_die) + Dice.roll(hit_die) + con_modifier
+        # Two hit dice, plus one more every four levels so late-game monsters hold up
+        dice_count = 2 + monster_level // 4
+        hp = monster_level + sum(Dice.roll(hit_die) for _ in range(dice_count)) + con_modifier
         return max(1, hp)

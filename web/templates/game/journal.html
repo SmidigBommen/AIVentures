@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="journal-container">
+    <h1 class="page-title">Journal</h1>
+    <p class="page-subtitle">{{ campaign.title }}</p>
+
+    <div class="panel journal-shards">
+        <h3 class="panel-title">The Crown of Unity</h3>
+        <div class="shard-row">
+            {% for shard in shards %}
+            <div class="shard-slot{% if shard.found %} shard-found{% endif %}" title="{{ shard.name if shard.found else 'Not yet recovered' }}">
+                <span class="shard-gem shard-gem-{{ loop.index }}"></span>
+                <span class="shard-name">{{ shard.name if shard.found else '???' }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% if campaign_complete %}
+        <p class="text-success text-center mt-2">The Crown is whole. Eldoria is at peace. <a href="/game/ending">Relive the ending</a></p>
+        {% endif %}
+    </div>
+
+    {% for act in acts %}
+    <div class="panel journal-act{% if act.locked %} journal-act-locked{% endif %}{% if act.current %} journal-act-current{% endif %}">
+        <div class="journal-act-header">
+            <span class="act-label">Act {{ act.number }}</span>
+            <h3>{{ act.title if not act.locked else '???' }}</h3>
+            {% if act.complete %}<span class="quest-type-badge journal-badge-done">Complete</span>
+            {% elif act.current %}<span class="quest-type-badge journal-badge-current">In progress</span>
+            {% else %}<span class="quest-type-badge journal-badge-locked">Locked</span>{% endif %}
+        </div>
+        {% if not act.locked %}
+        <p class="journal-act-desc">{{ act.description }}</p>
+        <p class="journal-main-quest"><strong>Main quest:</strong> {{ act.main_quest }}</p>
+        <ul class="journal-boss-list">
+            {% for boss in act.bosses %}
+            <li class="{% if boss.defeated %}journal-boss-defeated{% endif %}">
+                <span class="journal-boss-mark">{% if boss.defeated %}&#10003;{% else %}&#9760;{% endif %}</span>
+                <span class="journal-boss-name">{{ boss.name }}</span>
+                <span class="journal-boss-where">{{ boss.where }} &middot; Lvl {{ boss.level }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="empty-state">The road ahead is not yet known.</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    {% if active_quests %}
+    <div class="panel">
+        <h3 class="panel-title">Side Quests</h3>
+        <ul class="journal-boss-list">
+            {% for quest in active_quests %}
+            <li>
+                <span class="journal-boss-name">{{ quest.name }}</span>
+                <span class="journal-boss-where">{% if quest.ready %}Ready to turn in{% else %}{{ quest.progress }} / {{ quest.target }}{% endif %}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="panel">
+        <h3 class="panel-title">Deeds</h3>
+        <div class="stats-grid journal-stats">
+            <div class="stat-box"><span class="label">Monsters Slain</span><span class="value">{{ stats.kills }}</span></div>
+            <div class="stat-box"><span class="label">Bosses Felled</span><span class="value">{{ stats.bosses }}</span></div>
+            <div class="stat-box"><span class="label">Events</span><span class="value">{{ stats.events }}</span></div>
+            <div class="stat-box"><span class="label">Quests Done</span><span class="value">{{ stats.quests }}</span></div>
+        </div>
+    </div>
+
+    <div class="btn-group mt-3 text-center">
+        <a href="/game" class="btn btn-secondary">Back to the World</a>
+    </div>
+</div>
+{% endblock %}

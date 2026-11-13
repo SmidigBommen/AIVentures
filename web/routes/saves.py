@@ -32,7 +32,7 @@ async def saves_view(request: Request):
     if message or error:
         save_session(request, session)
 
-    return templates.TemplateResponse("saves/index.html", {
+    return templates.TemplateResponse(request, "saves/index.html", {
         "request": request,
         "title": "Save / Load Game",
         "character": char_data,

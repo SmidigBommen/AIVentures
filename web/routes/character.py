@@ -51,7 +51,7 @@ async def new_character(request: Request):
             "bonus_display": ", ".join(bonus_str) if bonus_str else "No bonuses"
         })
 
-    return templates.TemplateResponse("character/select_race.html", {
+    return templates.TemplateResponse(request, "character/select_race.html", {
         "request": request,
         "title": "Choose Your Race",
         "races": race_list
@@ -96,7 +96,7 @@ async def select_class_page(request: Request):
             "weapons": ", ".join(props["weapon_proficiencies"][:3]) + ("..." if len(props["weapon_proficiencies"]) > 3 else "")
         })
 
-    return templates.TemplateResponse("character/select_class.html", {
+    return templates.TemplateResponse(request, "character/select_class.html", {
         "request": request,
         "title": "Choose Your Class",
         "race": session.character_creation.race,
@@ -175,7 +175,7 @@ async def details_page(request: Request):
     skill_choices = class_props["skill_proficiency_choices"]
     num_skills = class_props["num_skill_choices"]
 
-    return templates.TemplateResponse("character/details.html", {
+    return templates.TemplateResponse(request, "character/details.html", {
         "request": request,
         "title": "Character Details",
         "race": session.character_creation.race,
@@ -274,7 +274,7 @@ async def character_summary(request: Request):
 
     char_data = session.serialize_character()
 
-    return templates.TemplateResponse("character/summary.html", {
+    return templates.TemplateResponse(request, "character/summary.html", {
         "request": request,
         "title": f"{char_data['name']} - Character Summary",
         "character": char_data

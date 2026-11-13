@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="result-screen victory ending-screen" data-confetti data-sound="victory">
+    <span class="act-label">Epilogue</span>
+    <h1>The Crown Restored</h1>
+    <p class="page-subtitle">{{ campaign.title }}</p>
+
+    <div class="home-story glass ending-story">
+        <p>The wound in the sky above the Convergence closes, and for the first time in a
+        generation the five provinces of Eldoria wake to the same quiet dawn.</p>
+        <p>The Crown of Unity is whole again &mdash; not because a king willed it, but because
+        {{ character.name }}, a {{ character.race }} {{ character.class_name }} out of Rivermeet,
+        carried its shards through forest, fire, flood, storm and stone, and would not put them down.</p>
+        <p>In the Whispering Woods the trees speak gently again. The beacon on the old watchtower
+        is lit. And in a tavern called the Flowing Tankard, they are already getting the story wrong.</p>
+    </div>
+
+    <div class="rewards-panel">
+        <h3>Your Legend</h3>
+        <div class="reward-row xp"><span class="label">Level reached</span><span class="value">{{ character.level }}</span></div>
+        <div class="reward-row"><span class="label">Monsters slain</span><span class="value">{{ stats.kills }}</span></div>
+        <div class="reward-row"><span class="label">Bosses felled</span><span class="value">{{ stats.bosses }}</span></div>
+        <div class="reward-row"><span class="label">Events braved</span><span class="value">{{ stats.events }}</span></div>
+        <div class="reward-row"><span class="label">Quests completed</span><span class="value">{{ stats.quests }}</span></div>
+        <div class="reward-row gold-r"><span class="label">Gold in purse</span><span class="value">{{ character.gold }}</span></div>
+    </div>
+
+    <div class="btn-group mt-3">
+        <a href="/game" class="btn btn-primary">Keep Adventuring</a>
+        <a href="/game/journal" class="btn btn-secondary">Journal</a>
+    </div>
+</div>
+{% endblock %}

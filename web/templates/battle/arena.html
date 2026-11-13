@@ -3,9 +3,15 @@
 {% block body_class %}battle-page{% endblock %}
 
 {% block content %}
-<div class="battle-wrapper">
+<div class="battle-wrapper{% if monster.is_boss %} boss-battle{% endif %}"{% if had_crit %} data-screen-shake{% endif %}>
     <div class="battle-overlay">
         <div class="battle-arena">
+            {% if monster.is_boss %}
+            <div class="boss-banner">
+                <span class="boss-banner-label">Boss Battle</span>
+                <span class="boss-banner-title">{{ monster.title }}</span>
+            </div>
+            {% endif %}
             <div class="round-badge">Round {{ round }}</div>
 
             <div class="combatants">
@@ -26,13 +32,11 @@
                             <div class="pp-bar-fill" style="width: {{ (character.power_points / character.max_power_points * 100) | int if character.max_power_points > 0 else 0 }}%"></div>
                         </div>
                     </div>
-                    <p class="ac">AC: {{ character.armor_class }}</p>
+                    <p class="ac">AC: {{ player_ac }}</p>
                     {% if player_effects %}
                     <div class="effect-badges">
                         {% for eff in player_effects %}
-                        <span class="effect-badge effect-buff" title="{{ eff.source }}: {{ eff.stat.replace('_', ' ') }} {{ '%+d' % eff.value }}{% if eff.duration > 0 %} ({{ eff.duration }}rd){% endif %}">
-                            {{ eff.source[:3] }} {{ '%+d' % eff.value }}
-                        </span>
+                        <span class="effect-badge effect-{{ eff.kind }}" title="{{ eff.title }}">{{ eff.label }}</span>
                         {% endfor %}
                     </div>
                     {% endif %}
@@ -40,7 +44,7 @@
 
                 <div class="vs-badge">VS</div>
 
-                <div class="combatant monster">
+                <div class="combatant monster{% if monster.is_boss %} boss{% endif %}{% if monster.enraged %} enraged{% endif %}">
                     {% if monster.taunt %}
                     <div class="monster-taunt">
                         <p class="monster-taunt-text">"{{ monster.taunt }}"</p>
@@ -48,7 +52,7 @@
                     {% endif %}
                     <img src="{{ monster.portrait }}" alt="{{ monster.race }}" class="monster-portrait">
                     <h2>{{ monster.name }}</h2>
-                    <p class="info">{{ monster.race }} - Lvl {{ monster.level }}</p>
+                    <p class="info">{{ monster.race }} - Lvl {{ monster.level }}{% if monster.enraged %} <span class="enraged-tag">Enraged</span>{% endif %}</p>
                     <div class="health-bar">
                         <div class="health-bar-fill" style="width: {{ (monster.hp / monster.max_hp * 100) | int }}%"
                              data-hp-percent="{{ (monster.hp / monster.max_hp * 100) | int }}"></div>
@@ -58,9 +62,7 @@
                     {% if monster_effects %}
                     <div class="effect-badges">
                         {% for eff in monster_effects %}
-                        <span class="effect-badge effect-debuff" title="{{ eff.source }}: {{ eff.stat.replace('_', ' ') }} {{ '%+d' % eff.value }}{% if eff.duration > 0 %} ({{ eff.duration }}rd){% endif %}">
-                            {{ eff.source[:3] }} {{ '%+d' % eff.value }}
-                        </span>
+                        <span class="effect-badge effect-{{ eff.kind }}" title="{{ eff.title }}">{{ eff.label }}</span>
                         {% endfor %}
                     </div>
                     {% endif %}
@@ -69,9 +71,7 @@
 
             <div class="battle-log">
                 {% for entry in battle_log %}
-                <div class="log-entry {% if '"' in entry and ':' in entry %}taunt{% elif 'hits for' in entry or 'deals' in entry %}damage{% elif 'heals' in entry %}heal{% elif 'defends' in entry %}defend{% elif 'misses' in entry or 'Miss' in entry %}miss{% elif 'uses' in entry or 'casts' in entry %}ability{% endif %}">
-                    {{ entry }}
-                </div>
+                <div class="log-entry {{ entry.cls }}">{{ entry.text }}</div>
                 {% endfor %}
             </div>
 
@@ -83,8 +83,14 @@
                         <button type="submit" class="btn btn-attack">Attack</button>
                     </form>
                     <form action="/battle/defend" method="post" class="inline-form">
-                        <button type="submit" class="btn btn-defend">Defend</button>
+                        <button type="submit" class="btn btn-defend" title="+1d4 AC until your next turn">Defend</button>
                     </form>
+                    {% if not monster.is_boss %}
+                    <form action="/battle/flee" method="post" class="inline-form">
+                        <button type="submit" class="btn btn-flee"
+                                title="Dexterity check: d20 {{ '%+d' % flee_mod }} vs DC {{ flee_dc }}. Fail and you lose your turn.">Flee</button>
+                    </form>
+                    {% endif %}
                 </div>
 
                 {% if abilities %}

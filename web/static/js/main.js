@@ -50,6 +50,12 @@ const SFX = {
         this._osc(120, 'sine', 0.1, 0.2);
     },
 
+    _crit() {
+        this._noise(0.2, 900, 0.35);
+        this._osc(90, 'sawtooth', 0.25, 0.22);
+        setTimeout(() => this._osc(660, 'square', 0.12, 0.08), 60);
+    },
+
     _miss() {
         this._noise(0.15, 2000, 0.08);
     },
@@ -233,7 +239,8 @@ function initBattleLog() {
     // Play sound for most recent log entry
     var last = log.querySelector('.log-entry:last-child');
     if (last) {
-        if (last.classList.contains('damage')) SFX.play('hit');
+        if (log.querySelector('.log-entry.crit:nth-last-child(-n+8)')) SFX.play('crit');
+        else if (last.classList.contains('damage')) SFX.play('hit');
         else if (last.classList.contains('miss')) SFX.play('miss');
         else if (last.classList.contains('heal')) SFX.play('heal');
         else if (last.classList.contains('defend')) SFX.play('defend');

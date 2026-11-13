@@ -88,11 +88,12 @@
         "classes": ["Wizard"],
         "cost": 2,
         "unlock_level": 4,
-        "description": "A bright streak erupts into a burst of flame.",
+        "description": "A bright streak erupts into a burst of flame that leaves the target burning.",
         "target": "enemy",
         "attack_method": "spell_save",
         "save_ability": "Dexterity",
-        "damage": { "dice_count": 6, "dice_size": 6, "bonus": 0, "type": "fire" }
+        "damage": { "dice_count": 6, "dice_size": 6, "bonus": 0, "type": "fire" },
+        "effects": [{ "stat": "burn", "value": 3, "duration": 2 }]
     },
     "ice_storm": {
         "name": "Ice Storm",
@@ -143,11 +144,11 @@
         "classes": ["Rogue"],
         "cost": 2,
         "unlock_level": 4,
-        "description": "Coat your blade with venom and slash.",
+        "description": "Coat your blade with venom and slash. Poisons the target for 3 rounds.",
         "target": "enemy",
         "attack_method": "melee_attack",
         "damage": { "dice_count": 2, "dice_size": 8, "bonus": "ability_modifier", "type": "poison" },
-        "effects": [{ "stat": "ac", "value": -1, "duration": 0 }]
+        "effects": [{ "stat": "ac", "value": -1, "duration": 0 }, { "stat": "poison", "value": 3, "duration": 3 }]
     },
     "shadow_step": {
         "name": "Shadow Step",
@@ -242,10 +243,11 @@
         "classes": ["Barbarian"],
         "cost": 2,
         "unlock_level": 2,
-        "description": "Bring your weapon down with bone-crushing force.",
+        "description": "Bring your weapon down with bone-crushing force, leaving a bleeding wound.",
         "target": "enemy",
         "attack_method": "melee_attack",
-        "damage": { "dice_count": 2, "dice_size": 12, "bonus": "ability_modifier", "type": "slashing" }
+        "damage": { "dice_count": 2, "dice_size": 12, "bonus": "ability_modifier", "type": "slashing" },
+        "effects": [{ "stat": "bleed", "value": 2, "duration": 3 }]
     },
     "intimidating_roar": {
         "name": "Intimidating Roar",
@@ -358,10 +360,11 @@
         "classes": ["Ranger"],
         "cost": 2,
         "unlock_level": 4,
-        "description": "Loose a rapid barrage of projectiles.",
+        "description": "Loose a rapid barrage of projectiles that leaves the target bleeding.",
         "target": "enemy",
         "attack_method": "melee_attack",
-        "damage": { "dice_count": 3, "dice_size": 8, "bonus": "ability_modifier", "type": "piercing" }
+        "damage": { "dice_count": 3, "dice_size": 8, "bonus": "ability_modifier", "type": "piercing" },
+        "effects": [{ "stat": "bleed", "value": 2, "duration": 2 }]
     },
     "foe_slayer": {
         "name": "Foe Slayer",
@@ -410,11 +413,11 @@
         "classes": ["Monk"],
         "cost": 2,
         "unlock_level": 4,
-        "description": "Strike a pressure point to daze your foe.",
+        "description": "Strike a pressure point to stun your foe, costing it its next action.",
         "target": "enemy",
         "attack_method": "melee_attack",
         "damage": { "dice_count": 1, "dice_size": 6, "bonus": "ability_modifier", "type": "bludgeoning" },
-        "effects": [{ "stat": "attack_bonus", "value": -3, "duration": 1 }]
+        "effects": [{ "stat": "stun", "value": 1, "duration": 1 }]
     },
     "quivering_palm": {
         "name": "Quivering Palm",
@@ -567,10 +570,11 @@
         "classes": ["Warlock"],
         "cost": 2,
         "unlock_level": 2,
-        "description": "Surround your foe in hellish flames.",
+        "description": "Surround your foe in hellish flames that keep burning.",
         "target": "enemy",
         "attack_method": "auto_hit",
-        "damage": { "dice_count": 2, "dice_size": 10, "bonus": 0, "type": "fire" }
+        "damage": { "dice_count": 2, "dice_size": 10, "bonus": 0, "type": "fire" },
+        "effects": [{ "stat": "burn", "value": 2, "duration": 2 }]
     },
     "hunger_of_hadar": {
         "name": "Hunger of Hadar",

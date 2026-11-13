@@ -8,30 +8,56 @@ from fastapi.templating import Jinja2Templates
 # Add parent directories to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from web.game_session import get_session, save_session, get_abilities, get_class_abilities, get_primary_modifier, get_quests, get_monster_taunts, get_monster_portraits
+from web.game_session import (
+    get_session, save_session, get_abilities, get_class_abilities, get_primary_modifier,
+    get_quests, get_monster_taunts, get_monster_portraits, get_bosses, get_monster_abilities,
+    get_save_modifiers, get_campaign, BATTLE_LOG_LIMIT,
+)
 from monsterFactory import MonsterFactory
 from dice import Dice
 from items import HealingPotion
 from character import WeaponSlot
 from lootGenerator import LootGenerator
 from web.routes.shop import restock_shop
-from engine.effects import get_effect_bonus, tick_effects
-from engine.combat import get_weapon_attack_modifier, resolve_weapon_attack, monster_turn_action, calculate_xp_reward, calculate_gold_reward
-from engine.leveling import calculate_max_pp
+from engine.effects import (
+    get_effect_bonus, tick_effects, is_stunned, resolve_round_conditions,
+    describe_effect, CONDITION_LABELS, DOT_STATS,
+)
+from engine.combat import (
+    get_weapon_attack_modifier, resolve_weapon_attack, resolve_flee,
+    calculate_xp_reward, calculate_gold_reward,
+)
+from engine.abilities import resolve_player_ability
+from engine.monster_ai import choose_monster_action, resolve_monster_ability, tick_cooldowns
+from engine.leveling import grant_xp
 from engine.quests import check_quest_progress
 from engine.combatant import CombatantState
+from engine import campaign as campaign_rules
 from web.dependencies import require_character, require_battle
 
 router = APIRouter()
 templates = Jinja2Templates(directory=Path(__file__).parent.parent / "templates")
 
-def get_monster_taunt(race: str, context: str) -> str:
-    """Get a random monster taunt by race and context."""
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def get_monster_taunt(race: str, context: str, boss_id: str = "") -> str:
+    """Get a random taunt by race and context. Bosses speak their own lines."""
+    if boss_id:
+        lines = get_bosses().get(boss_id, {}).get("taunts", {}).get(context)
+        if lines:
+            return random.choice(lines)
     all_taunts = get_monster_taunts()
     default = all_taunts.get("Default", {})
     taunts = all_taunts.get(race, default)
     lines = taunts.get(context, default.get(context, [""]))
     return random.choice(lines)
+
+
+def _taunt(battle, context: str) -> str:
+    return get_monster_taunt(battle.monster.race, context, battle.monster.boss_id)
 
 
 def get_monster_for_area(area, location=None):
@@ -58,148 +84,355 @@ def get_monster_for_area(area, location=None):
     return monster_race, level
 
 
-@router.get("/start")
-async def start_battle(request: Request, session=Depends(require_character)):
-    """Initialize a new battle encounter."""
+def classify_log_entry(entry: str) -> str:
+    """CSS class for a battle log line (drives color and sound)."""
+    if "CRITICAL" in entry:
+        return "crit"
+    if '"' in entry and ":" in entry:
+        return "taunt"
+    if "hits for" in entry or "deals" in entry or "damage" in entry or "drains" in entry:
+        return "damage"
+    if "heals" in entry or "regenerates" in entry:
+        return "heal"
+    if "defensive stance" in entry:
+        return "defend"
+    if "misses" in entry or "Miss" in entry or "resist" in entry:
+        return "miss"
+    if "stunned" in entry or "afflicted" in entry or "flee" in entry:
+        return "condition"
+    if "uses" in entry or "casts" in entry:
+        return "ability"
+    return ""
+
+
+def effect_badges(effects, friendly_is_positive=True):
+    """Build display badges for a list of active effects."""
+    badges = []
+    for eff in effects:
+        stat = eff["stat"]
+        if stat in CONDITION_LABELS:
+            label = CONDITION_LABELS[stat]
+            harmful = stat != "regen"
+        else:
+            label = f"{stat.replace('_', ' ').title().replace('Ac', 'AC')} {eff['value']:+d}"
+            harmful = eff["value"] < 0
+        title = f"{eff['source']}: {describe_effect(eff)}"
+        if eff["duration"] > 0:
+            title += f" ({eff['duration']} rd)"
+        badges.append({"label": label, "title": title, "kind": "debuff" if harmful else "buff"})
+    return badges
+
+
+def begin_battle(session, monster_state: CombatantState, intro_lines=None) -> bool:
+    """Set up battle state and roll initiative.
+
+    Returns False if the player was struck down by the opening blow.
+    """
+    char = session.character
+    battle = session.battle
+    battle.monster = monster_state
+    battle.is_active = True
+    battle.round_count = 1
+    battle.battle_log = list(intro_lines or [])
+    battle.player_effects = []
+
+    player_init = char.dexterity_modifier + Dice.roll_d20()
+    monster_init = monster_state.dex_mod + Dice.roll_d20()
+    battle.initiative_order = sorted(
+        [("player", player_init), ("monster", monster_init)], key=lambda x: x[1], reverse=True)
+    battle.is_player_turn = battle.initiative_order[0][0] == "player"
+
+    battle.battle_log.append(f"Battle begins: {char.name} vs {monster_state.name}!")
+    battle.battle_log.append(
+        f"Initiative: {char.name} ({player_init}) vs {monster_state.name} ({monster_init})")
+
+    # If the monster won initiative it gets a free opening action
+    if not battle.is_player_turn:
+        execute_monster_turn(session)
+        battle.is_player_turn = True
+    return char.current_hit_points > 0
+
+
+def begin_random_battle(session) -> bool:
+    """Start a fight against a random monster from the current area."""
     area = session.current_area
-    if not area:
-        return RedirectResponse("/game", status_code=303)
+    monster_race, level = get_monster_for_area(area, session.current_location)
 
-    # Generate monster
-    location = session.current_location
-    monster_race, level = get_monster_for_area(area, location)
-
-    # Create monster using factory
     factory = MonsterFactory()
-
-    # Make sure monster_race exists in defaults, fallback to Goblin
     if monster_race not in factory.races:
         monster_race = "Goblin"
 
     race_data = factory.races[monster_race]
-    monster_name = random.choice(race_data.get("names", [monster_race]))
-    monster_class = random.choice(race_data.get("class_options", ["Fighter"]))
-    weapon_name = random.choice(race_data.get("weapons", [race_data.get("weapon_name", "Club")]))
-
     monster = factory.create_monster(
-        name=monster_name,
+        name=random.choice(race_data.get("names", [monster_race])),
         race=monster_race,
-        class_name=monster_class,
+        class_name=random.choice(race_data.get("class_options", ["Fighter"])),
         monster_level=level,
-        weapon_name=weapon_name
+        weapon_name=random.choice(race_data.get("weapons", [race_data.get("weapon_name", "Club")])),
     )
+    state = CombatantState.from_monster(monster)
+    state.abilities = list(get_monster_abilities()["races"].get(monster_race, []))
+    return begin_battle(session, state)
 
-    # Initialize battle state
-    session.battle.monster = CombatantState.from_monster(monster)
-    session.battle.is_active = True
-    session.battle.round_count = 1
-    session.battle.battle_log = []
-    session.battle.player_effects = []
 
-    # Calculate initiative
-    player_init = session.character.dexterity_modifier + Dice.roll_d20()
-    monster_init = monster.dexterity_modifier + Dice.roll_d20()
+def begin_boss_battle(session, boss_id: str) -> bool:
+    """Start a fight against a boss from bosses.json."""
+    boss = get_bosses()[boss_id]
+    state = CombatantState.from_boss(boss_id, boss)
+    return begin_battle(session, state, intro_lines=[boss["intro"]] if boss.get("intro") else None)
 
-    session.battle.initiative_order = [
-        ("player", player_init),
-        ("monster", monster_init)
-    ]
-    session.battle.initiative_order.sort(key=lambda x: x[1], reverse=True)
-    session.battle.is_player_turn = session.battle.initiative_order[0][0] == "player"
 
-    session.battle.battle_log.append(f"Battle begins: {session.character.name} vs {monster.name}!")
-    session.battle.battle_log.append(f"Initiative: {session.character.name} ({player_init}) vs {monster.name} ({monster_init})")
+def maybe_enrage(session):
+    """Bosses enrage the first time they drop to half health."""
+    monster = session.battle.monster
+    if not monster.is_boss or monster.enraged or monster.hp <= 0:
+        return
+    if monster.hp * 2 > monster.max_hp:
+        return
+    monster.enraged = True
+    monster.cooldowns = {}
+    monster.effects.append({"stat": "damage_bonus", "value": 2 + monster.level // 5,
+                            "duration": 0, "source": "Enraged"})
+    boss = get_bosses().get(monster.boss_id, {})
+    session.battle.battle_log.append(
+        boss.get("enrage_text", f"{monster.name} flies into a rage!"))
 
-    # If monster goes first, execute monster turn
-    if not session.battle.is_player_turn:
-        execute_monster_turn(session)
-        session.battle.is_player_turn = True
+
+def execute_monster_turn(session):
+    """Execute the monster's turn: attack, defend or use a special ability."""
+    battle = session.battle
+    monster = battle.monster
+    char = session.character
+    catalog = get_monster_abilities()["abilities"]
+
+    maybe_enrage(session)
+
+    hp_fraction = char.current_hit_points / char.max_hit_points if char.max_hit_points else 1
+    action, ability_id = choose_monster_action(monster, catalog, hp_fraction)
+
+    if action == "ability":
+        result = resolve_monster_ability(
+            monster, ability_id, catalog[ability_id],
+            player_ac=char.armor_class,
+            player_effects=battle.player_effects,
+            player_save_mods=get_save_modifiers(char),
+        )
+        battle.battle_log.extend(result["log"])
+        if result["damage"]:
+            char.current_hit_points = max(0, char.current_hit_points - result["damage"])
+
+    elif action == "attack":
+        ability_mod = get_weapon_attack_modifier(
+            monster.str_mod, monster.dex_mod, monster.weapon.properties)
+
+        result = resolve_weapon_attack(
+            attacker_mod=ability_mod,
+            attacker_prof=monster.proficiency,
+            target_ac=char.armor_class,
+            damage_dice_count=monster.weapon.damage_dice_count,
+            damage_die=monster.weapon.damage_die,
+            attacker_effects=monster.effects,
+            target_effects=battle.player_effects,
+        )
+
+        battle.battle_log.append(f'{monster.name}: "{_taunt(battle, "attack")}"')
+        if result["crit"]:
+            battle.battle_log.append(
+                f"{monster.name} attacks with {monster.weapon.name} — CRITICAL HIT! "
+                f"{result['damage']} damage!")
+        elif result["hit"]:
+            battle.battle_log.append(
+                f"{monster.name} attacks with {monster.weapon.name}! "
+                f"(Roll: {result['attack_roll']} vs AC {result['target_ac']})")
+            battle.battle_log.append(f"{monster.name} hits for {result['damage']} damage!")
+        else:
+            battle.battle_log.append(
+                f"{monster.name} attacks with {monster.weapon.name}! "
+                f"(Roll: {result['attack_roll']} vs AC {result['target_ac']})")
+            battle.battle_log.append(f"{monster.name}'s attack misses!")
+        if result["hit"]:
+            char.current_hit_points = max(0, char.current_hit_points - result["damage"])
+
+    else:
+        monster.ac += 2
+        battle.battle_log.append(f"{monster.name} takes a defensive stance (+2 AC).")
+
+
+def _apply_round_conditions(session):
+    """Apply end-of-round damage-over-time and regeneration to both sides."""
+    battle = session.battle
+    monster = battle.monster
+    char = session.character
+
+    for name, effects, is_monster in (
+        (monster.name, monster.effects, True),
+        (char.name, battle.player_effects, False),
+    ):
+        outcome = resolve_round_conditions(effects)
+        for stat, value in outcome["sources"]:
+            if stat in DOT_STATS:
+                battle.battle_log.append(f"{name} takes {value} {stat} damage!")
+            else:
+                battle.battle_log.append(f"{name} regenerates {value} HP.")
+        if is_monster:
+            monster.hp = max(0, min(monster.max_hp, monster.hp - outcome["damage"] + outcome["heal"]))
+        else:
+            char.current_hit_points = max(0, min(
+                char.max_hit_points, char.current_hit_points - outcome["damage"] + outcome["heal"]))
+
+
+async def finish_player_turn(request: Request, session):
+    """Resolve everything that follows the player's action.
+
+    Monster turn → end-of-round conditions → effect/cooldown ticks → next round.
+    If the player is stunned the loop repeats, costing them their turn.
+    """
+    battle = session.battle
+    monster = battle.monster
+    char = session.character
+
+    if monster.hp <= 0:
+        return await end_battle(request, session, player_won=True)
+
+    while True:
+        battle.is_player_turn = False
+        if is_stunned(monster.effects):
+            battle.battle_log.append(f"{monster.name} is stunned and loses its turn!")
+        else:
+            execute_monster_turn(session)
+
+        if char.current_hit_points <= 0:
+            return await end_battle(request, session, player_won=False)
+
+        _apply_round_conditions(session)
+        if monster.hp <= 0:
+            return await end_battle(request, session, player_won=True)
+        if char.current_hit_points <= 0:
+            return await end_battle(request, session, player_won=False)
+        maybe_enrage(session)
+
+        # Round bookkeeping
+        monster.reset_ac()
+        battle.player_effects = tick_effects(battle.player_effects)
+        monster.effects = tick_effects(monster.effects)
+        tick_cooldowns(monster)
+        battle.round_count += 1
+        battle.is_player_turn = True
+
+        if is_stunned(battle.player_effects):
+            battle.battle_log.append(f"{char.name} is stunned and loses their turn!")
+            continue
+        break
 
     save_session(request, session)
     return RedirectResponse("/battle", status_code=303)
 
 
-def execute_monster_turn(session):
-    """Execute the monster's turn."""
-    battle = session.battle
-    action = monster_turn_action()
+# ---------------------------------------------------------------------------
+# Starting battles
+# ---------------------------------------------------------------------------
 
-    if action == "attack":
-        ability_mod = get_weapon_attack_modifier(
-            battle.monster_str_modifier, battle.monster_dex_modifier,
-            battle.monster_weapon_properties)
+@router.get("/start")
+async def start_battle(request: Request, session=Depends(require_character)):
+    """Initialize a new random encounter in the current area."""
+    if session.battle.is_active:
+        return RedirectResponse("/battle", status_code=303)
+    area = session.current_area
+    if not area or not area.get("monster_types") or session.character.current_hit_points <= 0:
+        return RedirectResponse("/game", status_code=303)
 
-        result = resolve_weapon_attack(
-            attacker_mod=ability_mod,
-            attacker_prof=battle.monster_proficiency_bonus,
-            target_ac=session.character.armor_class,
-            damage_dice_count=battle.monster_weapon_damage_dice_count,
-            damage_die=battle.monster_weapon_damage_die,
-            attacker_effects=battle.monster_effects,
-            target_effects=battle.player_effects,
-        )
+    if not begin_random_battle(session):
+        return await end_battle(request, session, player_won=False)
 
-        taunt = get_monster_taunt(battle.monster_race, "attack")
-        battle.battle_log.append(f'{battle.monster_name}: "{taunt}"')
-        battle.battle_log.append(
-            f"{battle.monster_name} attacks with {battle.monster_weapon_name}! "
-            f"(Roll: {result['attack_roll']} vs AC {result['target_ac']})")
+    save_session(request, session)
+    return RedirectResponse("/battle", status_code=303)
 
-        if result["hit"]:
-            session.character.current_hit_points = max(
-                0, session.character.current_hit_points - result["damage"])
-            battle.battle_log.append(f"{battle.monster_name} hits for {result['damage']} damage!")
-        else:
-            battle.battle_log.append(f"{battle.monster_name}'s attack misses!")
-    else:
-        battle.monster_ac += 2
-        battle.battle_log.append(f"{battle.monster_name} takes a defensive stance (+2 AC).")
 
+@router.post("/boss")
+async def start_boss_battle(request: Request, session=Depends(require_character)):
+    """Challenge the boss guarding the current area."""
+    if session.battle.is_active:
+        return RedirectResponse("/battle", status_code=303)
+
+    bosses = get_bosses()
+    boss_id = campaign_rules.get_area_boss(session.current_area, bosses, session.defeated_bosses)
+    if not boss_id or session.character.current_hit_points <= 0:
+        return RedirectResponse("/game", status_code=303)
+    if campaign_rules.missing_requirements(bosses[boss_id], session.defeated_bosses):
+        return RedirectResponse("/game", status_code=303)
+
+    if not begin_boss_battle(session, boss_id):
+        return await end_battle(request, session, player_won=False)
+
+    save_session(request, session)
+    return RedirectResponse("/battle", status_code=303)
+
+
+# ---------------------------------------------------------------------------
+# Battle view
+# ---------------------------------------------------------------------------
 
 @router.get("/", response_class=HTMLResponse)
 async def battle_view(request: Request, session=Depends(require_battle)):
     """Battle view - show combat arena."""
-
+    battle = session.battle
+    monster = battle.monster
+    char = session.character
     char_data = session.serialize_character()
 
-    # Get usable items
     usable_items = [
         {"name": item.name, "description": item.description, "index": i}
-        for i, item in enumerate(session.character.inventory)
+        for i, item in enumerate(char.inventory)
         if hasattr(item, 'is_usable_in_battle') and item.is_usable_in_battle
     ]
 
-    # Get class abilities
-    char = session.character
     abilities = get_class_abilities(char.class_name, char.level)
 
+    boss = get_bosses().get(monster.boss_id) if monster.is_boss else None
     portraits = get_monster_portraits()
-    monster_portrait = portraits.get(session.battle.monster_race, portraits.get("default", "/static/images/orc-creature-battle.jpg"))
-    monster_taunt = get_monster_taunt(session.battle.monster_race, "start") if session.battle.round_count <= 1 else None
+    default_portrait = portraits.get("default", "/static/images/orc-creature-battle.jpg")
+    monster_portrait = (boss or {}).get("portrait") or portraits.get(monster.race, default_portrait)
+    monster_taunt = _taunt(battle, "start") if battle.round_count <= 1 else None
 
-    return templates.TemplateResponse("battle/arena.html", {
+    log_entries = [{"text": entry, "cls": classify_log_entry(entry)}
+                   for entry in battle.battle_log[-BATTLE_LOG_LIMIT:]]
+    # A critical hit anywhere in the latest exchange shakes the screen
+    had_crit = any(e["cls"] == "crit" for e in log_entries[-8:]) and battle.round_count > 1
+
+    return templates.TemplateResponse(request, "battle/arena.html", {
         "request": request,
-        "title": "Battle!",
+        "title": "Boss Battle!" if boss else "Battle!",
         "character": char_data,
         "monster": {
-            "name": session.battle.monster_name,
-            "race": session.battle.monster_race,
-            "level": session.battle.monster_level,
-            "hp": session.battle.monster_hp,
-            "max_hp": session.battle.monster_max_hp,
-            "ac": session.battle.monster_ac,
+            "name": monster.name,
+            "race": monster.race,
+            "level": monster.level,
+            "hp": monster.hp,
+            "max_hp": monster.max_hp,
+            "ac": monster.ac + get_effect_bonus(monster.effects, "ac"),
             "portrait": monster_portrait,
             "taunt": monster_taunt,
+            "is_boss": monster.is_boss,
+            "title": boss.get("title") if boss else None,
+            "enraged": monster.enraged,
         },
-        "round": session.battle.round_count,
-        "battle_log": session.battle.battle_log[-10:],
-        "is_player_turn": session.battle.is_player_turn,
+        "player_ac": char.armor_class + get_effect_bonus(battle.player_effects, "ac"),
+        "round": battle.round_count,
+        "battle_log": log_entries,
+        "had_crit": had_crit,
+        "is_player_turn": battle.is_player_turn,
         "usable_items": usable_items,
         "abilities": abilities,
-        "player_effects": session.battle.player_effects,
-        "monster_effects": session.battle.monster_effects,
+        "player_effects": effect_badges(battle.player_effects),
+        "monster_effects": effect_badges(monster.effects),
+        "flee_dc": 10 + monster.level // 2,
+        "flee_mod": char.dexterity_modifier,
     })
 
+
+# ---------------------------------------------------------------------------
+# Player actions
+# ---------------------------------------------------------------------------
 
 @router.post("/attack")
 async def player_attack(request: Request, session=Depends(require_battle)):
@@ -208,6 +441,8 @@ async def player_attack(request: Request, session=Depends(require_battle)):
         return RedirectResponse("/battle", status_code=303)
 
     char = session.character
+    battle = session.battle
+    monster = battle.monster
 
     weapon = char.weapon_slots.get(WeaponSlot.MAIN_HAND)
     if weapon:
@@ -222,79 +457,47 @@ async def player_attack(request: Request, session=Depends(require_battle)):
     result = resolve_weapon_attack(
         attacker_mod=ability_mod,
         attacker_prof=char.proficiency_bonus,
-        target_ac=session.battle.monster_ac,
+        target_ac=monster.ac,
         damage_dice_count=damage_dice_count,
         damage_die=damage_die,
-        attacker_effects=session.battle.player_effects,
-        target_effects=session.battle.monster_effects,
+        attacker_effects=battle.player_effects,
+        target_effects=monster.effects,
     )
 
-    session.battle.battle_log.append(
-        f"{char.name} attacks! (Roll: {result['attack_roll']} vs AC {result['target_ac']})")
+    if result["crit"]:
+        battle.battle_log.append(
+            f"{char.name} attacks — CRITICAL HIT! {result['damage']} damage!")
+    else:
+        battle.battle_log.append(
+            f"{char.name} attacks! (Roll: {result['attack_roll']} vs AC {result['target_ac']})")
+        if result["hit"]:
+            battle.battle_log.append(f"{char.name} hits for {result['damage']} damage!")
+        elif result["fumble"]:
+            battle.battle_log.append(f"{char.name} fumbles — the attack misses badly!")
+        else:
+            battle.battle_log.append(f"{char.name}'s attack misses!")
 
     if result["hit"]:
-        session.battle.monster_hp = max(0, session.battle.monster_hp - result["damage"])
-        session.battle.battle_log.append(f"{char.name} hits for {result['damage']} damage!")
-        if session.battle.monster_hp > 0:
-            hurt_taunt = get_monster_taunt(session.battle.monster_race, "hurt")
-            session.battle.battle_log.append(f'{session.battle.monster_name}: "{hurt_taunt}"')
-    else:
-        session.battle.battle_log.append(f"{char.name}'s attack misses!")
+        monster.hp = max(0, monster.hp - result["damage"])
+        if monster.hp > 0:
+            battle.battle_log.append(f'{monster.name}: "{_taunt(battle, "hurt")}"')
 
-    # Check for victory
-    if session.battle.monster_hp <= 0:
-        return await end_battle(request, session, player_won=True)
-
-    # Monster's turn
-    session.battle.is_player_turn = False
-    execute_monster_turn(session)
-
-    # Check for defeat
-    if char.current_hit_points <= 0:
-        return await end_battle(request, session, player_won=False)
-
-    # Reset monster AC, tick effects, advance round
-    session.battle.monster.reset_ac()
-    session.battle.player_effects = tick_effects(session.battle.player_effects)
-    session.battle.monster_effects = tick_effects(session.battle.monster_effects)
-    session.battle.round_count += 1
-    session.battle.is_player_turn = True
-
-    save_session(request, session)
-    return RedirectResponse("/battle", status_code=303)
+    return await finish_player_turn(request, session)
 
 
 @router.post("/defend")
 async def player_defend(request: Request, session=Depends(require_battle)):
-    """Player takes a defensive stance."""
+    """Player takes a defensive stance: +1d4 AC until the end of the round."""
     if not session.battle.is_player_turn:
         return RedirectResponse("/battle", status_code=303)
 
     char = session.character
-
-    # Gain AC bonus
     ac_bonus = Dice.roll_d4()
-    char.armor_class += ac_bonus
+    session.battle.player_effects.append(
+        {"stat": "ac", "value": ac_bonus, "duration": 1, "source": "Defend"})
     session.battle.battle_log.append(f"{char.name} takes a defensive stance (+{ac_bonus} AC)!")
 
-    # Monster's turn
-    session.battle.is_player_turn = False
-    execute_monster_turn(session)
-
-    # Check for defeat
-    if char.current_hit_points <= 0:
-        return await end_battle(request, session, player_won=False)
-
-    # Reset AC bonus, tick effects, advance round
-    char.armor_class -= ac_bonus
-    session.battle.monster.reset_ac()
-    session.battle.player_effects = tick_effects(session.battle.player_effects)
-    session.battle.monster_effects = tick_effects(session.battle.monster_effects)
-    session.battle.round_count += 1
-    session.battle.is_player_turn = True
-
-    save_session(request, session)
-    return RedirectResponse("/battle", status_code=303)
+    return await finish_player_turn(request, session)
 
 
 @router.post("/item")
@@ -304,155 +507,28 @@ async def use_item(request: Request, item_index: int = Form(...), session=Depend
         return RedirectResponse("/battle", status_code=303)
 
     char = session.character
+    item = char.inventory[item_index] if 0 <= item_index < len(char.inventory) else None
+    if not isinstance(item, HealingPotion):
+        # Nothing usable at that slot — don't waste the player's turn
+        return RedirectResponse("/battle", status_code=303)
 
-    if 0 <= item_index < len(char.inventory):
-        item = char.inventory[item_index]
-        if hasattr(item, 'is_usable_in_battle') and item.is_usable_in_battle:
-            if isinstance(item, HealingPotion):
-                heal_amount = item.healing_amount
-                old_hp = char.current_hit_points
-                char.current_hit_points = min(char.max_hit_points, char.current_hit_points + heal_amount)
-                actual_heal = char.current_hit_points - old_hp
-                char.inventory.pop(item_index)
-                session.battle.battle_log.append(f"{char.name} uses {item.name} and heals for {actual_heal} HP!")
+    old_hp = char.current_hit_points
+    char.current_hit_points = min(char.max_hit_points, old_hp + item.healing_amount)
+    char.inventory.pop(item_index)
+    session.battle.battle_log.append(
+        f"{char.name} uses {item.name} and heals for {char.current_hit_points - old_hp} HP!")
 
-    # Monster's turn
-    session.battle.is_player_turn = False
-    execute_monster_turn(session)
-
-    # Check for defeat
-    if char.current_hit_points <= 0:
-        return await end_battle(request, session, player_won=False)
-
-    # Advance round, tick effects
-    session.battle.monster.reset_ac()
-    session.battle.player_effects = tick_effects(session.battle.player_effects)
-    session.battle.monster_effects = tick_effects(session.battle.monster_effects)
-    session.battle.round_count += 1
-    session.battle.is_player_turn = True
-
-    save_session(request, session)
-    return RedirectResponse("/battle", status_code=303)
+    return await finish_player_turn(request, session)
 
 
-def resolve_ability(session, ability):
-    """Resolve an ability use. Returns True if the ability was successfully used."""
-    char = session.character
-    battle = session.battle
-    primary_mod = get_primary_modifier(char)
-
-    # Check PP
-    if char.power_points < ability["cost"]:
+def resolve_ability(session, ability) -> bool:
+    """Resolve a class ability. Returns True if the ability was successfully used."""
+    log = resolve_player_ability(
+        session.character, ability, session.battle.monster,
+        session.battle.player_effects, get_primary_modifier(session.character))
+    if log is None:
         return False
-
-    # Spend PP
-    char.power_points -= ability["cost"]
-
-    attack_method = ability["attack_method"]
-    target = ability["target"]
-
-    # Determine if attack hits (for damage abilities targeting enemies)
-    hit = True
-    if target == "enemy" and attack_method in ("melee_attack", "spell_attack"):
-        attack_bonus = get_effect_bonus(battle.player_effects, "attack_bonus")
-        attack_roll = Dice.roll_d20() + primary_mod + char.proficiency_bonus + attack_bonus
-        effective_ac = battle.monster_ac + get_effect_bonus(battle.monster_effects, "ac")
-        if attack_roll >= effective_ac:
-            battle.battle_log.append(f"{char.name} uses {ability['name']}! (Roll: {attack_roll} vs AC {effective_ac}) Hit!")
-        else:
-            battle.battle_log.append(f"{char.name} uses {ability['name']}! (Roll: {attack_roll} vs AC {effective_ac}) Miss!")
-            hit = False
-
-    elif target == "enemy" and attack_method == "spell_save":
-        spell_dc = 8 + primary_mod + char.proficiency_bonus
-        save_ability = ability.get("save_ability", "Dexterity").lower()
-        save_mod = getattr(battle, f"monster_{save_ability[:3]}_modifier", 0)
-        save_roll = Dice.roll_d20() + save_mod
-        if save_roll >= spell_dc:
-            battle.battle_log.append(f"{char.name} casts {ability['name']}! ({battle.monster_name} saves: {save_roll} vs DC {spell_dc}) Half damage!")
-            hit = False  # save = half damage, we handle below
-        else:
-            battle.battle_log.append(f"{char.name} casts {ability['name']}! ({battle.monster_name} fails save: {save_roll} vs DC {spell_dc})")
-
-    elif target == "self":
-        battle.battle_log.append(f"{char.name} uses {ability['name']}!")
-
-    elif attack_method == "auto_hit":
-        battle.battle_log.append(f"{char.name} uses {ability['name']}!")
-
-    # Apply damage
-    if ability.get("damage") and target == "enemy":
-        dmg_data = ability["damage"]
-        dice_count = dmg_data["dice_count"]
-
-        # Apply scaling for cantrips
-        if ability.get("scaling"):
-            for level_str in sorted(ability["scaling"].keys(), key=int, reverse=True):
-                if char.level >= int(level_str):
-                    dice_count = ability["scaling"][level_str].get("dice_count", dice_count)
-                    break
-
-        damage = 0
-        for _ in range(dice_count):
-            damage += Dice.roll(dmg_data["dice_size"])
-
-        # Add bonus
-        bonus = dmg_data.get("bonus", 0)
-        if bonus == "ability_modifier":
-            damage += primary_mod
-        elif bonus == "level":
-            damage += char.level
-        elif isinstance(bonus, int):
-            damage += bonus
-
-        damage = max(1, damage)
-        damage_bonus = get_effect_bonus(battle.player_effects, "damage_bonus")
-        damage += damage_bonus
-
-        # Spell save = half damage on successful save
-        if attack_method == "spell_save" and not hit:
-            damage = max(1, damage // 2)
-            hit = True  # still apply the (halved) damage
-
-        # Melee/spell attack miss = no damage
-        if hit:
-            dr = get_effect_bonus(battle.monster_effects, "damage_reduction")
-            damage = max(1, damage - dr)
-            battle.monster_hp = max(0, battle.monster_hp - damage)
-            battle.battle_log.append(f"  {ability['name']} deals {damage} {dmg_data.get('type', '')} damage!")
-
-    # Apply heal
-    if ability.get("heal"):
-        heal_data = ability["heal"]
-        heal = 0
-        for _ in range(heal_data["dice_count"]):
-            heal += Dice.roll(heal_data["dice_size"])
-        bonus = heal_data.get("bonus", 0)
-        if bonus == "ability_modifier":
-            heal += primary_mod
-        elif bonus == "level":
-            heal += char.level
-        elif isinstance(bonus, int):
-            heal += bonus
-        heal = max(1, heal)
-        old_hp = char.current_hit_points
-        char.current_hit_points = min(char.max_hit_points, char.current_hit_points + heal)
-        actual_heal = char.current_hit_points - old_hp
-        if actual_heal > 0:
-            battle.battle_log.append(f"  {char.name} heals for {actual_heal} HP!")
-
-    # Apply effects
-    for effect in ability.get("effects", []):
-        eff = {"stat": effect["stat"], "value": effect["value"],
-               "duration": effect["duration"], "source": ability["name"]}
-        if target == "enemy":
-            battle.monster_effects.append(eff)
-            battle.battle_log.append(f"  {battle.monster_name}: {effect['stat'].replace('_', ' ')} {effect['value']:+d}")
-        else:
-            battle.player_effects.append(eff)
-            if effect["value"] > 0:
-                battle.battle_log.append(f"  {char.name}: {effect['stat'].replace('_', ' ')} {effect['value']:+d}")
-
+    session.battle.battle_log.extend(log)
     return True
 
 
@@ -462,9 +538,7 @@ async def use_ability(request: Request, ability_id: str = Form(...), session=Dep
     if not session.battle.is_player_turn:
         return RedirectResponse("/battle", status_code=303)
 
-    abilities = get_abilities()
-    ability = abilities.get(ability_id)
-
+    ability = get_abilities().get(ability_id)
     if not ability:
         return RedirectResponse("/battle", status_code=303)
 
@@ -478,64 +552,101 @@ async def use_ability(request: Request, ability_id: str = Form(...), session=Dep
     if not resolve_ability(session, ability):
         return RedirectResponse("/battle", status_code=303)
 
-    # Check for victory
-    if session.battle.monster_hp <= 0:
-        return await end_battle(request, session, player_won=True)
+    return await finish_player_turn(request, session)
 
-    # Monster's turn
-    session.battle.is_player_turn = False
-    execute_monster_turn(session)
 
-    # Check for defeat
-    if char.current_hit_points <= 0:
-        return await end_battle(request, session, player_won=False)
+@router.post("/flee")
+async def flee(request: Request, session=Depends(require_battle)):
+    """Try to escape: d20 + DEX vs DC 10 + half the monster's level. Bosses can't be fled."""
+    battle = session.battle
+    if not battle.is_player_turn:
+        return RedirectResponse("/battle", status_code=303)
 
-    # Tick effect durations and advance round
-    session.battle.player_effects = tick_effects(session.battle.player_effects)
-    session.battle.monster_effects = tick_effects(session.battle.monster_effects)
-    session.battle.round_count += 1
-    session.battle.is_player_turn = True
+    char = session.character
+    if battle.monster.is_boss:
+        battle.battle_log.append("There is no escape from this fight!")
+        save_session(request, session)
+        return RedirectResponse("/battle", status_code=303)
 
-    save_session(request, session)
-    return RedirectResponse("/battle", status_code=303)
+    result = resolve_flee(char.dexterity_modifier, battle.monster.level)
+    if result["success"]:
+        battle.is_active = False
+        battle.player_effects = []
+        battle.monster.effects = []
+        char.active_effects = []
+        session.set_flash("game_message", {
+            "text": f"You slip away from {battle.monster.name}! "
+                    f"(Rolled {result['total']} vs DC {result['dc']})",
+            "type": "info"})
+        save_session(request, session)
+        return RedirectResponse("/game", status_code=303)
+
+    battle.battle_log.append(
+        f"{char.name} tries to flee but {battle.monster.name} cuts off the escape! "
+        f"(Rolled {result['total']} vs DC {result['dc']})")
+    return await finish_player_turn(request, session)
+
+
+# ---------------------------------------------------------------------------
+# Battle resolution
+# ---------------------------------------------------------------------------
+
+def _boss_victory(session, boss_id: str) -> dict:
+    """Record a boss kill and work out what it unlocked. Returns display data."""
+    bosses = get_bosses()
+    boss = bosses[boss_id]
+    campaign = get_campaign()
+
+    act_before = campaign_rules.highest_unlocked_act(campaign, session.defeated_bosses)
+    complete_before = campaign_rules.is_campaign_complete(campaign, session.defeated_bosses)
+    if boss_id not in session.defeated_bosses:
+        session.defeated_bosses.append(boss_id)
+    act_after = campaign_rules.highest_unlocked_act(campaign, session.defeated_bosses)
+
+    act_unlocked = None
+    if act_after > act_before:
+        act = next(a for a in campaign["acts"] if a["number"] == act_after)
+        act_unlocked = {"number": act["number"], "title": act["title"],
+                        "description": act["description"]}
+
+    return {
+        "name": boss["name"],
+        "defeat_text": boss.get("defeat_text"),
+        "shard": boss.get("shard"),
+        "shards_collected": len(campaign_rules.collected_shards(bosses, session.defeated_bosses)),
+        "shards_total": len(campaign_rules.all_shards(bosses)),
+        "act_unlocked": act_unlocked,
+        "campaign_complete": (not complete_before
+                              and campaign_rules.is_campaign_complete(campaign, session.defeated_bosses)),
+    }
 
 
 async def end_battle(request: Request, session, player_won: bool):
     """End the battle and show results."""
-    session.battle.is_active = False
-    session.battle.player_effects = []
-    session.battle.monster_effects = []
-    if session.character:
-        session.character.active_effects = []
+    battle = session.battle
+    monster = battle.monster
+    char = session.character
+
+    battle.is_active = False
+    battle.player_effects = []
+    monster.effects = []
+    char.active_effects = []
 
     if player_won:
-        xp_reward = calculate_xp_reward(session.battle.monster_level, session.battle.round_count)
-        gold_reward = calculate_gold_reward(session.battle.monster_level)
+        boss = get_bosses().get(monster.boss_id) if monster.is_boss else None
+        if boss:
+            xp_reward = boss.get("rewards", {}).get("xp", 300 * monster.level)
+            gold_reward = boss.get("rewards", {}).get("gold", 30 * monster.level)
+        else:
+            xp_reward = calculate_xp_reward(monster.level, battle.round_count)
+            gold_reward = calculate_gold_reward(monster.level)
 
-        old_level = session.character.level
-        abilities_before = get_class_abilities(session.character.class_name, old_level)
-        abilities_before_ids = {a["id"] for a in abilities_before}
+        abilities_before = {a["id"] for a in get_class_abilities(char.class_name, char.level)}
+        xp_result = grant_xp(char, xp_reward, get_primary_modifier(char))
+        new_abilities = [a["name"] for a in get_class_abilities(char.class_name, char.level)
+                         if a["id"] not in abilities_before]
 
-        # Apply XP (handles leveling automatically)
-        level_ups = session.character.gain_xp(xp_reward)
-        total_hp_increase = sum(lu["hp_increase"] for lu in level_ups)
-
-        # Also heal on level up
-        for lu in level_ups:
-            session.character.current_hit_points += lu["hp_increase"]
-
-        # Recalculate PP on level up
-        if session.character.level > old_level:
-            primary_mod = get_primary_modifier(session.character)
-            session.character.max_power_points = calculate_max_pp(
-                session.character.class_name, session.character.level, primary_mod)
-            session.character.power_points = session.character.max_power_points
-
-        # Find newly unlocked abilities
-        abilities_after = get_class_abilities(session.character.class_name, session.character.level)
-        new_abilities = [a["name"] for a in abilities_after if a["id"] not in abilities_before_ids]
-
-        session.character.gold += gold_reward
+        char.gold += gold_reward
         session.monster_kills += 1
 
         # Restock shop every 10 kills
@@ -543,32 +654,30 @@ async def end_battle(request: Request, session, player_won: bool):
             restock_shop(session)
             session.kills_at_last_restock = session.monster_kills
 
-        # Chance for loot
-        loot = LootGenerator().generate_loot(session.battle.monster_level, session.character.level)
+        # Loot — bosses always drop something, from a better table
+        loot_level = monster.level + 6 if boss else monster.level
+        loot = LootGenerator().generate_loot(loot_level, char.level)
         if loot:
             if loot["type"] == "gold":
-                session.character.gold += loot["amount"]
+                char.gold += loot["amount"]
             else:
-                session.character.add_item(loot["item"])
+                char.add_item(loot["item"])
 
-        # Quest progress tracking via engine
-        all_quests = get_quests()
         quest_updates = check_quest_progress(
-            session.active_quests, all_quests,
-            session.battle.monster_race, session.character.inventory)
+            session.active_quests, get_quests(), monster.race, char.inventory)
 
-        # Store rewards for display
         session.battle_rewards = {
             "xp": xp_reward,
             "gold": gold_reward,
             "loot": loot["message"] if loot else None,
             "loot_type": loot["type"] if loot else None,
-            "leveled_up": session.character.level > old_level,
-            "new_level": session.character.level,
-            "hp_increase": total_hp_increase,
+            "leveled_up": xp_result["leveled_up"],
+            "new_level": char.level,
+            "hp_increase": xp_result["hp_increase"],
             "new_abilities": new_abilities,
-            "new_max_pp": session.character.max_power_points if session.character.level > old_level else None,
+            "new_max_pp": char.max_power_points if xp_result["leveled_up"] else None,
             "quest_updates": quest_updates,
+            "boss": _boss_victory(session, monster.boss_id) if boss else None,
         }
     else:
         session.battle_rewards = None
@@ -591,7 +700,7 @@ async def victory_screen(request: Request, session=Depends(require_character)):
     save_session(request, session)
     char_data = session.serialize_character() if session.character else None
 
-    return templates.TemplateResponse("battle/victory.html", {
+    return templates.TemplateResponse(request, "battle/victory.html", {
         "request": request,
         "title": "Victory!",
         "character": char_data,
@@ -610,7 +719,7 @@ async def defeat_screen(request: Request, session=Depends(require_character)):
     gold = session.character.gold if session.character else 0
     gold_cost = gold // 2
 
-    return templates.TemplateResponse("battle/defeat.html", {
+    return templates.TemplateResponse(request, "battle/defeat.html", {
         "request": request,
         "title": "Defeat",
         "character": char_data,
