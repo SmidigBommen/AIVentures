@@ -64,6 +64,9 @@
         {% if rewards.new_max_pp %}
         <p class="text-info">PP: {{ rewards.new_max_pp }} max</p>
         {% endif %}
+        {% if rewards.asi_points %}
+        <p class="text-warning">Ability Score Improvement! <a href="/character/summary">Spend {{ rewards.asi_points }} point{{ 's' if rewards.asi_points != 1 }}</a></p>
+        {% endif %}
         {% if rewards.new_abilities %}
         <div class="new-abilities">
             <p class="text-warning">New abilities unlocked:</p>

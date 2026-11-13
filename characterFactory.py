@@ -28,6 +28,16 @@ class CharacterFactory:
         wisdom_score = race_default_values["wisdom"] + race_stats["wisdom_bonus"]
         charisma_score = race_default_values["charisma"] + race_stats["charisma_bonus"]
 
+        # Class training: bonuses to the abilities the class relies on
+        class_props = self.classes_properties.get(class_name, {})
+        class_bonuses = class_props.get("ability_bonuses", {})
+        strength_score += class_bonuses.get("Strength", 0)
+        dexterity_score += class_bonuses.get("Dexterity", 0)
+        constitution_score += class_bonuses.get("Constitution", 0)
+        intelligence_score += class_bonuses.get("Intelligence", 0)
+        wisdom_score += class_bonuses.get("Wisdom", 0)
+        charisma_score += class_bonuses.get("Charisma", 0)
+
         # Create character
         character = Character(
             name=name,
@@ -50,6 +60,9 @@ class CharacterFactory:
             base_ac=race_default_values["base_ac"],
             damage_reduction=0
         )
+
+        character.unarmored_defense = class_props.get("unarmored_defense")
+        character.update_ac()
 
         # Initialize hit points based on class hit die and constitution modifier
         self.initialize_hit_points(character, hit_die)

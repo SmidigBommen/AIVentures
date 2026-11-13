@@ -7,8 +7,8 @@
         "description": "A powerful weapon strike with extra force.",
         "target": "enemy",
         "attack_method": "melee_attack",
-        "damage": { "dice_count": 1, "dice_size": 10, "bonus": "ability_modifier", "type": "slashing" },
-        "scaling": { "5": { "dice_count": 2 }, "11": { "dice_count": 3 } }
+        "damage": { "dice_count": 1, "dice_size": 8, "bonus": "ability_modifier", "type": "slashing" },
+        "scaling": { "5": { "dice_count": 2 }, "11": { "dice_count": 3 }, "14": { "dice_count": 4 } }
     },
     "second_wind": {
         "name": "Second Wind",
@@ -28,7 +28,8 @@
         "description": "Push beyond your limits for a devastating double strike.",
         "target": "enemy",
         "attack_method": "melee_attack",
-        "damage": { "dice_count": 2, "dice_size": 10, "bonus": "ability_modifier", "type": "slashing" }
+        "damage": { "dice_count": 2, "dice_size": 10, "bonus": "ability_modifier", "type": "slashing" },
+        "scaling": { "9": { "dice_count": 3 }, "13": { "dice_count": 4 } }
     },
     "rallying_cry": {
         "name": "Rallying Cry",
@@ -49,7 +50,8 @@
         "description": "Channel all your might into one crushing blow.",
         "target": "enemy",
         "attack_method": "melee_attack",
-        "damage": { "dice_count": 3, "dice_size": 10, "bonus": "ability_modifier", "type": "slashing" }
+        "damage": { "dice_count": 3, "dice_size": 10, "bonus": "ability_modifier", "type": "slashing" },
+        "scaling": { "9": { "dice_count": 4 }, "13": { "dice_count": 6 } }
     },
 
     "fire_bolt": {
@@ -71,7 +73,8 @@
         "description": "Three darts of magical force strike unerringly.",
         "target": "enemy",
         "attack_method": "auto_hit",
-        "damage": { "dice_count": 3, "dice_size": 4, "bonus": 3, "type": "force" }
+        "damage": { "dice_count": 3, "dice_size": 4, "bonus": 3, "type": "force" },
+        "scaling": { "5": { "dice_count": 4 }, "9": { "dice_count": 5 }, "13": { "dice_count": 6 } }
     },
     "arcane_shield": {
         "name": "Arcane Shield",
@@ -93,7 +96,8 @@
         "attack_method": "spell_save",
         "save_ability": "Dexterity",
         "damage": { "dice_count": 6, "dice_size": 6, "bonus": 0, "type": "fire" },
-        "effects": [{ "stat": "burn", "value": 3, "duration": 2 }]
+        "effects": [{ "stat": "burn", "value": 3, "duration": 2 }],
+        "scaling": { "9": { "dice_count": 9 }, "13": { "dice_count": 10 } }
     },
     "ice_storm": {
         "name": "Ice Storm",
@@ -104,8 +108,9 @@
         "target": "enemy",
         "attack_method": "spell_save",
         "save_ability": "Dexterity",
-        "damage": { "dice_count": 4, "dice_size": 8, "bonus": 0, "type": "cold" },
-        "effects": [{ "stat": "attack_bonus", "value": -2, "duration": 0 }]
+        "damage": { "dice_count": 5, "dice_size": 8, "bonus": 0, "type": "cold" },
+        "effects": [{ "stat": "attack_bonus", "value": -2, "duration": 0 }],
+        "scaling": { "9": { "dice_count": 8 }, "13": { "dice_count": 9 } }
     },
 
     "sneak_attack": {
@@ -117,7 +122,7 @@
         "target": "enemy",
         "attack_method": "melee_attack",
         "damage": { "dice_count": 2, "dice_size": 6, "bonus": "ability_modifier", "type": "piercing" },
-        "scaling": { "3": { "dice_count": 3 }, "5": { "dice_count": 4 }, "7": { "dice_count": 5 } }
+        "scaling": { "5": { "dice_count": 3 }, "9": { "dice_count": 4 }, "13": { "dice_count": 5 } }
     },
     "cunning_dodge": {
         "name": "Cunning Dodge",
@@ -148,7 +153,8 @@
         "target": "enemy",
         "attack_method": "melee_attack",
         "damage": { "dice_count": 2, "dice_size": 8, "bonus": "ability_modifier", "type": "poison" },
-        "effects": [{ "stat": "ac", "value": -1, "duration": 0 }, { "stat": "poison", "value": 3, "duration": 3 }]
+        "effects": [{ "stat": "ac", "value": -1, "duration": 0 }, { "stat": "poison", "value": 3, "duration": 3 }],
+        "scaling": { "9": { "dice_count": 3 }, "13": { "dice_count": 4 } }
     },
     "shadow_step": {
         "name": "Shadow Step",
@@ -158,7 +164,8 @@
         "description": "Vanish into shadow and strike from the blind spot.",
         "target": "enemy",
         "attack_method": "melee_attack",
-        "damage": { "dice_count": 4, "dice_size": 8, "bonus": "ability_modifier", "type": "piercing" }
+        "damage": { "dice_count": 4, "dice_size": 8, "bonus": "ability_modifier", "type": "piercing" },
+        "scaling": { "9": { "dice_count": 6 }, "13": { "dice_count": 8 } }
     },
 
     "sacred_flame": {
@@ -181,7 +188,8 @@
         "description": "Touch a creature and channel healing energy.",
         "target": "self",
         "attack_method": "auto_hit",
-        "heal": { "dice_count": 1, "dice_size": 8, "bonus": "ability_modifier" }
+        "heal": { "dice_count": 1, "dice_size": 8, "bonus": "ability_modifier" },
+        "scaling": { "5": { "dice_count": 2 }, "9": { "dice_count": 3 }, "13": { "dice_count": 4 } }
     },
     "shield_of_faith": {
         "name": "Shield of Faith",
@@ -201,7 +209,8 @@
         "description": "A floating spectral weapon strikes your foe.",
         "target": "enemy",
         "attack_method": "spell_attack",
-        "damage": { "dice_count": 2, "dice_size": 8, "bonus": "ability_modifier", "type": "force" }
+        "damage": { "dice_count": 3, "dice_size": 8, "bonus": "ability_modifier", "type": "force" },
+        "scaling": { "9": { "dice_count": 4 }, "13": { "dice_count": 6 } }
     },
     "mass_heal": {
         "name": "Mass Heal",
@@ -211,7 +220,8 @@
         "description": "A flood of divine healing energy washes over you.",
         "target": "self",
         "attack_method": "auto_hit",
-        "heal": { "dice_count": 3, "dice_size": 8, "bonus": "ability_modifier" }
+        "heal": { "dice_count": 3, "dice_size": 8, "bonus": "ability_modifier" },
+        "scaling": { "9": { "dice_count": 5 }, "13": { "dice_count": 7 } }
     },
 
     "reckless_attack": {
@@ -219,11 +229,12 @@
         "classes": ["Barbarian"],
         "cost": 0,
         "unlock_level": 1,
-        "description": "Throw caution to the wind with a wild, powerful swing.",
+        "description": "Throw caution to the wind with a wild, powerful swing that leaves you open (-3 AC until your next turn).",
         "target": "enemy",
         "attack_method": "melee_attack",
-        "damage": { "dice_count": 1, "dice_size": 12, "bonus": "ability_modifier", "type": "slashing" },
-        "scaling": { "5": { "dice_count": 2 }, "11": { "dice_count": 3 } }
+        "damage": { "dice_count": 1, "dice_size": 10, "bonus": "ability_modifier", "type": "slashing" },
+        "scaling": { "5": { "dice_count": 2 }, "11": { "dice_count": 3 }, "14": { "dice_count": 4 } },
+        "self_effects": [{ "stat": "ac", "value": -3, "duration": 1 }]
     },
     "rage": {
         "name": "Rage",
@@ -233,10 +244,7 @@
         "description": "Enter a primal fury, hitting harder and shrugging off blows.",
         "target": "self",
         "attack_method": "auto_hit",
-        "effects": [
-            { "stat": "damage_bonus", "value": 2, "duration": 0 },
-            { "stat": "damage_reduction", "value": 2, "duration": 0 }
-        ]
+        "effects": [{ "stat": "damage_bonus", "value": 1, "duration": 0 }, { "stat": "damage_reduction", "value": 1, "duration": 0 }]
     },
     "brutal_strike": {
         "name": "Brutal Strike",
@@ -247,7 +255,8 @@
         "target": "enemy",
         "attack_method": "melee_attack",
         "damage": { "dice_count": 2, "dice_size": 12, "bonus": "ability_modifier", "type": "slashing" },
-        "effects": [{ "stat": "bleed", "value": 2, "duration": 3 }]
+        "effects": [{ "stat": "bleed", "value": 2, "duration": 3 }],
+        "scaling": { "9": { "dice_count": 3 } }
     },
     "intimidating_roar": {
         "name": "Intimidating Roar",
@@ -267,7 +276,8 @@
         "description": "Unleash an unstoppable onslaught of savage blows.",
         "target": "enemy",
         "attack_method": "melee_attack",
-        "damage": { "dice_count": 3, "dice_size": 12, "bonus": "ability_modifier", "type": "slashing" }
+        "damage": { "dice_count": 3, "dice_size": 12, "bonus": "ability_modifier", "type": "slashing" },
+        "scaling": { "9": { "dice_count": 4 }, "13": { "dice_count": 5 } }
     },
 
     "divine_strike": {
@@ -279,7 +289,7 @@
         "target": "enemy",
         "attack_method": "melee_attack",
         "damage": { "dice_count": 1, "dice_size": 8, "bonus": "ability_modifier", "type": "radiant" },
-        "scaling": { "5": { "dice_count": 2 }, "11": { "dice_count": 3 } }
+        "scaling": { "5": { "dice_count": 2 }, "11": { "dice_count": 3 }, "14": { "dice_count": 4 } }
     },
     "lay_on_hands": {
         "name": "Lay on Hands",
@@ -289,7 +299,8 @@
         "description": "Your blessed touch mends wounds.",
         "target": "self",
         "attack_method": "auto_hit",
-        "heal": { "dice_count": 2, "dice_size": 6, "bonus": 0 }
+        "heal": { "dice_count": 2, "dice_size": 6, "bonus": 0 },
+        "scaling": { "5": { "dice_count": 3 }, "9": { "dice_count": 5 }, "13": { "dice_count": 7 } }
     },
     "divine_smite": {
         "name": "Divine Smite",
@@ -299,7 +310,8 @@
         "description": "Smite your foe with searing radiant energy.",
         "target": "enemy",
         "attack_method": "melee_attack",
-        "damage": { "dice_count": 2, "dice_size": 8, "bonus": "ability_modifier", "type": "radiant" }
+        "damage": { "dice_count": 2, "dice_size": 8, "bonus": "ability_modifier", "type": "radiant" },
+        "scaling": { "9": { "dice_count": 3 }, "13": { "dice_count": 4 } }
     },
     "shield_of_devotion": {
         "name": "Shield of Devotion",
@@ -320,7 +332,8 @@
         "target": "enemy",
         "attack_method": "melee_attack",
         "damage": { "dice_count": 3, "dice_size": 8, "bonus": "ability_modifier", "type": "radiant" },
-        "heal": { "dice_count": 1, "dice_size": 6, "bonus": 0 }
+        "heal": { "dice_count": 1, "dice_size": 6, "bonus": 0 },
+        "scaling": { "9": { "dice_count": 4 }, "13": { "dice_count": 6 } }
     },
 
     "precise_shot": {
@@ -332,7 +345,7 @@
         "target": "enemy",
         "attack_method": "melee_attack",
         "damage": { "dice_count": 1, "dice_size": 8, "bonus": "ability_modifier", "type": "piercing" },
-        "scaling": { "5": { "dice_count": 2 }, "11": { "dice_count": 3 } }
+        "scaling": { "5": { "dice_count": 2 }, "11": { "dice_count": 3 }, "14": { "dice_count": 4 } }
     },
     "ensnaring_strike": {
         "name": "Ensnaring Strike",
@@ -353,7 +366,8 @@
         "description": "Call upon nature's restorative magic.",
         "target": "self",
         "attack_method": "auto_hit",
-        "heal": { "dice_count": 2, "dice_size": 6, "bonus": 0 }
+        "heal": { "dice_count": 2, "dice_size": 6, "bonus": 0 },
+        "scaling": { "7": { "dice_count": 3 }, "11": { "dice_count": 5 } }
     },
     "volley": {
         "name": "Volley",
@@ -364,7 +378,8 @@
         "target": "enemy",
         "attack_method": "melee_attack",
         "damage": { "dice_count": 3, "dice_size": 8, "bonus": "ability_modifier", "type": "piercing" },
-        "effects": [{ "stat": "bleed", "value": 2, "duration": 2 }]
+        "effects": [{ "stat": "bleed", "value": 2, "duration": 2 }],
+        "scaling": { "9": { "dice_count": 4 }, "13": { "dice_count": 6 } }
     },
     "foe_slayer": {
         "name": "Foe Slayer",
@@ -374,7 +389,8 @@
         "description": "Strike with the lethal precision of a seasoned hunter.",
         "target": "enemy",
         "attack_method": "melee_attack",
-        "damage": { "dice_count": 4, "dice_size": 8, "bonus": "ability_modifier", "type": "piercing" }
+        "damage": { "dice_count": 4, "dice_size": 8, "bonus": "ability_modifier", "type": "piercing" },
+        "scaling": { "9": { "dice_count": 6 }, "13": { "dice_count": 8 } }
     },
 
     "martial_arts_strike": {
@@ -385,8 +401,8 @@
         "description": "A swift unarmed strike powered by discipline.",
         "target": "enemy",
         "attack_method": "melee_attack",
-        "damage": { "dice_count": 1, "dice_size": 6, "bonus": "ability_modifier", "type": "bludgeoning" },
-        "scaling": { "5": { "dice_count": 2 }, "11": { "dice_count": 3 } }
+        "damage": { "dice_count": 1, "dice_size": 8, "bonus": "ability_modifier", "type": "bludgeoning" },
+        "scaling": { "5": { "dice_count": 2 }, "11": { "dice_count": 3 }, "14": { "dice_count": 4 } }
     },
     "flurry_of_blows": {
         "name": "Flurry of Blows",
@@ -396,7 +412,8 @@
         "description": "Unleash a rapid series of unarmed strikes.",
         "target": "enemy",
         "attack_method": "melee_attack",
-        "damage": { "dice_count": 2, "dice_size": 6, "bonus": "ability_modifier", "type": "bludgeoning" }
+        "damage": { "dice_count": 3, "dice_size": 6, "bonus": "ability_modifier", "type": "bludgeoning" },
+        "scaling": { "7": { "dice_count": 4 }, "11": { "dice_count": 5 } }
     },
     "patient_defense": {
         "name": "Patient Defense",
@@ -416,8 +433,9 @@
         "description": "Strike a pressure point to stun your foe, costing it its next action.",
         "target": "enemy",
         "attack_method": "melee_attack",
-        "damage": { "dice_count": 1, "dice_size": 6, "bonus": "ability_modifier", "type": "bludgeoning" },
-        "effects": [{ "stat": "stun", "value": 1, "duration": 1 }]
+        "damage": { "dice_count": 2, "dice_size": 8, "bonus": "ability_modifier", "type": "bludgeoning" },
+        "effects": [{ "stat": "stun", "value": 1, "duration": 1 }],
+        "scaling": { "9": { "dice_count": 3 }, "13": { "dice_count": 4 } }
     },
     "quivering_palm": {
         "name": "Quivering Palm",
@@ -427,7 +445,8 @@
         "description": "Channel devastating ki into a single deadly strike.",
         "target": "enemy",
         "attack_method": "melee_attack",
-        "damage": { "dice_count": 4, "dice_size": 10, "bonus": "ability_modifier", "type": "bludgeoning" }
+        "damage": { "dice_count": 4, "dice_size": 10, "bonus": "ability_modifier", "type": "bludgeoning" },
+        "scaling": { "9": { "dice_count": 6 }, "13": { "dice_count": 8 } }
     },
 
     "vicious_mockery": {
@@ -439,7 +458,7 @@
         "target": "enemy",
         "attack_method": "spell_save",
         "save_ability": "Wisdom",
-        "damage": { "dice_count": 1, "dice_size": 6, "bonus": 0, "type": "psychic" },
+        "damage": { "dice_count": 1, "dice_size": 8, "bonus": 0, "type": "psychic" },
         "effects": [{ "stat": "attack_bonus", "value": -2, "duration": 1 }],
         "scaling": { "5": { "dice_count": 2 }, "11": { "dice_count": 3 } }
     },
@@ -451,7 +470,8 @@
         "description": "A soothing melody restores vitality.",
         "target": "self",
         "attack_method": "auto_hit",
-        "heal": { "dice_count": 1, "dice_size": 6, "bonus": "ability_modifier" }
+        "heal": { "dice_count": 1, "dice_size": 8, "bonus": "ability_modifier" },
+        "scaling": { "5": { "dice_count": 2 }, "9": { "dice_count": 3 }, "13": { "dice_count": 4 } }
     },
     "bardic_inspiration": {
         "name": "Bardic Inspiration",
@@ -461,10 +481,7 @@
         "description": "Inspire yourself with a rousing performance.",
         "target": "self",
         "attack_method": "auto_hit",
-        "effects": [
-            { "stat": "attack_bonus", "value": 2, "duration": 0 },
-            { "stat": "damage_bonus", "value": 2, "duration": 0 }
-        ]
+        "effects": [{ "stat": "damage_bonus", "value": 2, "duration": 0 }, { "stat": "ac", "value": 2, "duration": 0 }]
     },
     "dissonant_whispers": {
         "name": "Dissonant Whispers",
@@ -475,7 +492,8 @@
         "target": "enemy",
         "attack_method": "spell_save",
         "save_ability": "Wisdom",
-        "damage": { "dice_count": 3, "dice_size": 6, "bonus": 0, "type": "psychic" }
+        "damage": { "dice_count": 4, "dice_size": 6, "bonus": 0, "type": "psychic" },
+        "scaling": { "9": { "dice_count": 6 }, "13": { "dice_count": 8 } }
     },
     "power_chord": {
         "name": "Power Chord",
@@ -486,7 +504,8 @@
         "target": "enemy",
         "attack_method": "spell_save",
         "save_ability": "Constitution",
-        "damage": { "dice_count": 4, "dice_size": 8, "bonus": 0, "type": "thunder" }
+        "damage": { "dice_count": 5, "dice_size": 8, "bonus": 0, "type": "thunder" },
+        "scaling": { "9": { "dice_count": 7 }, "13": { "dice_count": 10 } }
     },
 
     "acid_splash": {
@@ -509,7 +528,8 @@
         "description": "A sphere of elemental energy streaks toward your target.",
         "target": "enemy",
         "attack_method": "spell_attack",
-        "damage": { "dice_count": 3, "dice_size": 8, "bonus": 0, "type": "fire" }
+        "damage": { "dice_count": 3, "dice_size": 8, "bonus": 0, "type": "fire" },
+        "scaling": { "9": { "dice_count": 4 }, "13": { "dice_count": 5 } }
     },
     "arcane_ward": {
         "name": "Arcane Ward",
@@ -530,7 +550,8 @@
         "target": "enemy",
         "attack_method": "spell_save",
         "save_ability": "Dexterity",
-        "damage": { "dice_count": 6, "dice_size": 6, "bonus": 0, "type": "lightning" }
+        "damage": { "dice_count": 6, "dice_size": 6, "bonus": 0, "type": "lightning" },
+        "scaling": { "9": { "dice_count": 9 }, "13": { "dice_count": 10 } }
     },
     "chaos_bolt": {
         "name": "Chaos Bolt",
@@ -540,7 +561,8 @@
         "description": "Wild magic coalesces into a devastating blast.",
         "target": "enemy",
         "attack_method": "spell_attack",
-        "damage": { "dice_count": 4, "dice_size": 10, "bonus": "ability_modifier", "type": "fire" }
+        "damage": { "dice_count": 4, "dice_size": 10, "bonus": "ability_modifier", "type": "fire" },
+        "scaling": { "9": { "dice_count": 6 }, "13": { "dice_count": 7 } }
     },
 
     "eldritch_blast": {
@@ -574,7 +596,8 @@
         "target": "enemy",
         "attack_method": "auto_hit",
         "damage": { "dice_count": 2, "dice_size": 10, "bonus": 0, "type": "fire" },
-        "effects": [{ "stat": "burn", "value": 2, "duration": 2 }]
+        "effects": [{ "stat": "burn", "value": 2, "duration": 2 }],
+        "scaling": { "9": { "dice_count": 3 }, "13": { "dice_count": 4 } }
     },
     "hunger_of_hadar": {
         "name": "Hunger of Hadar",
@@ -585,8 +608,9 @@
         "target": "enemy",
         "attack_method": "spell_save",
         "save_ability": "Constitution",
-        "damage": { "dice_count": 3, "dice_size": 6, "bonus": 0, "type": "cold" },
-        "effects": [{ "stat": "attack_bonus", "value": -2, "duration": 0 }]
+        "damage": { "dice_count": 4, "dice_size": 6, "bonus": 0, "type": "cold" },
+        "effects": [{ "stat": "attack_bonus", "value": -2, "duration": 0 }],
+        "scaling": { "9": { "dice_count": 6 }, "13": { "dice_count": 8 } }
     },
     "eldritch_smite": {
         "name": "Eldritch Smite",
@@ -596,7 +620,8 @@
         "description": "Channel your patron's power into a devastating eldritch strike.",
         "target": "enemy",
         "attack_method": "spell_attack",
-        "damage": { "dice_count": 4, "dice_size": 8, "bonus": "ability_modifier", "type": "force" }
+        "damage": { "dice_count": 4, "dice_size": 8, "bonus": "ability_modifier", "type": "force" },
+        "scaling": { "9": { "dice_count": 6 }, "13": { "dice_count": 8 } }
     },
 
     "thorn_whip": {
@@ -607,7 +632,7 @@
         "description": "A thorny vine lashes out at your command.",
         "target": "enemy",
         "attack_method": "spell_attack",
-        "damage": { "dice_count": 1, "dice_size": 6, "bonus": "ability_modifier", "type": "piercing" },
+        "damage": { "dice_count": 1, "dice_size": 8, "bonus": "ability_modifier", "type": "piercing" },
         "scaling": { "5": { "dice_count": 2 }, "11": { "dice_count": 3 } }
     },
     "entangle": {
@@ -619,7 +644,7 @@
         "target": "enemy",
         "attack_method": "spell_save",
         "save_ability": "Strength",
-        "damage": { "dice_count": 1, "dice_size": 4, "bonus": 0, "type": "bludgeoning" },
+        "damage": { "dice_count": 2, "dice_size": 6, "bonus": 0, "type": "bludgeoning" },
         "effects": [{ "stat": "attack_bonus", "value": -2, "duration": 0 }]
     },
     "healing_word_druid": {
@@ -630,7 +655,8 @@
         "description": "Nature's restorative energy mends your wounds.",
         "target": "self",
         "attack_method": "auto_hit",
-        "heal": { "dice_count": 1, "dice_size": 8, "bonus": "ability_modifier" }
+        "heal": { "dice_count": 2, "dice_size": 8, "bonus": "ability_modifier" },
+        "scaling": { "7": { "dice_count": 3 }, "11": { "dice_count": 4 }, "15": { "dice_count": 5 } }
     },
     "call_lightning": {
         "name": "Call Lightning",
@@ -641,20 +667,18 @@
         "target": "enemy",
         "attack_method": "spell_save",
         "save_ability": "Dexterity",
-        "damage": { "dice_count": 4, "dice_size": 6, "bonus": 0, "type": "lightning" }
+        "damage": { "dice_count": 5, "dice_size": 6, "bonus": 0, "type": "lightning" },
+        "scaling": { "9": { "dice_count": 7 }, "13": { "dice_count": 9 } }
     },
     "wild_shape": {
         "name": "Wild Shape",
         "classes": ["Druid"],
         "cost": 3,
         "unlock_level": 6,
-        "description": "Transform into a powerful beast, gaining resilience.",
+        "description": "Transform into a powerful beast, gaining resilience and slowly mending your wounds.",
         "target": "self",
         "attack_method": "auto_hit",
-        "heal": { "dice_count": 2, "dice_size": 6, "bonus": 0 },
-        "effects": [
-            { "stat": "ac", "value": 2, "duration": 0 },
-            { "stat": "damage_bonus", "value": 2, "duration": 0 }
-        ]
+        "heal": { "dice_count": 2, "dice_size": 8, "bonus": "ability_modifier" },
+        "effects": [{ "stat": "ac", "value": 2, "duration": 0 }, { "stat": "damage_bonus", "value": 2, "duration": 0 }, { "stat": "regen", "value": 2, "duration": 0 }]
     }
 }

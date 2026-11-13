@@ -23,6 +23,9 @@ Then open http://localhost:8000 in your browser.
 - 12 races with unique ability score bonuses
 - 11 classes: Fighter, Wizard, Rogue, Cleric, Barbarian, Paladin, Ranger, Monk, Bard, Sorcerer, Warlock, Druid
 - 6 ability scores (STR/DEX/CON/INT/WIS/CHA) with D&D 5e modifier calculation
+- Class training: every class starts with +4 to its primary ability and +2 to a second one
+- **Ability Score Improvements** at levels 4, 8, 12, 16 and 19: two points to spend on the character sheet (max 20 per score). Constitution grants its HP retroactively
+- Unarmored Defense for Monk (Wisdom) and Barbarian (Constitution)
 - Skill proficiency selection based on class
 - Equipment system with weapon and armor slots, proficiency checks
 - XP-based leveling with HP increases
@@ -34,7 +37,8 @@ Then open http://localhost:8000 in your browser.
 - Each class has a free cantrip/basic ability (0 PP) plus 4 costed abilities (1-3 PP) unlocking at levels 1, 2, 4, and 6
 - Ability types: damage (melee/spell attack, spell save, auto-hit), healing, buffs (self), debuffs (enemy)
 - Conditions: some abilities leave the target Poisoned, Burning or Bleeding (damage every round) or Stunned (lose a turn)
-- Cantrips scale with level (more dice at levels 5, 11)
+- Free abilities scale with level (more dice at levels 5 and 11); costed damage abilities and heals grow too, so spending PP stays worthwhile
+- Monks draw on a larger ki-sized PP pool; Reckless Attack hits hard but lowers the Barbarian's own AC
 - Active effects modify attack rolls, damage, AC, and damage reduction
 - Effects tick down each round; duration 0 = lasts entire combat
 - PP recovers on rest
@@ -206,8 +210,8 @@ Done | Act progression gating, crown shards, journal and ending
 Done | Monster abilities and smarter AI
 Done | Critical hits, conditions (poison/burn/bleed/stun) and fleeing
 Done | Exploration events driven by skill checks
-x | Class balance pass (casters far out-damage martials at high level; Monk and Druid are weakest)
-x | Ability score improvements on level-up
+Done | Class balance pass (all 12 classes within the same win-rate band against bosses)
+Done | Class ability bonuses and ability score improvements on level-up
 x | Boss and remaining monster portraits
 x | Spells/abilities for exploration (outside combat)
 x | Off-hand / dual wielding

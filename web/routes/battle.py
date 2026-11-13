@@ -29,7 +29,7 @@ from engine.combat import (
 )
 from engine.abilities import resolve_player_ability
 from engine.monster_ai import choose_monster_action, resolve_monster_ability, tick_cooldowns
-from engine.leveling import grant_xp
+from engine.leveling import asi_points_available, grant_xp
 from engine.quests import check_quest_progress
 from engine.combatant import CombatantState
 from engine import campaign as campaign_rules
@@ -676,6 +676,7 @@ async def end_battle(request: Request, session, player_won: bool):
             "hp_increase": xp_result["hp_increase"],
             "new_abilities": new_abilities,
             "new_max_pp": char.max_power_points if xp_result["leveled_up"] else None,
+            "asi_points": asi_points_available(char) if xp_result["leveled_up"] else 0,
             "quest_updates": quest_updates,
             "boss": _boss_victory(session, monster.boss_id) if boss else None,
         }

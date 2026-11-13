@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
+{% if is_new %}
 <div class="steps">
     <div class="step completed"><span class="step-num">1</span><span class="step-label">Race</span></div>
     <div class="step-line done"></div>
@@ -10,6 +11,7 @@
     <div class="step-line done"></div>
     <div class="step completed"><span class="step-num">4</span><span class="step-label">Summary</span></div>
 </div>
+{% endif %}
 
 <div class="char-summary">
     {% if character.portrait %}
@@ -36,40 +38,42 @@
         </div>
     </div>
 
-    <div class="panel">
+    <div class="panel{% if character.asi_points %} asi-panel{% endif %}">
         <h2 class="panel-title">Ability Scores</h2>
-        <div class="stats-grid">
-            <div class="stat-box">
-                <span class="label">Strength</span>
-                <span class="value">{{ character.strength_score }}</span>
-                <span class="modifier">{% if character.strength_modifier >= 0 %}+{% endif %}{{ character.strength_modifier }}</span>
-            </div>
-            <div class="stat-box">
-                <span class="label">Dexterity</span>
-                <span class="value">{{ character.dexterity_score }}</span>
-                <span class="modifier">{% if character.dexterity_modifier >= 0 %}+{% endif %}{{ character.dexterity_modifier }}</span>
-            </div>
-            <div class="stat-box">
-                <span class="label">Constitution</span>
-                <span class="value">{{ character.constitution_score }}</span>
-                <span class="modifier">{% if character.constitution_modifier >= 0 %}+{% endif %}{{ character.constitution_modifier }}</span>
-            </div>
-            <div class="stat-box">
-                <span class="label">Intelligence</span>
-                <span class="value">{{ character.intelligence_score }}</span>
-                <span class="modifier">{% if character.intelligence_modifier >= 0 %}+{% endif %}{{ character.intelligence_modifier }}</span>
-            </div>
-            <div class="stat-box">
-                <span class="label">Wisdom</span>
-                <span class="value">{{ character.wisdom_score }}</span>
-                <span class="modifier">{% if character.wisdom_modifier >= 0 %}+{% endif %}{{ character.wisdom_modifier }}</span>
-            </div>
-            <div class="stat-box">
-                <span class="label">Charisma</span>
-                <span class="value">{{ character.charisma_score }}</span>
-                <span class="modifier">{% if character.charisma_modifier >= 0 %}+{% endif %}{{ character.charisma_modifier }}</span>
-            </div>
+        {% if improve_message %}
+        <p class="asi-message" data-sound="levelup">{{ improve_message }}</p>
+        {% endif %}
+        {% if character.asi_points %}
+        <div class="asi-banner">
+            <strong>Ability Score Improvement</strong>
+            <span class="asi-points">{{ character.asi_points }} point{{ 's' if character.asi_points != 1 }} to spend</span>
+            <p>Each point raises one ability score by 1 (maximum {{ character.ability_score_cap }}). Choices are permanent.</p>
         </div>
+        {% endif %}
+        <div class="stats-grid">
+            {% for ability in abilities %}
+            {% set score = character[ability ~ '_score'] %}
+            {% set modifier = character[ability ~ '_modifier'] %}
+            <div class="stat-box{% if ability == primary_ability %} stat-primary{% endif %}">
+                <span class="label">{{ ability | capitalize }}</span>
+                <span class="value">{{ score }}</span>
+                <span class="modifier">{% if modifier >= 0 %}+{% endif %}{{ modifier }}</span>
+                {% if ability == primary_ability %}<span class="stat-tag">Primary</span>{% endif %}
+                {% if character.asi_points and score < character.ability_score_cap %}
+                <form action="/character/improve" method="post">
+                    <input type="hidden" name="ability" value="{{ ability }}">
+                    <button type="submit" class="btn btn-secondary btn-small btn-asi" aria-label="Increase {{ ability }}">+1</button>
+                </form>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        <p class="asi-hint">
+            Your primary ability drives attack rolls, ability damage and power points.
+            Constitution adds hit points every level; Dexterity adds to AC in light or no armor.
+            {% if unarmored_defense %}Unarmored Defense: without armor, your {{ unarmored_defense | capitalize }} modifier is added to AC as well.{% endif %}
+            Improvements are earned at levels 4, 8, 12, 16 and 19.
+        </p>
     </div>
 
     <div class="panel">
@@ -98,7 +102,7 @@
 
     <div class="btn-group mt-3">
         <a href="/character/new" class="btn btn-secondary">Create New Character</a>
-        <a href="/game" class="btn btn-primary">Begin Adventure</a>
+        <a href="/game" class="btn btn-primary">{{ 'Begin Adventure' if is_new else 'Back to the World' }}</a>
     </div>
 </div>
 {% endblock %}

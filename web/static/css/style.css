@@ -2996,3 +2996,48 @@ nav {
     .event-choice { flex-direction: column; align-items: flex-start; }
     .event-choice-check { align-items: flex-start; }
 }
+
+
+/* ===== 32. Ability Score Improvements ===== */
+.nav-badge {
+    display: inline-block;
+    margin-left: var(--sp-xs);
+    padding: 0 0.4rem;
+    border-radius: var(--r-full);
+    background: var(--gold);
+    color: var(--bg-deepest);
+    font-size: 0.7rem;
+    font-weight: bold;
+    line-height: 1.4;
+}
+
+.asi-panel { border-color: var(--gold-dim); box-shadow: var(--shadow-glow-gold); }
+
+.asi-banner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--sp-sm) var(--sp-md);
+    padding: var(--sp-md);
+    margin-bottom: var(--sp-md);
+    border: 1px solid var(--gold-dim);
+    border-radius: var(--r-md);
+    background: rgba(218, 165, 32, 0.08);
+}
+.asi-banner strong { font-family: var(--font-heading); color: var(--gold-light); }
+.asi-banner .asi-points { color: var(--gold); font-weight: bold; }
+.asi-banner p { flex-basis: 100%; margin: 0; color: var(--text-muted); font-size: 0.85rem; }
+
+.asi-message { color: var(--success-light); margin-bottom: var(--sp-md); }
+.asi-hint { margin: var(--sp-md) 0 0; color: var(--text-muted); font-size: 0.8rem; line-height: 1.6; }
+
+.stat-box.stat-primary { border-color: var(--gold-dim); }
+.stat-box .stat-tag {
+    display: block;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gold);
+}
+.stat-box form { margin-top: var(--sp-sm); }
+.btn-asi { min-width: 3rem; }

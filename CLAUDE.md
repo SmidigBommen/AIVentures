@@ -52,7 +52,7 @@ Headless game logic shared across the application — no I/O, no web framework i
 - **`engine/abilities.py`** → `resolve_player_ability()` — player class abilities (all attack methods, damage, healing, effects)
 - **`engine/monster_ai.py`** → `choose_monster_action()`, `resolve_monster_ability()`, `tick_cooldowns()` — monster decisions and special abilities
 - **`engine/effects.py`** → `get_effect_bonus()`, `tick_effects()`, `is_stunned()`, `resolve_round_conditions()`, `describe_effect()` — effect duration, stacking, conditions
-- **`engine/leveling.py`** → `calculate_max_pp()`, `grant_xp()` — power points; XP award with level-up HP and PP handling
+- **`engine/leveling.py`** → `calculate_max_pp()`, `grant_xp()`, `asi_points_available()`, `improve_ability()`, `apply_ability_increases()` — power points; XP award with level-up HP and PP handling; Ability Score Improvements
 - **`engine/campaign.py`** → `highest_unlocked_act()`, `is_act_complete()`, `get_area_boss()`, `collected_shards()`, `pending_ambush()` — pure progression rules derived from the defeated-boss list
 - **`engine/events.py`** → `pick_event()`, `resolve_event_choice()`, `apply_outcome()` — exploration skill-check events
 - **`engine/quests.py`** → `check_quest_progress()`, `turn_in_quest()` — quest state mutations after kills and turn-ins
@@ -62,13 +62,24 @@ Headless game logic shared across the application — no I/O, no web framework i
 
 All 11 classes have unique abilities powered by **Power Points (PP)**:
 - **Data**: `json/abilities.json` — 55 abilities (5 per class), each with cost, unlock_level, attack_method, damage/heal/effects
-- **PP calculation** in `engine/leveling.py`: `calculate_max_pp(class_name, level, primary_modifier)` — full casters get `level + mod`, half casters `level//2 + mod`, martial `level//3 + mod` (min 2)
+- **PP calculation** in `engine/leveling.py`: `calculate_max_pp(class_name, level, primary_modifier)` — full casters get `level + mod`, half casters and Monk `level//2 + mod`, martial `level//3 + mod` (min 2)
+- **Scaling**: `scaling` (`{"level": {"dice_count": n}}`) applies to the damage dice, or to the heal dice of an ability with no damage. Every damage ability costing 2+ PP must scale (a test enforces it), otherwise the free abilities overtake it
+- **`self_effects`**: effects an enemy-targeted ability puts on the player whether it hits or not (Reckless Attack: -3 AC for the round)
 - **Helpers** in `web/game_session.py`: `get_abilities()`, `get_class_abilities(class_name, level)`, `get_primary_modifier(character)`
 - **Combat resolution** in `engine/abilities.py`: `resolve_player_ability()` handles all attack methods (melee_attack, spell_attack, spell_save, auto_hit), crits, damage, healing, and effect application. Enemy-targeted effects only apply if the ability lands (hit / failed save)
 - **Active effects**: stored on `BattleState` (`player_effects`) and `CombatantState` (`effects`). Each effect has `stat`, `value`, `duration`, `source`. Duration 0 = lasts entire combat, positive = rounds remaining. `tick_effects()` decrements each round. `get_effect_bonus(effects, stat)` sums bonuses.
 - **Stat modifiers**: `ac`, `attack_bonus`, `damage_bonus`, `damage_reduction` — applied in weapon attacks, ability attacks, and monster turns
 - **Conditions** (same effect dict, special `stat`): `poison`/`burn`/`bleed` deal `value` damage at end of each round, `regen` heals, `stun` skips the bearer's turn. Bosses are immune to stun
 - PP initialized on character creation, restored on rest, recalculated on level up
+
+### Ability Scores
+
+- Starting scores = race defaults + race bonus + class `ability_bonuses` (`json/classes_properties.json`: +4 primary, +2 secondary)
+- **Ability Score Improvements**: 2 points at each of levels 4, 8, 12, 16, 19 (`ASI_LEVELS`), +1 per point, cap 20. Unspent points are derived (`asi_points_available()` = earned for level − spent), so old saves get theirs automatically
+- Spent points live in `Character.ability_increases` (`{"strength": 2, ...}`), serialized with the character and re-applied by `apply_ability_increases()` in `_restore_character()` — characters are rebuilt from the factory on every request, so scores themselves are never stored
+- `improve_ability()` handles side effects: Constitution adds `level` HP per modifier point, the class primary ability grows the PP pool, AC is recalculated
+- AC is always derived (`update_ac()` on restore), never read from the save. `unarmored_defense` in class data (Monk: Wisdom, Barbarian: Constitution) adds that modifier to AC when no armor is worn
+- UI: `/character/summary` is the character sheet with +1 buttons (`POST /character/improve`); the nav shows a badge while points are unspent
 
 ### Quest System
 
@@ -118,7 +129,7 @@ Combat is handled via `web/routes/battle.py` with game logic in `engine/`:
 
 ### Balance
 
-Boss and monster numbers were tuned with `tools/balance_sim.py`, which plays fights through the real routes (`python tools/balance_sim.py bosses` / `monsters`, see its docstring). Targets: bosses ~40–80% win rate at-level with 3 potions, regular fights 75–100%. Player damage scales slowly (no ability score increases) and classes are uneven (casters out-damage martials; Monk and Druid are weakest), so boss HP is deliberately modest — re-run the simulator after changing combat numbers.
+Class kits, boss and monster numbers were tuned with `tools/balance_sim.py`, which plays fights through the real routes (`python tools/balance_sim.py bosses` / `monsters`, see its docstring; pass `--classes` with all 12 names for a class comparison). Targets: every class averages roughly 60–80% against at-level bosses with 3 potions (the simulated player spends its ASIs on the primary ability), regular fights 90%+ with most HP left. The simulator never uses one-round defensive abilities (Arcane Shield, Patient Defense, Cunning Dodge), so classes built around them are slightly better in real play than their numbers. Re-run it after changing combat numbers.
 
 ### Web Application (`web/`)
 

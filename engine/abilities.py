@@ -20,7 +20,7 @@ def _bonus(data, primary_mod, level):
 
 
 def _scaled_dice_count(ability, base_count, level):
-    """Cantrip-style scaling: the highest threshold at or below the level wins."""
+    """Level scaling: the highest threshold at or below the level wins."""
     for level_str in sorted(ability.get("scaling", {}).keys(), key=int, reverse=True):
         if level >= int(level_str):
             return ability["scaling"][level_str].get("dice_count", base_count)
@@ -91,7 +91,10 @@ def resolve_player_ability(char, ability, monster, player_effects, primary_mod):
     # Healing
     if ability.get("heal"):
         heal = ability["heal"]
-        amount = roll_dice(heal["dice_count"], heal["dice_size"]) + _bonus(heal, primary_mod, char.level)
+        heal_dice = heal["dice_count"]
+        if not ability.get("damage"):   # `scaling` belongs to the damage when there is one
+            heal_dice = _scaled_dice_count(ability, heal_dice, char.level)
+        amount = roll_dice(heal_dice, heal["dice_size"]) + _bonus(heal, primary_mod, char.level)
         amount = max(1, amount)
         old_hp = char.current_hit_points
         char.current_hit_points = min(char.max_hit_points, old_hp + amount)
@@ -114,5 +117,12 @@ def resolve_player_ability(char, ability, monster, player_effects, primary_mod):
         else:
             player_effects.append(eff)
             log.append(f"  {char.name}: {describe_effect(eff)}")
+
+    # Self effects: the price (or perk) of an enemy-targeted ability, hit or miss
+    for effect in ability.get("self_effects", []):
+        eff = {"stat": effect["stat"], "value": effect["value"],
+               "duration": effect["duration"], "source": name}
+        player_effects.append(eff)
+        log.append(f"  {char.name}: {describe_effect(eff)}")
 
     return log

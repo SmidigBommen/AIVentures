@@ -18,7 +18,7 @@
             <div class="nav-links">
                 <a href="/game">World</a>
                 <a href="/inventory">Inventory</a>
-                <a href="/character/summary">Character</a>
+                <a href="/character/summary">Character{% if character.asi_points %}<span class="nav-badge" title="Ability Score Improvement available">+{{ character.asi_points }}</span>{% endif %}</a>
                 <a href="/game/journal">Journal</a>
                 <a href="/saves">Save/Load</a>
             </div>

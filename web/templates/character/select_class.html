@@ -29,6 +29,12 @@
                 <span class="label">Primary:</span>
                 <span class="value">{{ cls.primary_ability }}</span>
             </div>
+            {% if cls.ability_bonuses %}
+            <div class="class-info-row">
+                <span class="label">Training:</span>
+                <span class="value small">{{ cls.ability_bonuses }}</span>
+            </div>
+            {% endif %}
             <div class="class-info-row">
                 <span class="label">Saves:</span>
                 <span class="value small">{{ cls.saving_throws }}</span>

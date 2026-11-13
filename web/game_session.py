@@ -10,6 +10,10 @@ from dataclasses import dataclass, field
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from engine.leveling import (  # noqa: E402
+    ABILITY_SCORE_CAP, apply_ability_increases, asi_points_available,
+)
+
 # Path to JSON data files
 JSON_DIR = Path(__file__).parent.parent / "json"
 
@@ -498,6 +502,9 @@ class GameSession:
             "power_points": c.power_points,
             "max_power_points": c.max_power_points,
             "active_effects": c.active_effects,
+            "ability_increases": dict(c.ability_increases),
+            "asi_points": asi_points_available(c),
+            "ability_score_cap": ABILITY_SCORE_CAP,
             "portrait": self.character_creation.portrait,
         }
 
@@ -625,6 +632,7 @@ class GameSession:
             )
 
             # Restore state
+            apply_ability_increases(character, char_data.get("ability_increases"))
             character.level = char_data.get("level", 1)
             character.xp = char_data.get("xp", 0)
             character.gold = char_data.get("gold", 0)
@@ -660,6 +668,9 @@ class GameSession:
                     character.equip(armor)
                 except ValueError:
                     pass
+
+            # AC is derived from scores and armor, never trusted from the save
+            character.update_ac()
 
             # Restore skills
             for skill in cc_data.get("skills", []):

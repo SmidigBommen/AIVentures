@@ -16,10 +16,11 @@ class CharacterCreationSmokeTest(unittest.TestCase):
         elf_wizard = self.character_factory.create_character("Elf Wizard", "Elf", "Wizard")
         dwarf_cleric = self.character_factory.create_character("Dwarf Cleric", "Dwarf", "Cleric")
 
-        # Verify race bonuses were applied correctly
-        self.assertEqual(human_fighter.strength_score, 11)  # Human gets +1 to all stats
-        self.assertEqual(elf_wizard.dexterity_score, 12)  # Elf gets +2 to dexterity
-        self.assertEqual(dwarf_cleric.constitution_score, 12)  # Dwarf gets +2 to constitution
+        # Verify race and class bonuses were applied correctly
+        self.assertEqual(human_fighter.strength_score, 15)  # 10 + Human 1 + Fighter 4
+        self.assertEqual(human_fighter.charisma_score, 11)  # Human gets +1 to all stats
+        self.assertEqual(elf_wizard.dexterity_score, 14)  # 10 + Elf 2 + Wizard 2
+        self.assertEqual(dwarf_cleric.constitution_score, 14)  # 10 + Dwarf 2 + Cleric 2
 
         # Verify hit point calculation
         self.assertEqual(human_fighter.hit_die, 10)  # Fighter uses d10

@@ -30,6 +30,10 @@ class Character(Entity):
         self.power_points = 0
         self.max_power_points = 0
         self.active_effects = []  # list of {"stat", "value", "duration", "source"}
+        # Ability name (e.g. "Wisdom") added to AC while unarmored, or None
+        self.unarmored_defense = None
+        # Points spent from Ability Score Improvements: {"strength": 2, ...}
+        self.ability_increases = {}
 
     def assign_stats(self, strength_score, dexterity_score, constitution_score, intelligence_score, wisdom_score, charisma_score):
         self.strength_score = strength_score
@@ -38,6 +42,15 @@ class Character(Entity):
         self.intelligence_score = intelligence_score
         self.wisdom_score = wisdom_score
         self.charisma_score = charisma_score
+
+    def calculate_total_ac(self):
+        """Armor rules from Entity, plus Unarmored Defense for classes that have it."""
+        from equipmentType import EquipmentType
+        unarmored_defense = getattr(self, "unarmored_defense", None)
+        if unarmored_defense and self.equipment.get(EquipmentType.ARMOR) is None:
+            bonus = getattr(self, f"{unarmored_defense.lower()}_modifier", 0)
+            return self.base_ac + self.dexterity_modifier + max(0, bonus)
+        return super().calculate_total_ac()
 
     def update_ac(self):
         """Update AC when dexterity or equipment changes"""

@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-from fastapi import APIRouter, Request, Form
+from fastapi import APIRouter, Depends, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
@@ -16,6 +16,8 @@ from weaponFactory import WeaponFactory
 from armorFactory import ArmorFactory
 from items import HealingPotion
 from character import WeaponSlot
+from engine.leveling import improve_ability
+from web.dependencies import require_character
 
 router = APIRouter()
 templates = Jinja2Templates(directory=Path(__file__).parent.parent / "templates")
@@ -90,6 +92,9 @@ async def select_class_page(request: Request):
             "name": class_name,
             "hit_die": props["hit_die"],
             "primary_ability": props["primary_ability"],
+            "ability_bonuses": ", ".join(
+                f"+{bonus} {ability[:3].upper()}"
+                for ability, bonus in props.get("ability_bonuses", {}).items()),
             "saving_throws": ", ".join(props["saving_throw_proficiencies"]),
             "num_skills": props["num_skill_choices"],
             "armor": ", ".join(props["armor_training"]) if props["armor_training"] else "None",
@@ -273,9 +278,35 @@ async def character_summary(request: Request):
         return RedirectResponse("/character/new", status_code=303)
 
     char_data = session.serialize_character()
+    class_props = get_classes().get(char_data["class_name"], {})
 
     return templates.TemplateResponse(request, "character/summary.html", {
         "request": request,
         "title": f"{char_data['name']} - Character Summary",
-        "character": char_data
+        "character": char_data,
+        "abilities": ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"],
+        "primary_ability": class_props.get("primary_ability", "").lower(),
+        "unarmored_defense": (class_props.get("unarmored_defense") or "").lower(),
+        "improve_message": session.pop_flash("improve_message"),
+        "is_new": char_data["level"] == 1 and char_data["xp"] == 0,
     })
+
+
+@router.post("/improve")
+async def improve(request: Request, ability: str = Form(...), session=Depends(require_character)):
+    """Spend one Ability Score Improvement point."""
+    char = session.character
+    primary = get_classes().get(char.class_name, {}).get("primary_ability", "Strength")
+    result = improve_ability(char, ability, primary)
+    if result:
+        modifier = result["new_modifier"]
+        message = f"{result['ability'].capitalize()} is now {result['new_score']}"
+        if result["modifier_increased"]:
+            message += f" (modifier {'+' if modifier >= 0 else ''}{modifier})"
+        if result["hp_increase"]:
+            message += f", +{result['hp_increase']} max HP"
+        if result["pp_increase"]:
+            message += f", +{result['pp_increase']} max PP"
+        session.set_flash("improve_message", message + ".")
+    save_session(request, session)
+    return RedirectResponse("/character/summary", status_code=303)
