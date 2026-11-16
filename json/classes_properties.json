@@ -1,5 +1,6 @@
 {
     "Fighter": {
+        "playstyle": "Heavy armor and reliable weapon damage, with a self-heal for long fights.",
         "hit_die": 10,
         "primary_ability": "Strength",
         "ability_bonuses": {"Strength": 4, "Constitution": 2},
@@ -10,6 +11,7 @@
         "weapon_proficiencies": ["Simple", "Martial"]
     },
     "Wizard": {
+        "playstyle": "Fragile, with the largest power pool and spells that burn and chill.",
         "hit_die": 6,
         "primary_ability": "Intelligence",
         "ability_bonuses": {"Intelligence": 4, "Dexterity": 2},
@@ -20,6 +22,7 @@
         "weapon_proficiencies": ["Dagger", "Dart", "Sling", "Quarterstaff", "Light Crossbow"]
     },
     "Rogue": {
+        "playstyle": "Light armor, dodging and poisoned strikes.",
         "hit_die": 8,
         "primary_ability": "Dexterity",
         "ability_bonuses": {"Dexterity": 4, "Intelligence": 2},
@@ -30,6 +33,7 @@
         "weapon_proficiencies": ["Simple", "Hand Crossbow", "Longsword", "Rapier", "Shortsword"]
     },
     "Cleric": {
+        "playstyle": "Sturdy healer who outlasts enemies and strikes with radiant damage.",
         "hit_die": 8,
         "primary_ability": "Wisdom",
         "ability_bonuses": {"Wisdom": 4, "Constitution": 2},
@@ -40,6 +44,7 @@
         "weapon_proficiencies": ["Simple"]
     },
     "Paladin": {
+        "playstyle": "Armored front-liner who mixes heavy smites with healing.",
         "hit_die": 10,
         "primary_ability": "Strength",
         "ability_bonuses": {"Strength": 4, "Charisma": 2},
@@ -50,6 +55,7 @@
         "weapon_proficiencies": ["Simple", "Martial"]
     },
     "Ranger": {
+        "playstyle": "Ranged attacker who ensnares the target and leaves it bleeding.",
         "hit_die": 10,
         "primary_ability": "Dexterity",
         "ability_bonuses": {"Dexterity": 4, "Wisdom": 2},
@@ -60,6 +66,7 @@
         "weapon_proficiencies": ["Simple", "Martial"]
     },
     "Barbarian": {
+        "playstyle": "The most hit points, and reckless attacks that trade defense for damage.",
         "hit_die": 12,
         "primary_ability": "Strength",
         "ability_bonuses": {"Strength": 4, "Constitution": 2},
@@ -71,6 +78,7 @@
         "weapon_proficiencies": ["Simple", "Martial"]
     },
     "Bard": {
+        "playstyle": "Weakens enemies and inspires themselves, with a heal to fall back on.",
         "hit_die": 8,
         "primary_ability": "Charisma",
         "ability_bonuses": {"Charisma": 4, "Dexterity": 2},
@@ -81,6 +89,7 @@
         "weapon_proficiencies": ["Simple", "Hand Crossbow", "Longsword", "Rapier", "Shortsword"]
     },
     "Druid": {
+        "playstyle": "Hinders enemies, heals, and later shifts into a resilient beast form.",
         "hit_die": 8,
         "primary_ability": "Wisdom",
         "ability_bonuses": {"Wisdom": 4, "Constitution": 2},
@@ -91,6 +100,7 @@
         "weapon_proficiencies": ["Club", "Dagger", "Dart", "Javelin", "Mace", "Quarterstaff", "Scimitar", "Sickle", "Sling", "Spear"]
     },
     "Monk": {
+        "playstyle": "Unarmored and fast, with a stun that costs the enemy its turn.",
         "hit_die": 8,
         "primary_ability": "Dexterity",
         "ability_bonuses": {"Dexterity": 4, "Wisdom": 2},
@@ -102,6 +112,7 @@
         "weapon_proficiencies": ["Simple", "Shortsword"]
     },
     "Sorcerer": {
+        "playstyle": "Burst spell damage behind a protective ward; low hit points.",
         "hit_die": 6,
         "primary_ability": "Charisma",
         "ability_bonuses": {"Charisma": 4, "Constitution": 2},
@@ -112,6 +123,7 @@
         "weapon_proficiencies": ["Dagger", "Dart", "Sling", "Quarterstaff", "Light Crossbow"]
     },
     "Warlock": {
+        "playstyle": "Curses that weaken the enemy while hellfire keeps burning it.",
         "hit_die": 8,
         "primary_ability": "Charisma",
         "ability_bonuses": {"Charisma": 4, "Dexterity": 2},

@@ -27,7 +27,7 @@ from engine.combat import (
     get_weapon_attack_modifier, resolve_weapon_attack, resolve_flee,
     calculate_xp_reward, calculate_gold_reward,
 )
-from engine.abilities import resolve_player_ability
+from engine.abilities import resolve_player_ability, summarize_ability
 from engine.monster_ai import choose_monster_action, resolve_monster_ability, tick_cooldowns
 from engine.leveling import asi_points_available, grant_xp
 from engine.quests import check_quest_progress
@@ -380,13 +380,21 @@ async def battle_view(request: Request, session=Depends(require_battle)):
     char = session.character
     char_data = session.serialize_character()
 
-    usable_items = [
-        {"name": item.name, "description": item.description, "index": i}
-        for i, item in enumerate(char.inventory)
-        if hasattr(item, 'is_usable_in_battle') and item.is_usable_in_battle
-    ]
+    # Identical items share one button; hotkeys Q, W, E, R go to the first four
+    stacks = {}
+    for i, item in enumerate(char.inventory):
+        if not getattr(item, "is_usable_in_battle", False):
+            continue
+        stack = stacks.setdefault(
+            item.name, {"name": item.name, "description": item.description, "index": i, "count": 0,
+                        "hotkey": ""})
+        stack["count"] += 1
+    usable_items = list(stacks.values())
+    for stack, hotkey in zip(usable_items, "qwer"):
+        stack["hotkey"] = hotkey
 
-    abilities = get_class_abilities(char.class_name, char.level)
+    abilities = [{**ability, "summary": summarize_ability(ability, char.level)}
+                 for ability in get_class_abilities(char.class_name, char.level)]
 
     boss = get_bosses().get(monster.boss_id) if monster.is_boss else None
     portraits = get_monster_portraits()
@@ -696,9 +704,8 @@ async def end_battle(request: Request, session, player_won: bool):
 @router.get("/victory", response_class=HTMLResponse)
 async def victory_screen(request: Request, session=Depends(require_character)):
     """Display victory screen with rewards."""
+    # Rewards stay until the next battle ends, so a refresh shows them again
     rewards = session.battle_rewards or {}
-    session.battle_rewards = None
-    save_session(request, session)
     char_data = session.serialize_character() if session.character else None
 
     return templates.TemplateResponse(request, "battle/victory.html", {

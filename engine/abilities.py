@@ -27,6 +27,31 @@ def _scaled_dice_count(ability, base_count, level):
     return base_count
 
 
+def _dice_text(spec, dice_count):
+    bonus = spec.get("bonus", 0)
+    extra = {"ability_modifier": " + mod", "level": " + level"}.get(bonus) or (f" + {bonus}" if bonus else "")
+    return f"{dice_count}d{spec['dice_size']}{extra}"
+
+
+def summarize_ability(ability, level):
+    """Short stat lines for an ability at a level, e.g. ["2d10 + mod slashing", "Self: damage bonus +2"]."""
+    lines = []
+    damage, heal = ability.get("damage"), ability.get("heal")
+    if damage:
+        count = _scaled_dice_count(ability, damage["dice_count"], level)
+        lines.append(f"{_dice_text(damage, count)} {damage.get('type', '')}".strip())
+    if heal:
+        count = heal["dice_count"] if damage else _scaled_dice_count(ability, heal["dice_count"], level)
+        lines.append(f"Heal {_dice_text(heal, count)}")
+    who = "Self" if ability.get("target") == "self" else "Enemy"
+    for owner, effects in ((who, ability.get("effects", [])), ("Self", ability.get("self_effects", []))):
+        for effect in effects:
+            duration = effect.get("duration", 0)
+            span = "whole fight" if duration == 0 else f"{duration} round{'s' if duration != 1 else ''}"
+            lines.append(f"{owner}: {describe_effect(effect)}, {span}")
+    return lines
+
+
 def resolve_player_ability(char, ability, monster, player_effects, primary_mod):
     """Resolve a class ability used by the player against a monster.
 

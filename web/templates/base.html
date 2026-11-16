@@ -35,7 +35,10 @@
                 </div>
                 <span class="nav-pp">{{ character.power_points }}PP</span>
                 <span class="nav-gold">{{ character.gold }}g</span>
-                <span class="nav-level">Lv{{ character.level }}</span>
+                <span class="nav-level" title="{{ character.xp }} / {{ character.xp_to_next_level }} XP to level {{ character.level + 1 }}">
+                    Lv{{ character.level }}
+                    <span class="nav-xp-bar"><span class="nav-xp-fill" style="width: {{ [100, (character.xp / character.xp_to_next_level * 100) | int] | min }}%"></span></span>
+                </span>
             </div>
             {% endif %}
         </nav>

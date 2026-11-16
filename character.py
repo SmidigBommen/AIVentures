@@ -52,6 +52,16 @@ class Character(Entity):
             return self.base_ac + self.dexterity_modifier + max(0, bonus)
         return super().calculate_total_ac()
 
+    def ac_if_wearing(self, armor):
+        """AC with `armor` on (None = unarmored), without changing what is equipped."""
+        from equipmentType import EquipmentType
+        current = self.equipment.get(EquipmentType.ARMOR)
+        self.equipment[EquipmentType.ARMOR] = armor
+        try:
+            return self.calculate_total_ac()
+        finally:
+            self.equipment[EquipmentType.ARMOR] = current
+
     def update_ac(self):
         """Update AC when dexterity or equipment changes"""
         self.armor_class = self.calculate_total_ac()

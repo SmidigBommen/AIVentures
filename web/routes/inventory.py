@@ -13,6 +13,7 @@ from character import WeaponSlot
 from equipmentType import EquipmentType
 from weapon import Weapon
 from armor import Armor
+from items import HealingPotion
 
 router = APIRouter()
 templates = Jinja2Templates(directory=Path(__file__).parent.parent / "templates")
@@ -27,6 +28,17 @@ def _can_equip_item(item, weapon_proficiencies, armor_training):
     return False
 
 
+def _average_damage(weapon) -> float:
+    return weapon.damage_dice_count * (weapon.damage_die + 1) / 2
+
+
+def _compare(diff, unit):
+    """Display data for a difference against the equipped item."""
+    if diff == 0:
+        return {"cls": "same", "text": f"Same {unit}"}
+    return {"cls": "better" if diff > 0 else "worse", "text": f"{diff:+g} {unit}"}
+
+
 @router.get("/", response_class=HTMLResponse)
 async def inventory_view(request: Request, session=Depends(require_character)):
     """Inventory and equipment management page."""
@@ -38,11 +50,33 @@ async def inventory_view(request: Request, session=Depends(require_character)):
     weapon_proficiencies = class_props.get("weapon_proficiencies", [])
     armor_training = class_props.get("armor_training", [])
 
-    # Annotate inventory items with can_equip
+    character = session.character
+    equipped_weapon = character.weapon_slots.get(WeaponSlot.MAIN_HAND)
+    equipped_avg = _average_damage(equipped_weapon) if equipped_weapon else 0
+    hp_missing = character.max_hit_points - character.current_hit_points
+
+    # Annotate items; identical potions and quest items collapse into one stack
+    stacks = {}
+    items = []
     for i, item in enumerate(char_data["inventory"]):
-        actual_item = session.character.inventory[i]
+        actual_item = character.inventory[i]
         item["can_equip"] = _can_equip_item(actual_item, weapon_proficiencies, armor_training)
         item["index"] = i
+        item["count"] = 1
+        if isinstance(actual_item, Weapon):
+            item["compare"] = _compare(_average_damage(actual_item) - equipped_avg, "avg damage")
+        elif isinstance(actual_item, Armor):
+            item["ac_if_equipped"] = character.ac_if_wearing(actual_item)
+            item["compare"] = _compare(item["ac_if_equipped"] - character.armor_class, "AC")
+        else:
+            item["can_use"] = isinstance(actual_item, HealingPotion) and hp_missing > 0
+            key = (item["type"], item["name"], item["description"])
+            if key in stacks:
+                stacks[key]["count"] += 1
+                continue
+            stacks[key] = item
+        items.append(item)
+    char_data["inventory"] = items
 
     message = session.pop_flash("inventory_message")
     error = session.pop_flash("inventory_error")
@@ -56,6 +90,31 @@ async def inventory_view(request: Request, session=Depends(require_character)):
         "message": message,
         "error": error,
     })
+
+
+@router.post("/use")
+async def use_item(request: Request, item_index: int = Form(...), session=Depends(require_character)):
+    """Drink a healing potion outside of battle."""
+    if session.battle.is_active:
+        return RedirectResponse("/battle", status_code=303)
+
+    character = session.character
+    item = character.inventory[item_index] if 0 <= item_index < len(character.inventory) else None
+    if not isinstance(item, HealingPotion):
+        session.set_flash("inventory_error", "That item cannot be used.")
+    elif character.current_hit_points <= 0:
+        session.set_flash("inventory_error", "You are in no state to drink anything.")
+    elif character.current_hit_points >= character.max_hit_points:
+        session.set_flash("inventory_error", "You are already at full health.")
+    else:
+        old_hp = character.current_hit_points
+        character.current_hit_points = min(character.max_hit_points, old_hp + item.healing_amount)
+        character.inventory.pop(item_index)
+        session.set_flash(
+            "inventory_message",
+            f"You drink the {item.name} and recover {character.current_hit_points - old_hp} HP.")
+    save_session(request, session)
+    return RedirectResponse("/inventory", status_code=303)
 
 
 @router.post("/equip-weapon")

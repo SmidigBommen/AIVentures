@@ -57,7 +57,7 @@
             {% for item in character.inventory %}
             <div class="backpack-item {% if not item.can_equip and item.type not in ('potion', 'quest_item') %}not-proficient{% endif %}">
                 <div class="item-header">
-                    <span class="item-name">{{ item.name }}</span>
+                    <span class="item-name">{{ item.name }}{% if item.count > 1 %} <span class="item-count">&times;{{ item.count }}</span>{% endif %}</span>
                     <span class="type-badge badge-{{ item.type }}">{% if item.type == 'quest_item' %}Quest{% else %}{{ item.type | capitalize }}{% endif %}</span>
                 </div>
 
@@ -65,13 +65,23 @@
                 <p class="item-stat">{{ item.damage_dice_count }}d{{ item.damage_die }} {{ item.damage_type }}</p>
                 <p class="item-meta">{{ item.category }}{% if item.properties %} &middot; {{ item.properties | join(', ') }}{% endif %}</p>
                 {% elif item.type == 'armor' %}
-                <p class="item-stat">Base AC: {{ item.base_ac }}</p>
+                <p class="item-stat">Base AC: {{ item.base_ac }} &middot; AC {{ item.ac_if_equipped }} when worn</p>
                 <p class="item-meta">{{ item.category }}</p>
                 {% else %}
                 <p class="item-meta">{{ item.description }}</p>
                 {% endif %}
 
-                {% if item.type == 'weapon' %}
+                {% if item.compare and item.can_equip %}
+                <p class="item-compare compare-{{ item.compare.cls }}">{{ item.compare.text }} vs equipped</p>
+                {% endif %}
+
+                {% if item.type == 'potion' %}
+                    <form action="/inventory/use" method="post">
+                        <input type="hidden" name="item_index" value="{{ item.index }}">
+                        <button type="submit" class="btn btn-success btn-small"
+                                {% if not item.can_use %}disabled title="You are at full health"{% endif %}>Drink</button>
+                    </form>
+                {% elif item.type == 'weapon' %}
                     {% if item.can_equip %}
                     <form action="/inventory/equip-weapon" method="post">
                         <input type="hidden" name="item_index" value="{{ item.index }}">

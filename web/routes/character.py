@@ -9,7 +9,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from web.game_session import (
     get_session, save_session, get_races, get_classes,
-    get_all_weapons_flat, get_all_armors_flat, get_campaign
+    get_all_weapons_flat, get_all_armors_flat, get_campaign, get_class_abilities,
+    get_primary_modifier, calculate_max_pp,
 )
 from characterFactory import CharacterFactory
 from weaponFactory import WeaponFactory
@@ -90,6 +91,12 @@ async def select_class_page(request: Request):
     for class_name, props in classes.items():
         class_list.append({
             "name": class_name,
+            "playstyle": props.get("playstyle", ""),
+            "abilities": [
+                {"name": a["name"], "unlock_level": a["unlock_level"], "cost": a["cost"],
+                 "description": a["description"]}
+                for a in sorted(get_class_abilities(class_name, 99), key=lambda a: (a["unlock_level"], a["cost"]))
+            ],
             "hit_die": props["hit_die"],
             "primary_ability": props["primary_ability"],
             "ability_bonuses": ", ".join(
@@ -166,10 +173,16 @@ async def details_page(request: Request):
     armor_training = class_props["armor_training"]
     available_armors = []
 
+    # What the finished character will look like (scores do not depend on the choices below)
+    preview = CharacterFactory().create_character(
+        name="", race=session.character_creation.race, class_name=session.character_creation.class_name)
+    armor_factory = ArmorFactory()
+
     for armor_name, armor_data in all_armors.items():
         if armor_data["category"] in armor_training:
             available_armors.append({
                 "name": armor_name,
+                "total_ac": preview.ac_if_wearing(armor_factory.get_armor_by_name(armor_name)),
                 "base_ac": armor_data["base_ac"],
                 "category": armor_data["category"],
                 "weight": armor_data["weight"],
@@ -187,6 +200,18 @@ async def details_page(request: Request):
         "class_name": session.character_creation.class_name,
         "weapons": available_weapons,
         "armors": available_armors,
+        "preview": {
+            "scores": [
+                {"name": ability, "score": getattr(preview, f"{ability}_score"),
+                 "modifier": getattr(preview, f"{ability}_modifier"),
+                 "primary": ability == class_props["primary_ability"].lower()}
+                for ability in ("strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma")
+            ],
+            "hit_points": preview.max_hit_points,
+            "power_points": calculate_max_pp(preview.class_name, 1, get_primary_modifier(preview)),
+            "unarmored_ac": preview.ac_if_wearing(None),
+            "starting_abilities": [a["name"] for a in get_class_abilities(preview.class_name, 1)],
+        },
         "skill_choices": skill_choices,
         "num_skills": num_skills
     })

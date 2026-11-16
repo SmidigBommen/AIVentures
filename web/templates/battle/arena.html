@@ -5,7 +5,7 @@
 {% block content %}
 <div class="battle-wrapper{% if monster.is_boss %} boss-battle{% endif %}"{% if had_crit %} data-screen-shake{% endif %}>
     <div class="battle-overlay">
-        <div class="battle-arena">
+        <div class="battle-arena" data-battle-key="{{ monster.name }}|{{ monster.max_hp }}|{{ character.max_hit_points }}" data-round="{{ round }}">
             {% if monster.is_boss %}
             <div class="boss-banner">
                 <span class="boss-banner-label">Boss Battle</span>
@@ -15,7 +15,7 @@
             <div class="round-badge">Round {{ round }}</div>
 
             <div class="combatants">
-                <div class="combatant player">
+                <div class="combatant player" data-combatant="player" data-hp="{{ character.current_hit_points }}" data-max-hp="{{ character.max_hit_points }}">
                     {% if character.portrait %}
                     <img src="{{ character.portrait }}" alt="{{ character.name }}" class="player-portrait">
                     {% endif %}
@@ -44,7 +44,7 @@
 
                 <div class="vs-badge">VS</div>
 
-                <div class="combatant monster{% if monster.is_boss %} boss{% endif %}{% if monster.enraged %} enraged{% endif %}">
+                <div class="combatant monster{% if monster.is_boss %} boss{% endif %}{% if monster.enraged %} enraged{% endif %}" data-combatant="monster" data-hp="{{ monster.hp }}" data-max-hp="{{ monster.max_hp }}">
                     {% if monster.taunt %}
                     <div class="monster-taunt">
                         <p class="monster-taunt-text">"{{ monster.taunt }}"</p>
@@ -80,31 +80,38 @@
                 <h3>Your Turn</h3>
                 <div class="btn-group">
                     <form action="/battle/attack" method="post" class="inline-form">
-                        <button type="submit" class="btn btn-attack">Attack</button>
+                        <button type="submit" class="btn btn-attack" data-hotkey="a">Attack <kbd>A</kbd></button>
                     </form>
                     <form action="/battle/defend" method="post" class="inline-form">
-                        <button type="submit" class="btn btn-defend" title="+1d4 AC until your next turn">Defend</button>
+                        <button type="submit" class="btn btn-defend" data-hotkey="d" title="+1d4 AC until your next turn">Defend <kbd>D</kbd></button>
                     </form>
                     {% if not monster.is_boss %}
                     <form action="/battle/flee" method="post" class="inline-form">
                         <button type="submit" class="btn btn-flee"
-                                title="Dexterity check: d20 {{ '%+d' % flee_mod }} vs DC {{ flee_dc }}. Fail and you lose your turn.">Flee</button>
+                                title="Dexterity check: d20 {{ '%+d' % flee_mod }} vs DC {{ flee_dc }}. Fail and you lose your turn." data-hotkey="f">Flee <kbd>F</kbd></button>
                     </form>
                     {% endif %}
                 </div>
 
                 {% if abilities %}
                 <div class="items-section">
-                    <h4>Abilities (PP: {{ character.power_points }}/{{ character.max_power_points }})</h4>
-                    <div class="item-buttons">
+                    <h4>Abilities <span class="pp-pill">{{ character.power_points }} / {{ character.max_power_points }} PP</span></h4>
+                    <div class="ability-grid">
                         {% for ability in abilities %}
-                        <form action="/battle/ability" method="post" class="inline-form">
+                        {% set affordable = character.power_points >= ability.cost %}
+                        <form action="/battle/ability" method="post">
                             <input type="hidden" name="ability_id" value="{{ ability.id }}">
-                            <button type="submit"
-                                    class="btn btn-ability{% if ability.cost == 0 %}-free{% endif %}"
-                                    title="{{ ability.description }} ({{ ability.cost }} PP)"
-                                    {% if character.power_points < ability.cost %}disabled{% endif %}>
-                                {{ ability.name }}{% if ability.cost > 0 %} <span class="ability-cost">{{ ability.cost }}</span>{% endif %}
+                            <button type="submit" class="ability-card{% if ability.cost == 0 %} ability-card-free{% endif %}"
+                                    data-hotkey="{{ loop.index }}" {% if not affordable %}disabled{% endif %}>
+                                <span class="ability-card-head">
+                                    <span class="ability-card-name">{{ ability.name }}</span>
+                                    <span class="ability-card-cost">{% if ability.cost %}{{ ability.cost }} PP{% else %}Free{% endif %}</span>
+                                </span>
+                                <span class="ability-card-desc">{{ ability.description }}</span>
+                                <span class="ability-card-stats">
+                                    {% for line in ability.summary %}<span class="ability-stat">{{ line }}</span>{% endfor %}
+                                    <kbd>{{ loop.index }}</kbd>
+                                </span>
                             </button>
                         </form>
                         {% endfor %}
@@ -119,8 +126,10 @@
                         {% for item in usable_items %}
                         <form action="/battle/item" method="post" class="inline-form">
                             <input type="hidden" name="item_index" value="{{ item.index }}">
-                            <button type="submit" class="btn btn-item" title="{{ item.description }}">
-                                {{ item.name }}
+                            <button type="submit" class="btn btn-item" title="{{ item.description }}" data-hotkey="{{ item.hotkey }}">
+                                {{ item.name }}{% if item.count > 1 %} &times;{{ item.count }}{% endif %}
+                                <span class="item-effect">{{ item.description }}</span>
+                                {% if item.hotkey %}<kbd>{{ item.hotkey | upper }}</kbd>{% endif %}
                             </button>
                         </form>
                         {% endfor %}

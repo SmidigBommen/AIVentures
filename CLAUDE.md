@@ -22,6 +22,13 @@ pytest test/test_battle.py      # single test file
 pytest -k "test_name"           # single test by name
 ```
 
+### Screenshot every screen
+```bash
+python tools/ui_tour.py OUT_DIR --mobile      # all screens, desktop + 390px
+python tools/ui_tour.py OUT_DIR --only battle,battle-hit,location
+```
+Plays a scripted game through the routes with a temp session folder and captures each screen with headless Chrome (flatpak by default, `--chrome` to override). Run it after changing templates or CSS. Key hints (`<kbd>`) are hidden in these captures because headless Chrome reports no hover.
+
 ## Architecture
 
 ### Domain Model (root-level `.py` files)
@@ -65,6 +72,7 @@ All 11 classes have unique abilities powered by **Power Points (PP)**:
 - **PP calculation** in `engine/leveling.py`: `calculate_max_pp(class_name, level, primary_modifier)` — full casters get `level + mod`, half casters and Monk `level//2 + mod`, martial `level//3 + mod` (min 2)
 - **Scaling**: `scaling` (`{"level": {"dice_count": n}}`) applies to the damage dice, or to the heal dice of an ability with no damage. Every damage ability costing 2+ PP must scale (a test enforces it), otherwise the free abilities overtake it
 - **`self_effects`**: effects an enemy-targeted ability puts on the player whether it hits or not (Reckless Attack: -3 AC for the round)
+- **Display**: `summarize_ability(ability, level)` in `engine/abilities.py` returns the stat lines shown on the battle ability cards ("2d10 + mod slashing", "Self: damage bonus +2, whole fight")
 - **Helpers** in `web/game_session.py`: `get_abilities()`, `get_class_abilities(class_name, level)`, `get_primary_modifier(character)`
 - **Combat resolution** in `engine/abilities.py`: `resolve_player_ability()` handles all attack methods (melee_attack, spell_attack, spell_save, auto_hit), crits, damage, healing, and effect application. Enemy-targeted effects only apply if the ability lands (hit / failed save)
 - **Active effects**: stored on `BattleState` (`player_effects`) and `CombatantState` (`effects`). Each effect has `stat`, `value`, `duration`, `source`. Duration 0 = lasts entire combat, positive = rounds remaining. `tick_effects()` decrements each round. `get_effect_bonus(effects, stat)` sums bonuses.
@@ -109,6 +117,9 @@ Combat is handled via `web/routes/battle.py` with game logic in `engine/`:
 - **Monster AI**: `choose_monster_action()` — heal when wounded, use abilities off cooldown (chance rises with level; higher for bosses), otherwise attack/defend
 - **Effects**: `engine/effects.py` — `tick_effects()` per round, `get_effect_bonus()` for stat queries
 - **Battle actions**: `POST /battle/attack`, `POST /battle/defend`, `POST /battle/ability` (with `ability_id` form field), `POST /battle/item`, `POST /battle/flee`
+- **Battle screen**: abilities are cards (`.ability-card`) with cost, description and stat lines; identical items share one button. Hotkeys via `data-hotkey`: A/D/F, 1–5 abilities, Q/W/E/R items
+- **Hit feedback**: the page reloads after every action, so `initBattleFeedback()` keeps the previous HP in `sessionStorage` (keyed by `data-battle-key` + round) and shows floating damage numbers and an animated HP bar from the difference. Combatants carry `data-combatant`, `data-hp`, `data-max-hp`
+- **Victory**: `battle_rewards` stays in the session until the next battle ends, so the victory page survives a refresh
 - **Monster data**: Taunts in `json/monster_taunts.json`, portraits in `json/monster_portraits.json`
 - **Player portraits**: Selected during character creation (3 options: Knight, Berserker, Wizard). Stored in `CharacterCreationState.portrait`
 
@@ -118,6 +129,12 @@ Combat is handled via `web/routes/battle.py` with game logic in `engine/`:
 - An act is complete when every boss placed on one of its areas is defeated → next act unlocks for travel (`/game/travel` lists all acts, locked ones greyed out)
 - Bosses may declare `requires` (other bosses first — Malachar needs Lady Vex), `shard` (crown shard awarded), `ambush` (`{"act", "after_act_bosses"}` — sprung on travel; Lady Vex in Act 2)
 - `GET /game/journal` shows main quest, shards, bosses, stats; `GET /game/ending` is the epilogue once all acts are complete
+
+### Location Screen
+
+- `build_area_map(location, current_area, defeated_bosses)` in `web/routes/game.py` lays the location's areas out top-down: row = steps from the location's first area, positions in percent. The template draws edges in an SVG and nodes as absolutely positioned boxes; only areas one step away are buttons (`POST /game/move`)
+- Node markers: danger band on the top border (`_danger()`: safe/low/med/high from `encounters`), Shop, Rest, Boss/Cleared tags
+- Hotkeys: E explore, R rest, S shop, T travel
 
 ### Exploration Events
 
@@ -136,6 +153,9 @@ Class kits, boss and monster numbers were tuned with `tools/balance_sim.py`, whi
 - **`web/app.py`** → FastAPI app, mounts static files, includes route blueprints at `/character`, `/game`, `/battle`, `/shop`, `/inventory`
 - **`web/game_session.py`** → `GameSession` class with server-side file storage. Contains `CharacterCreationState`, `BattleState`, quest state, shop state, and references to campaign location/area data. Character objects are recreated from factory on each request via `_restore_character()`. Also contains JSON data loaders with caching.
 - **`web/dependencies.py`** → FastAPI dependencies `require_character` and `require_battle` for route guards (replaces boilerplate `if not session.character` checks)
+- **Inventory** (`web/routes/inventory.py`): `POST /inventory/use` drinks a healing potion outside battle; identical potions and quest items are stacked; backpack weapons show average damage and armor shows resulting AC (`Character.ac_if_wearing()`) against what is equipped
+- **Character creation**: class cards show `playstyle` (from `classes_properties.json`) and the class's abilities; the details page previews final scores, HP, PP and the AC for each armor choice
+- **Nav**: XP progress bar under the level (`xp_to_next_level` in the serialized character)
 - **Routes** use server-side rendering with Jinja2 templates and POST/Redirect/GET pattern (303 redirects)
 - **Templates** are rendered with `templates.TemplateResponse(request, "name.html", {...})` (request first — required by current Starlette)
 - **Templates** in `web/templates/` extend `base.html` — all styling in `web/static/css/style.css`, all JS in `web/static/js/main.js` (no inline styles/scripts in templates)
@@ -174,6 +194,10 @@ Consolidated CSS design system with:
 - Bosses: `.boss-panel` (location), `.boss-banner`, `.combatant.boss`/`.enraged`, `.boss-defeat-panel`, `.shard-gem`
 - Events: `.event-card`, `.event-choice`, `.outcome-chip`; reuses `.haggle-roll-result` for the d20 breakdown
 - Journal/travel: `.journal-act`, `.shard-row`, `.travel-act`, `.loc-tag`
+- Area map: `.area-map`, `.map-node`, `.map-edge`, `.map-tag`, `.map-danger-*`
+- Battle feedback: `.ability-card`, `.float-number`, `.took-hit`/`.took-heal`; HP bar colour via `.hp-mid`/`.hp-low`
+- `kbd` key hints (hidden on touch devices), `.xp-bar`, `.item-compare`, `.char-preview`, `.class-abilities`
+- On phones the two combatants stay side by side
 - Responsive breakpoints at 768px and 480px
 
 ### JavaScript (`web/static/js/main.js`)
@@ -182,6 +206,9 @@ Consolidated CSS design system with:
 - Toast notification system (`showToast`, `initToasts` — reads `data-toast` elements)
 - Confetti effect (`showConfetti`) and screen shake (`screenShake`) triggered by `data-confetti`/`data-screen-shake` attributes
 - `initShopTabs()`: Tab switching with URL param auto-select (`?tab=quests`)
+- `initHotkeys()`: pressing a key clicks the enabled element with that `data-hotkey`; ignored while typing in a field
+- `initSubmitGuard()`: a POST form can only be submitted once per page load
+- `initBattleFeedback()`, `initFillBars()` (`data-fill` bars animate on load), `initArmorPreview()`
 - Selection card handler, skill counter, battle log auto-scroll, health bar coloring, active nav link detection
 
 ### Game World (`json/campaign.json`)

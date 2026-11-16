@@ -14,6 +14,26 @@
 <h1 class="page-title">Character Details</h1>
 <p class="page-subtitle">Name your character and choose your starting equipment.</p>
 
+<div class="panel char-preview">
+    <h2 class="panel-title">{{ race }} {{ class_name }}</h2>
+    <div class="stats-grid">
+        {% for s in preview.scores %}
+        <div class="stat-box{% if s.primary %} stat-primary{% endif %}">
+            <span class="label">{{ s.name | capitalize }}</span>
+            <span class="value">{{ s.score }}</span>
+            <span class="modifier">{{ '%+d' % s.modifier }}</span>
+            {% if s.primary %}<span class="stat-tag">Primary</span>{% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    <div class="char-preview-vitals">
+        <span><strong>{{ preview.hit_points }}</strong> hit points</span>
+        <span><strong>{{ preview.power_points }}</strong> power points</span>
+        <span><strong id="preview-ac" data-default="{{ preview.unarmored_ac }}">{{ preview.unarmored_ac }}</strong> armor class</span>
+        <span>Starts with <strong>{{ preview.starting_abilities | join(', ') }}</strong></span>
+    </div>
+</div>
+
 <form action="/character/create" method="post" id="details-form">
     <div class="form-section">
         <h2>Character Name</h2>
@@ -73,11 +93,11 @@
 
         <div class="equip-grid">
             <label class="equip-card">
-                <input type="radio" name="armor" value="" checked>
+                <input type="radio" name="armor" value="" checked data-ac="{{ preview.unarmored_ac }}">
                 <div class="equip-card-inner">
                     <h3>No Armor</h3>
                     <div class="equip-meta">
-                        <span class="equip-damage">AC 10 + DEX</span>
+                        <span class="equip-damage">AC {{ preview.unarmored_ac }}</span>
                         <span class="equip-category">Unarmored</span>
                     </div>
                     <p class="equip-props">No stealth penalty</p>
@@ -85,11 +105,11 @@
             </label>
             {% for armor in armors %}
             <label class="equip-card">
-                <input type="radio" name="armor" value="{{ armor.name }}">
+                <input type="radio" name="armor" value="{{ armor.name }}" data-ac="{{ armor.total_ac }}">
                 <div class="equip-card-inner">
                     <h3>{{ armor.name }}</h3>
                     <div class="equip-meta">
-                        <span class="equip-damage">AC {{ armor.base_ac }}{% if armor.category == "Light" %} + DEX{% elif armor.category == "Medium" %} + DEX (max 2){% endif %}</span>
+                        <span class="equip-damage" title="Base {{ armor.base_ac }}{% if armor.category == 'Light' %} + DEX{% elif armor.category == 'Medium' %} + DEX (max 2){% endif %}">AC {{ armor.total_ac }}</span>
                         <span class="equip-category">{{ armor.category }}</span>
                     </div>
                     <p class="equip-props">{{ armor.weight }} lb{% if armor.stealth_disadvantage %} | Stealth disadvantage{% endif %}</p>

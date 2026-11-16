@@ -21,6 +21,7 @@
         {% for cls in classes %}
         <div class="selection-card" data-value="{{ cls.name }}">
             <h3>{{ cls.name }}</h3>
+            {% if cls.playstyle %}<p class="class-playstyle">{{ cls.playstyle }}</p>{% endif %}
             <div class="class-info-row">
                 <span class="label">Hit Die:</span>
                 <span class="value">d{{ cls.hit_die }}</span>
@@ -47,6 +48,20 @@
                 <span class="label">Armor:</span>
                 <span class="value small">{{ cls.armor }}</span>
             </div>
+            {% if cls.abilities %}
+            <div class="class-abilities">
+                <span class="class-abilities-title">Abilities</span>
+                <ul>
+                    {% for ability in cls.abilities %}
+                    <li title="{{ ability.description }}">
+                        <span class="class-ability-level">Lv {{ ability.unlock_level }}</span>
+                        <span class="class-ability-name">{{ ability.name }}</span>
+                        <span class="class-ability-cost">{% if ability.cost %}{{ ability.cost }} PP{% else %}Free{% endif %}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
         </div>
         {% endfor %}
     </div>

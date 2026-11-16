@@ -83,7 +83,11 @@
     <div class="char-status-card">
         <h3>{{ character.name }}</h3>
         <p>HP: {{ character.current_hit_points }}/{{ character.max_hit_points }}</p>
-        <p>XP: {{ character.xp }}/{{ character.level * 150 }}</p>
+        <div class="xp-row">
+            <span class="xp-label">Level {{ character.level }}</span>
+            <div class="xp-bar"><div class="xp-bar-fill" data-fill="{{ [100, (character.xp / character.xp_to_next_level * 100) | int] | min }}"></div></div>
+            <span class="xp-label">{{ character.xp }} / {{ character.xp_to_next_level }} XP</span>
+        </div>
         <p>Gold: {{ character.gold }}</p>
     </div>
     {% endif %}

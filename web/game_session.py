@@ -478,6 +478,7 @@ class GameSession:
             "class_name": c.class_name,
             "level": c.level,
             "xp": c.xp,
+            "xp_to_next_level": c.calculate_xp_to_next_level(),
             "gold": c.gold,
             "current_hit_points": c.current_hit_points,
             "max_hit_points": c.max_hit_points,

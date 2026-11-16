@@ -253,11 +253,8 @@ function initBattleLog() {
 function initHealthBars() {
     document.querySelectorAll('.health-bar-fill[data-hp-percent]').forEach(function(bar) {
         var pct = parseInt(bar.dataset.hpPercent || '100');
-        if (pct <= 25) {
-            bar.style.boxShadow = '0 0 12px rgba(198, 40, 40, 0.8)';
-        } else if (pct <= 50) {
-            bar.style.boxShadow = '0 0 10px rgba(249, 168, 37, 0.7)';
-        }
+        if (pct <= 25) bar.classList.add('hp-low');
+        else if (pct <= 50) bar.classList.add('hp-mid');
     });
 }
 
@@ -343,6 +340,120 @@ function initConfirmDialogs() {
 }
 
 
+// ===== Keyboard shortcuts =====
+// Any enabled element with data-hotkey="x" is clicked when x is pressed.
+function initHotkeys() {
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+        var tag = (e.target.tagName || '').toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable) return;
+        var key = e.key.toLowerCase();
+        if (key.length !== 1) return;
+        var targets = document.querySelectorAll('[data-hotkey]');
+        for (var i = 0; i < targets.length; i++) {
+            var el = targets[i];
+            if (el.dataset.hotkey === key && !el.disabled && el.offsetParent !== null) {
+                e.preventDefault();
+                el.click();
+                return;
+            }
+        }
+    });
+}
+
+
+// ===== Double-submit guard =====
+function initSubmitGuard() {
+    document.addEventListener('submit', function(e) {
+        var form = e.target;
+        if (form.classList.contains('is-submitting')) {
+            e.preventDefault();
+            return;
+        }
+        if ((form.method || '').toLowerCase() === 'post') form.classList.add('is-submitting');
+    });
+    // Coming back with the browser's back button restores the page as it was left
+    window.addEventListener('pageshow', function() {
+        document.querySelectorAll('form.is-submitting').forEach(function(form) {
+            form.classList.remove('is-submitting');
+        });
+    });
+}
+
+
+// ===== Battle feedback =====
+// The page reloads after every action, so the HP from the previous render is
+// kept in sessionStorage and compared to show what the last exchange did.
+var BATTLE_HP_KEY = 'battleHp';
+
+function readBattleHp() {
+    try { return JSON.parse(sessionStorage.getItem(BATTLE_HP_KEY)); } catch (e) { return null; }
+}
+
+function initBattleFeedback() {
+    var arena = document.querySelector('.battle-arena[data-battle-key]');
+    if (!arena) {
+        try { sessionStorage.removeItem(BATTLE_HP_KEY); } catch (e) { /* storage unavailable */ }
+        return;
+    }
+    var round = parseInt(arena.dataset.round, 10) || 1;
+    var prev = readBattleHp();
+    var sameFight = prev && prev.key === arena.dataset.battleKey && prev.round <= round;
+    var now = { key: arena.dataset.battleKey, round: round };
+
+    arena.querySelectorAll('[data-combatant]').forEach(function(el) {
+        var who = el.dataset.combatant;
+        var hp = parseInt(el.dataset.hp, 10);
+        var maxHp = parseInt(el.dataset.maxHp, 10) || 1;
+        now[who] = hp;
+        if (!sameFight || typeof prev[who] !== 'number' || prev[who] === hp) return;
+
+        var delta = hp - prev[who];
+        var fill = el.querySelector('.health-bar-fill');
+        if (fill) {
+            var target = fill.style.width;
+            fill.style.transition = 'none';
+            fill.style.width = Math.max(0, Math.min(100, prev[who] / maxHp * 100)) + '%';
+            void fill.offsetWidth;   // commit the old width before animating to the new one
+            fill.style.transition = '';
+            fill.style.width = target;
+        }
+        var num = document.createElement('span');
+        num.className = 'float-number' + (delta > 0 ? ' float-heal' : '');
+        num.textContent = (delta > 0 ? '+' : '') + delta;
+        el.appendChild(num);
+        num.addEventListener('animationend', function() { num.remove(); });
+        el.classList.add(delta > 0 ? 'took-heal' : 'took-hit');
+    });
+
+    try { sessionStorage.setItem(BATTLE_HP_KEY, JSON.stringify(now)); } catch (e) { /* storage unavailable */ }
+}
+
+
+// ===== Progress bars that fill on load =====
+function initFillBars() {
+    var bars = document.querySelectorAll('[data-fill]');
+    if (!bars.length) return;
+    requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+            bars.forEach(function(bar) { bar.style.width = bar.dataset.fill + '%'; });
+        });
+    });
+}
+
+
+// ===== Character creation: armor choice updates the AC preview =====
+function initArmorPreview() {
+    var out = document.getElementById('preview-ac');
+    if (!out) return;
+    document.querySelectorAll('input[name="armor"][data-ac]').forEach(function(radio) {
+        radio.addEventListener('change', function() {
+            if (radio.checked) out.textContent = radio.dataset.ac;
+        });
+    });
+}
+
+
 // ===== Init =====
 document.addEventListener('DOMContentLoaded', function() {
     initSelectionCards();
@@ -354,4 +465,9 @@ document.addEventListener('DOMContentLoaded', function() {
     initActiveNav();
     initShopTabs();
     initConfirmDialogs();
+    initHotkeys();
+    initSubmitGuard();
+    initBattleFeedback();
+    initFillBars();
+    initArmorPreview();
 });

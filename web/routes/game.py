@@ -57,6 +57,85 @@ def _boss_panel(session):
     }
 
 
+def _danger(area) -> str:
+    """Danger band of an area from its 0-10 encounter rating."""
+    encounters = area.get("encounters", 0)
+    if encounters <= 0:
+        return "safe"
+    if encounters <= 2:
+        return "low"
+    return "med" if encounters <= 5 else "high"
+
+
+def build_area_map(location, current_area, defeated_bosses) -> dict:
+    """Lay the location's areas out as a top-down map.
+
+    Rows are the number of steps from the location's first area, so the way in
+    is at the top and the deepest area at the bottom. Positions are percentages
+    of the map box. Returns {"rows", "nodes", "edges"}.
+    """
+    areas = {a["id"]: a for a in location.get("areas", [])}
+    if not areas:
+        return {"rows": 0, "nodes": [], "edges": []}
+    links = {aid: [c for c in a.get("connections", []) if c in areas] for aid, a in areas.items()}
+
+    # Breadth-first from the entry area; children stay grouped under their parent
+    rows, seen, frontier = [], set(), [next(iter(areas))]
+    while frontier:
+        seen.update(frontier)
+        rows.append(frontier)
+        nxt = []
+        for aid in frontier:
+            for conn in links[aid]:
+                if conn not in seen and conn not in nxt:
+                    nxt.append(conn)
+        frontier = nxt
+    unreachable = [aid for aid in areas if aid not in seen]
+    if unreachable:
+        rows.append(unreachable)
+
+    pos = {}
+    for r, row in enumerate(rows):
+        for i, aid in enumerate(row):
+            pos[aid] = (round((i + 0.5) / len(row) * 100, 1),
+                        round((r + 0.5) / len(rows) * 100, 1))
+
+    current_id = current_area["id"] if current_area else None
+    reachable = set(links.get(current_id, []))
+    bosses = get_bosses()
+
+    nodes = []
+    for aid, area in areas.items():
+        special = str(area.get("special", "")).lower()
+        boss_id = area.get("boss")
+        nodes.append({
+            "id": aid,
+            "name": area["name"],
+            "x": pos[aid][0],
+            "y": pos[aid][1],
+            "current": aid == current_id,
+            "reachable": aid in reachable,
+            "danger": _danger(area),
+            "shop": "shop" in special,
+            "rest": _can_rest(area),
+            "boss": bool(boss_id) and boss_id in bosses and boss_id not in defeated_bosses,
+            "boss_defeated": bool(boss_id) and boss_id in defeated_bosses,
+        })
+
+    edges, drawn = [], set()
+    for aid, conns in links.items():
+        for conn in conns:
+            if (conn, aid) in drawn:
+                continue
+            drawn.add((aid, conn))
+            edges.append({
+                "a": aid, "b": conn,
+                "x1": pos[aid][0], "y1": pos[aid][1], "x2": pos[conn][0], "y2": pos[conn][1],
+                "active": current_id in (aid, conn),
+            })
+    return {"rows": len(rows), "nodes": nodes, "edges": edges}
+
+
 @router.get("/", response_class=HTMLResponse)
 async def game_view(request: Request, session=Depends(require_character)):
     """Main game view - show current location."""
@@ -73,15 +152,6 @@ async def game_view(request: Request, session=Depends(require_character)):
     location = session.current_location
     area = session.current_area
 
-    # Get connected areas
-    connected_areas = []
-    if area and "connections" in area:
-        for conn_id in area["connections"]:
-            for a in location.get("areas", []):
-                if a["id"] == conn_id:
-                    connected_areas.append(a)
-                    break
-
     # Check if shop is available (special can be a string like "shop_location")
     special = area.get("special", "") if area else ""
     has_shop = "shop" in str(special).lower()
@@ -96,7 +166,8 @@ async def game_view(request: Request, session=Depends(require_character)):
         "character": char_data,
         "location": location,
         "area": area,
-        "connected_areas": connected_areas,
+        "area_map": build_area_map(location, area, session.defeated_bosses),
+        "danger": _danger(area) if area else "safe",
         "has_shop": has_shop,
         "can_rest": _can_rest(area),
         "act": session.act,
