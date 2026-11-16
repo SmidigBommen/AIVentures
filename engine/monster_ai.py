@@ -113,7 +113,8 @@ def resolve_monster_ability(monster, ability_id, ability, player_ac, player_effe
         player_save_mods: {"strength": int, ...} total saving throw modifiers
 
     Returns:
-        dict with keys: damage (int), log (list[str]), landed (bool)
+        dict with keys: damage (int), log (list[str]), landed (bool), crit (bool),
+        half (bool — a save succeeded but half the damage still applies)
     """
     log = [ability.get("text", "{name} uses {ability}!").format(name=monster.name, ability=ability["name"])]
     kind = ability["kind"]
@@ -121,12 +122,13 @@ def resolve_monster_ability(monster, ability_id, ability, player_ac, player_effe
     damage = 0
     landed = True
     half = False
+    crit = False
 
     if kind == "attack":
         bonus = stat_mod + monster.proficiency + get_effect_bonus(monster.effects, "attack_bonus")
         effective_ac = player_ac + get_effect_bonus(player_effects, "ac")
         roll = resolve_attack_roll(bonus, effective_ac)
-        landed = roll["hit"]
+        landed, crit = roll["hit"], roll["crit"]
         if roll["crit"]:
             log.append(f"  CRITICAL HIT! (natural 20 vs AC {effective_ac})")
         elif landed:
@@ -193,4 +195,4 @@ def resolve_monster_ability(monster, ability_id, ability, player_ac, player_effe
         # +1 because cooldowns tick at the end of the round the ability was used in
         monster.cooldowns[ability_id] = ability["cooldown"] + 1
 
-    return {"damage": damage, "log": log, "landed": landed}
+    return {"damage": damage, "log": log, "landed": landed, "crit": crit, "half": half}

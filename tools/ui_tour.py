@@ -12,7 +12,8 @@ real web/sessions folder is not touched.
 
 Screens: home, race, class, details, summary, location, location-large,
 shop, shop-quests, inventory, travel, journal, saves, event, event-result,
-battle, battle-hit (damage numbers mid-animation), victory, defeat.
+battle, battle-hit and battle-hit2 (the last turn mid-playback),
+battle-boss and battle-golem (the largest sprites), victory, defeat.
 
 The browser is headless Chrome through flatpak (override with --chrome "cmd").
 """
@@ -87,6 +88,9 @@ class Tour:
                     if pred(area):
                         return act["number"], loc["name"], area["id"]
         raise LookupError("no matching area")
+
+    def session(self):
+        return json.loads(next(self.sessions.glob("*.json")).read_text())
 
     # -- capture --------------------------------------------------------------
     def shot(self, name, url, head="", budget=4000):
@@ -170,21 +174,22 @@ class Tour:
         wilds = self._where(lambda a: a.get("monster_types"))
         self.edit(lambda d: d.update(act_num=wilds[0], location_name=wilds[1], area_id=wilds[2]))
         c.get("/battle/start")
+        self.edit(lambda d: d["battle"]["monster"].update(race="Goblin"))
         self.edit(lambda d: d["battle"]["monster"].update(
             hp=max(d["battle"]["monster"]["max_hp"], 40), max_hp=max(d["battle"]["monster"]["max_hp"], 40)))
         c.post("/battle/attack")
         c.post("/battle/defend")
         self.shot("battle", "/battle")
-        # Pretend the previous render had more HP on both sides, to show the hit feedback
-        # Registered before main.js, so it runs first on DOMContentLoaded
-        seed = ("<script>document.addEventListener('DOMContentLoaded',function(){"
-                "var q=function(s){return document.querySelector(s)},r=q('.battle-arena');"
-                "sessionStorage.setItem('battleHp',JSON.stringify({key:r.dataset.battleKey,round:1,"
-                "player:+q('[data-combatant=player]').dataset.hp+3,"
-                "monster:+q('[data-combatant=monster]').dataset.hp+9}))})</script>")
-        self.shot("battle-hit", "/battle", head=seed, budget=450)
-
-        self.edit(lambda d: d["battle"]["monster"].update(hp=1))
+        # A fresh page load plays the last turn; stop early to catch it mid-animation
+        for name, budget in (("battle-hit", 700), ("battle-hit2", 1500)):
+            self.shot(name, "/battle", budget=budget)
+        # The largest sprites: a boss, then a big regular monster
+        race = self.session()["battle"]["monster"]["race"]
+        self.edit(lambda d: d["battle"]["monster"].update(is_boss=True, boss_id="Malachar the Void-touched"))
+        self.shot("battle-boss", "/battle", budget=700)
+        self.edit(lambda d: d["battle"]["monster"].update(is_boss=False, boss_id=None, race="Stone Golem"))
+        self.shot("battle-golem", "/battle", budget=700)
+        self.edit(lambda d: d["battle"]["monster"].update(race=race, hp=1))
         for _ in range(30):
             # No redirect following: the victory page shows its rewards only once
             r = c.post("/battle/attack", follow_redirects=False)

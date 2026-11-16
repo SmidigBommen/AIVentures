@@ -128,6 +128,18 @@ def get_monster_portraits() -> dict:
     return _portraits_cache
 
 
+_battle_sprites_cache = None
+
+
+def get_battle_sprites() -> dict:
+    """Sprite sheets for the battle stage ({sheet, scale}): players by portrait, monsters by race,
+    bosses by boss id, plus backdrops."""
+    global _battle_sprites_cache
+    if _battle_sprites_cache is None:
+        _battle_sprites_cache = load_json("battle_sprites.json")
+    return _battle_sprites_cache
+
+
 _shopkeeper_cache = None
 
 
@@ -269,6 +281,8 @@ class BattleState:
     is_player_turn: bool = True
     is_active: bool = False
     player_effects: list = field(default_factory=list)
+    turn_events: list = field(default_factory=list)   # what the last turn did (engine/turn_events.py)
+    turn_seq: int = 0                                 # goes up every turn; the UI plays each seq once
 
     def __post_init__(self):
         if self.monster is None:
@@ -380,6 +394,8 @@ class GameSession:
                 "is_player_turn": self.battle.is_player_turn,
                 "is_active": self.battle.is_active,
                 "player_effects": self.battle.player_effects,
+                "turn_events": self.battle.turn_events,
+                "turn_seq": self.battle.turn_seq,
             },
             "location_name": location_name,
             "area_id": area_id,
@@ -607,6 +623,8 @@ class GameSession:
             is_player_turn=battle_data.get("is_player_turn", True),
             is_active=battle_data.get("is_active", False),
             player_effects=battle_data.get("player_effects", []),
+            turn_events=battle_data.get("turn_events", []),
+            turn_seq=battle_data.get("turn_seq", 0),
         )
 
         # Restore character if creation data exists

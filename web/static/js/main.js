@@ -235,17 +235,6 @@ function initBattleLog() {
     var log = document.querySelector('.battle-log');
     if (!log) return;
     log.scrollTop = log.scrollHeight;
-
-    // Play sound for most recent log entry
-    var last = log.querySelector('.log-entry:last-child');
-    if (last) {
-        if (log.querySelector('.log-entry.crit:nth-last-child(-n+8)')) SFX.play('crit');
-        else if (last.classList.contains('damage')) SFX.play('hit');
-        else if (last.classList.contains('miss')) SFX.play('miss');
-        else if (last.classList.contains('heal')) SFX.play('heal');
-        else if (last.classList.contains('defend')) SFX.play('defend');
-        else if (last.classList.contains('ability')) SFX.play('spell');
-    }
 }
 
 
@@ -381,55 +370,6 @@ function initSubmitGuard() {
 }
 
 
-// ===== Battle feedback =====
-// The page reloads after every action, so the HP from the previous render is
-// kept in sessionStorage and compared to show what the last exchange did.
-var BATTLE_HP_KEY = 'battleHp';
-
-function readBattleHp() {
-    try { return JSON.parse(sessionStorage.getItem(BATTLE_HP_KEY)); } catch (e) { return null; }
-}
-
-function initBattleFeedback() {
-    var arena = document.querySelector('.battle-arena[data-battle-key]');
-    if (!arena) {
-        try { sessionStorage.removeItem(BATTLE_HP_KEY); } catch (e) { /* storage unavailable */ }
-        return;
-    }
-    var round = parseInt(arena.dataset.round, 10) || 1;
-    var prev = readBattleHp();
-    var sameFight = prev && prev.key === arena.dataset.battleKey && prev.round <= round;
-    var now = { key: arena.dataset.battleKey, round: round };
-
-    arena.querySelectorAll('[data-combatant]').forEach(function(el) {
-        var who = el.dataset.combatant;
-        var hp = parseInt(el.dataset.hp, 10);
-        var maxHp = parseInt(el.dataset.maxHp, 10) || 1;
-        now[who] = hp;
-        if (!sameFight || typeof prev[who] !== 'number' || prev[who] === hp) return;
-
-        var delta = hp - prev[who];
-        var fill = el.querySelector('.health-bar-fill');
-        if (fill) {
-            var target = fill.style.width;
-            fill.style.transition = 'none';
-            fill.style.width = Math.max(0, Math.min(100, prev[who] / maxHp * 100)) + '%';
-            void fill.offsetWidth;   // commit the old width before animating to the new one
-            fill.style.transition = '';
-            fill.style.width = target;
-        }
-        var num = document.createElement('span');
-        num.className = 'float-number' + (delta > 0 ? ' float-heal' : '');
-        num.textContent = (delta > 0 ? '+' : '') + delta;
-        el.appendChild(num);
-        num.addEventListener('animationend', function() { num.remove(); });
-        el.classList.add(delta > 0 ? 'took-heal' : 'took-hit');
-    });
-
-    try { sessionStorage.setItem(BATTLE_HP_KEY, JSON.stringify(now)); } catch (e) { /* storage unavailable */ }
-}
-
-
 // ===== Progress bars that fill on load =====
 function initFillBars() {
     var bars = document.querySelectorAll('[data-fill]');
@@ -467,7 +407,6 @@ document.addEventListener('DOMContentLoaded', function() {
     initConfirmDialogs();
     initHotkeys();
     initSubmitGuard();
-    initBattleFeedback();
     initFillBars();
     initArmorPreview();
 });

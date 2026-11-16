@@ -1,0 +1,115 @@
+{
+  "players": {
+    "/static/images/player_fighter.png": {
+      "sheet": "/static/images/sprites/knight.png",
+      "scale": 1
+    },
+    "/static/images/player_berserker.png": {
+      "sheet": "/static/images/sprites/berserker.png",
+      "scale": 1
+    },
+    "/static/images/player_wizard.png": {
+      "sheet": "/static/images/sprites/wizard.png",
+      "scale": 1
+    }
+  },
+  "default_player": {
+    "sheet": "/static/images/sprites/knight.png",
+    "scale": 1
+  },
+  "monsters": {
+    "Goblin": {
+      "sheet": "/static/images/sprites/goblin.png",
+      "scale": 1
+    },
+    "Orc": {
+      "sheet": "/static/images/sprites/orc.png",
+      "scale": 1.1
+    },
+    "Troll": {
+      "sheet": "/static/images/sprites/troll.png",
+      "scale": 1.25
+    },
+    "Blighted Dryad": {
+      "sheet": "/static/images/sprites/dryad.png",
+      "scale": 1.1
+    },
+    "Fire Salamander": {
+      "sheet": "/static/images/sprites/salamander.png",
+      "scale": 1.1
+    },
+    "Shadow Wraith": {
+      "sheet": "/static/images/sprites/wraith.png",
+      "scale": 1.1
+    },
+    "Sea Serpent": {
+      "sheet": "/static/images/sprites/serpent.png",
+      "scale": 1.25
+    },
+    "Wind Specter": {
+      "sheet": "/static/images/sprites/specter.png",
+      "scale": 1.1
+    },
+    "Stone Golem": {
+      "sheet": "/static/images/sprites/stone_golem.png",
+      "scale": 1.3
+    },
+    "Crystal Golem": {
+      "sheet": "/static/images/sprites/crystal_golem.png",
+      "scale": 1.3
+    },
+    "Shadow Knight": {
+      "sheet": "/static/images/sprites/shadow_knight.png",
+      "scale": 1.1
+    },
+    "Void Fiend": {
+      "sheet": "/static/images/sprites/void_fiend.png",
+      "scale": 1.2
+    }
+  },
+  "default_monster": {
+    "sheet": "/static/images/sprites/orc.png",
+    "scale": 1.1
+  },
+  "bosses": {
+    "Shard Guardian": {
+      "sheet": "/static/images/sprites/boss_shard_guardian.png",
+      "scale": 1.45
+    },
+    "Corrupted Captain": {
+      "sheet": "/static/images/sprites/boss_captain.png",
+      "scale": 1.3
+    },
+    "Lady Vex": {
+      "sheet": "/static/images/sprites/boss_vex.png",
+      "scale": 1.25
+    },
+    "Flame Cultist Leader": {
+      "sheet": "/static/images/sprites/boss_ssarak.png",
+      "scale": 1.35
+    },
+    "Corrupted High Priest": {
+      "sheet": "/static/images/sprites/boss_oren.png",
+      "scale": 1.35
+    },
+    "Ancient Wind Rider": {
+      "sheet": "/static/images/sprites/boss_toruun.png",
+      "scale": 1.4
+    },
+    "Primordial Earth Elemental": {
+      "sheet": "/static/images/sprites/boss_ghorrum.png",
+      "scale": 1.55
+    },
+    "Lady Vex (Final Battle)": {
+      "sheet": "/static/images/sprites/boss_vex_unbound.png",
+      "scale": 1.4
+    },
+    "Malachar the Void-touched": {
+      "sheet": "/static/images/sprites/boss_malachar.png",
+      "scale": 1.5
+    }
+  },
+  "backdrops": {
+    "default": "/static/images/sprites/backdrop_forest.png"
+  }
+}

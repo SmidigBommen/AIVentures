@@ -5,6 +5,13 @@
     <h1>Defeat</h1>
     <p class="page-subtitle">You have been slain by {{ monster_name }}...</p>
 
+    {% if stage and character %}
+    {% with monster=stage.monster, player_ac=stage.player_ac, player_effects=[], monster_effects=[],
+            turn=stage.turn, sprites=stage.sprites, finale="defeat" %}
+    {% include "battle/_stage.html" %}
+    {% endwith %}
+    {% endif %}
+
     <div class="defeat-msg">
         <p>A wandering healer found you at death's door and carried you to safety...
         for a price.</p>
@@ -30,4 +37,8 @@
         <a href="/character/new" class="btn btn-secondary">Start Over</a>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/battle.js"></script>
 {% endblock %}

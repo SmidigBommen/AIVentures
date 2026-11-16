@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from web.game_session import (
     get_session, save_session, get_abilities, get_class_abilities, get_primary_modifier,
     get_quests, get_monster_taunts, get_monster_portraits, get_bosses, get_monster_abilities,
-    get_save_modifiers, get_campaign, BATTLE_LOG_LIMIT,
+    get_save_modifiers, get_campaign, get_all_weapons_flat, get_battle_sprites, BATTLE_LOG_LIMIT,
 )
 from monsterFactory import MonsterFactory
 from dice import Dice
@@ -27,7 +27,8 @@ from engine.combat import (
     get_weapon_attack_modifier, resolve_weapon_attack, resolve_flee,
     calculate_xp_reward, calculate_gold_reward,
 )
-from engine.abilities import resolve_player_ability, summarize_ability
+from engine.abilities import resolve_player_ability_detail, summarize_ability
+from engine.turn_events import TurnRecorder, ability_fx, outcome_of
 from engine.monster_ai import choose_monster_action, resolve_monster_ability, tick_cooldowns
 from engine.leveling import asi_points_available, grant_xp
 from engine.quests import check_quest_progress
@@ -42,6 +43,28 @@ templates = Jinja2Templates(directory=Path(__file__).parent.parent / "templates"
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+def begin_turn(session):
+    """Start recording a new turn (see engine/turn_events.py)."""
+    battle = session.battle
+    battle.recorder = TurnRecorder(session.character.current_hit_points, battle.monster.hp)
+    battle.turn_events = battle.recorder.events
+    battle.turn_seq += 1
+
+
+def record(session, actor, kind, name="", outcome=None, fx="impact", ranged=False):
+    """Add a step to the turn being recorded; HP changes since the last step are measured here."""
+    battle = session.battle
+    if getattr(battle, "recorder", None) is None:
+        begin_turn(session)
+    battle.recorder.add(actor, kind, session.character.current_hit_points, battle.monster.hp,
+                        name=name, outcome=outcome, fx=fx, ranged=ranged)
+
+
+def weapon_fx(weapon_name: str) -> str:
+    """Damage type of a weapon by name, for the hit effect."""
+    return get_all_weapons_flat().get(weapon_name, {}).get("damage_type", "slashing").lower()
+
 
 def get_monster_taunt(race: str, context: str, boss_id: str = "") -> str:
     """Get a random taunt by race and context. Bosses speak their own lines."""
@@ -135,6 +158,7 @@ def begin_battle(session, monster_state: CombatantState, intro_lines=None) -> bo
     battle.round_count = 1
     battle.battle_log = list(intro_lines or [])
     battle.player_effects = []
+    begin_turn(session)
 
     player_init = char.dexterity_modifier + Dice.roll_d20()
     monster_init = monster_state.dex_mod + Dice.roll_d20()
@@ -196,6 +220,7 @@ def maybe_enrage(session):
     boss = get_bosses().get(monster.boss_id, {})
     session.battle.battle_log.append(
         boss.get("enrage_text", f"{monster.name} flies into a rage!"))
+    record(session, "monster", "enrage", name="Enraged", fx="rage")
 
 
 def execute_monster_turn(session):
@@ -220,6 +245,11 @@ def execute_monster_turn(session):
         battle.battle_log.extend(result["log"])
         if result["damage"]:
             char.current_hit_points = max(0, char.current_hit_points - result["damage"])
+        ability = catalog[ability_id]
+        record(session, "monster", "ability", name=ability["name"], fx=ability_fx(ability),
+               ranged=ability["kind"] == "save",
+               outcome=None if ability["kind"] == "self"
+               else outcome_of(result["landed"], result["crit"], result["half"]))
 
     elif action == "attack":
         ability_mod = get_weapon_attack_modifier(
@@ -252,10 +282,14 @@ def execute_monster_turn(session):
             battle.battle_log.append(f"{monster.name}'s attack misses!")
         if result["hit"]:
             char.current_hit_points = max(0, char.current_hit_points - result["damage"])
+        record(session, "monster", "attack", name=monster.weapon.name,
+               outcome=outcome_of(result["hit"], result["crit"]), fx=weapon_fx(monster.weapon.name),
+               ranged="ammunition" in monster.weapon.properties)
 
     else:
         monster.ac += 2
         battle.battle_log.append(f"{monster.name} takes a defensive stance (+2 AC).")
+        record(session, "monster", "defend", name="Defend", fx="shield")
 
 
 def _apply_round_conditions(session):
@@ -279,6 +313,11 @@ def _apply_round_conditions(session):
         else:
             char.current_hit_points = max(0, min(
                 char.max_hit_points, char.current_hit_points - outcome["damage"] + outcome["heal"]))
+        if outcome["sources"]:
+            # One event per side; the strongest condition picks the visual
+            stat = max(outcome["sources"], key=lambda source: source[1])[0]
+            record(session, "monster" if is_monster else "player", "condition",
+                   name=CONDITION_LABELS.get(stat, stat.title()), fx=stat)
 
 
 async def finish_player_turn(request: Request, session):
@@ -298,6 +337,7 @@ async def finish_player_turn(request: Request, session):
         battle.is_player_turn = False
         if is_stunned(monster.effects):
             battle.battle_log.append(f"{monster.name} is stunned and loses its turn!")
+            record(session, "monster", "stunned", name="Stunned", fx="stun")
         else:
             execute_monster_turn(session)
 
@@ -321,6 +361,7 @@ async def finish_player_turn(request: Request, session):
 
         if is_stunned(battle.player_effects):
             battle.battle_log.append(f"{char.name} is stunned and loses their turn!")
+            record(session, "player", "stunned", name="Stunned", fx="stun")
             continue
         break
 
@@ -372,6 +413,48 @@ async def start_boss_battle(request: Request, session=Depends(require_character)
 # Battle view
 # ---------------------------------------------------------------------------
 
+def stage_context(session) -> dict:
+    """Template data for the battle stage (battle/_stage.html): both combatants, their
+    sprites, and the last turn's events for playback. Also used after the fight ends,
+    so the final blow can be shown on the victory and defeat screens."""
+    battle = session.battle
+    monster = battle.monster
+    char = session.character
+
+    boss = get_bosses().get(monster.boss_id) if monster.is_boss else None
+    portraits = get_monster_portraits()
+    default_portrait = portraits.get("default", "/static/images/orc-creature-battle.jpg")
+    sprites = get_battle_sprites()
+
+    return {
+        "monster": {
+            "name": monster.name,
+            "race": monster.race,
+            "level": monster.level,
+            "hp": monster.hp,
+            "max_hp": monster.max_hp,
+            "ac": monster.ac + get_effect_bonus(monster.effects, "ac"),
+            "portrait": (boss or {}).get("portrait") or portraits.get(monster.race, default_portrait),
+            "taunt": _taunt(battle, "start") if battle.is_active and battle.round_count <= 1 else None,
+            "is_boss": monster.is_boss,
+            "title": boss.get("title") if boss else None,
+            "enraged": monster.enraged,
+        },
+        "player_ac": char.armor_class + get_effect_bonus(battle.player_effects, "ac"),
+        "player_effects": effect_badges(battle.player_effects),
+        "monster_effects": effect_badges(monster.effects),
+        "round": battle.round_count,
+        "turn": {"seq": battle.turn_seq, "events": battle.turn_events},
+        "sprites": {
+            "player": sprites["players"].get(session.character_creation.portrait)
+                      or sprites.get("default_player"),
+            "monster": (sprites["bosses"].get(monster.boss_id) if boss
+                        else sprites["monsters"].get(monster.race)) or sprites.get("default_monster"),
+            "backdrop": sprites["backdrops"].get("default"),
+        },
+    }
+
+
 @router.get("/", response_class=HTMLResponse)
 async def battle_view(request: Request, session=Depends(require_battle)):
     """Battle view - show combat arena."""
@@ -396,43 +479,19 @@ async def battle_view(request: Request, session=Depends(require_battle)):
     abilities = [{**ability, "summary": summarize_ability(ability, char.level)}
                  for ability in get_class_abilities(char.class_name, char.level)]
 
-    boss = get_bosses().get(monster.boss_id) if monster.is_boss else None
-    portraits = get_monster_portraits()
-    default_portrait = portraits.get("default", "/static/images/orc-creature-battle.jpg")
-    monster_portrait = (boss or {}).get("portrait") or portraits.get(monster.race, default_portrait)
-    monster_taunt = _taunt(battle, "start") if battle.round_count <= 1 else None
-
     log_entries = [{"text": entry, "cls": classify_log_entry(entry)}
                    for entry in battle.battle_log[-BATTLE_LOG_LIMIT:]]
-    # A critical hit anywhere in the latest exchange shakes the screen
-    had_crit = any(e["cls"] == "crit" for e in log_entries[-8:]) and battle.round_count > 1
 
     return templates.TemplateResponse(request, "battle/arena.html", {
         "request": request,
-        "title": "Boss Battle!" if boss else "Battle!",
+        "title": "Boss Battle!" if monster.is_boss else "Battle!",
         "character": char_data,
-        "monster": {
-            "name": monster.name,
-            "race": monster.race,
-            "level": monster.level,
-            "hp": monster.hp,
-            "max_hp": monster.max_hp,
-            "ac": monster.ac + get_effect_bonus(monster.effects, "ac"),
-            "portrait": monster_portrait,
-            "taunt": monster_taunt,
-            "is_boss": monster.is_boss,
-            "title": boss.get("title") if boss else None,
-            "enraged": monster.enraged,
-        },
-        "player_ac": char.armor_class + get_effect_bonus(battle.player_effects, "ac"),
+        **stage_context(session),
         "round": battle.round_count,
         "battle_log": log_entries,
-        "had_crit": had_crit,
         "is_player_turn": battle.is_player_turn,
         "usable_items": usable_items,
         "abilities": abilities,
-        "player_effects": effect_badges(battle.player_effects),
-        "monster_effects": effect_badges(monster.effects),
         "flee_dc": 10 + monster.level // 2,
         "flee_mod": char.dexterity_modifier,
     })
@@ -452,6 +511,7 @@ async def player_attack(request: Request, session=Depends(require_battle)):
     battle = session.battle
     monster = battle.monster
 
+    begin_turn(session)
     weapon = char.weapon_slots.get(WeaponSlot.MAIN_HAND)
     if weapon:
         ability_mod = char.get_attack_modifier(weapon)
@@ -489,6 +549,10 @@ async def player_attack(request: Request, session=Depends(require_battle)):
         monster.hp = max(0, monster.hp - result["damage"])
         if monster.hp > 0:
             battle.battle_log.append(f'{monster.name}: "{_taunt(battle, "hurt")}"')
+    record(session, "player", "attack", name=weapon.name if weapon else "Unarmed Strike",
+           outcome=outcome_of(result["hit"], result["crit"]),
+           fx=weapon.damage_type.lower() if weapon else "bludgeoning",
+           ranged=bool(weapon) and "ammunition" in weapon.properties)
 
     return await finish_player_turn(request, session)
 
@@ -500,10 +564,12 @@ async def player_defend(request: Request, session=Depends(require_battle)):
         return RedirectResponse("/battle", status_code=303)
 
     char = session.character
+    begin_turn(session)
     ac_bonus = Dice.roll_d4()
     session.battle.player_effects.append(
         {"stat": "ac", "value": ac_bonus, "duration": 1, "source": "Defend"})
     session.battle.battle_log.append(f"{char.name} takes a defensive stance (+{ac_bonus} AC)!")
+    record(session, "player", "defend", name="Defend", fx="shield")
 
     return await finish_player_turn(request, session)
 
@@ -520,23 +586,30 @@ async def use_item(request: Request, item_index: int = Form(...), session=Depend
         # Nothing usable at that slot — don't waste the player's turn
         return RedirectResponse("/battle", status_code=303)
 
+    begin_turn(session)
     old_hp = char.current_hit_points
     char.current_hit_points = min(char.max_hit_points, old_hp + item.healing_amount)
     char.inventory.pop(item_index)
     session.battle.battle_log.append(
         f"{char.name} uses {item.name} and heals for {char.current_hit_points - old_hp} HP!")
+    record(session, "player", "item", name=item.name, fx="heal")
 
     return await finish_player_turn(request, session)
 
 
 def resolve_ability(session, ability) -> bool:
     """Resolve a class ability. Returns True if the ability was successfully used."""
-    log = resolve_player_ability(
-        session.character, ability, session.battle.monster,
-        session.battle.player_effects, get_primary_modifier(session.character))
-    if log is None:
+    char = session.character
+    if char.power_points < ability["cost"]:
         return False
-    session.battle.battle_log.extend(log)
+    begin_turn(session)
+    detail = resolve_player_ability_detail(
+        char, ability, session.battle.monster,
+        session.battle.player_effects, get_primary_modifier(char))
+    session.battle.battle_log.extend(detail["log"])
+    record(session, "player", "ability", name=ability["name"],
+           outcome=detail["outcome"], fx=ability_fx(ability),
+           ranged=ability["attack_method"] != "melee_attack")
     return True
 
 
@@ -589,9 +662,11 @@ async def flee(request: Request, session=Depends(require_battle)):
         save_session(request, session)
         return RedirectResponse("/game", status_code=303)
 
+    begin_turn(session)
     battle.battle_log.append(
         f"{char.name} tries to flee but {battle.monster.name} cuts off the escape! "
         f"(Rolled {result['total']} vs DC {result['dc']})")
+    record(session, "player", "flee", name="Flee", outcome="miss", fx="impact")
     return await finish_player_turn(request, session)
 
 
@@ -713,7 +788,8 @@ async def victory_screen(request: Request, session=Depends(require_character)):
         "title": "Victory!",
         "character": char_data,
         "rewards": rewards,
-        "monster_name": session.battle.monster_name
+        "monster_name": session.battle.monster_name,
+        "stage": stage_context(session) if session.battle.monster.name else None,
     })
 
 
@@ -732,6 +808,7 @@ async def defeat_screen(request: Request, session=Depends(require_character)):
         "title": "Defeat",
         "character": char_data,
         "monster_name": session.battle.monster_name,
+        "stage": stage_context(session) if session.battle.monster.name else None,
         "gold_cost": gold_cost,
         "current_gold": gold,
     })

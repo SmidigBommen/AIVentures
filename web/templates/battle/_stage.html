@@ -1,0 +1,84 @@
+{# Battle stage: status plates, the two actors and the effects canvas.
+   Expects character, monster, player_ac, player_effects, monster_effects, turn, sprites.
+   `finale` ("victory" / "defeat") plays the last turn and then the loser's death. #}
+<div class="battle-scene{% if monster.is_boss %} boss-scene{% endif %}">
+    <div class="stage-hud">
+        <div class="combatant hud-plate player" data-combatant="player"
+             data-hp="{{ character.current_hit_points }}" data-max-hp="{{ character.max_hit_points }}">
+            <div class="hud-head">
+                <h2>{{ character.name }}</h2>
+                <span class="ac" title="Armor Class">AC {{ player_ac }}</span>
+            </div>
+            <p class="info">{{ character.race }} {{ character.class_name }} &middot; Lvl {{ character.level }}</p>
+            <div class="health-bar">
+                <div class="health-bar-fill" style="width: {{ (character.current_hit_points / character.max_hit_points * 100) | int }}%"></div>
+            </div>
+            <div class="hud-foot">
+                <span class="hp-text">HP <span data-hp-now>{{ character.current_hit_points }}</span> / {{ character.max_hit_points }}</span>
+                <span class="pp-text">PP {{ character.power_points }} / {{ character.max_power_points }}</span>
+            </div>
+            {% if player_effects %}
+            <div class="effect-badges">
+                {% for eff in player_effects %}
+                <span class="effect-badge effect-{{ eff.kind }}" title="{{ eff.title }}">{{ eff.label }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="combatant hud-plate monster{% if monster.is_boss %} boss{% endif %}{% if monster.enraged %} enraged{% endif %}"
+             data-combatant="monster" data-hp="{{ monster.hp }}" data-max-hp="{{ monster.max_hp }}">
+            <div class="hud-head">
+                <h2>{{ monster.name }}</h2>
+                <span class="ac" title="Armor Class">AC {{ monster.ac }}</span>
+            </div>
+            <p class="info">{{ monster.race }} &middot; Lvl {{ monster.level }}{% if monster.enraged %} <span class="enraged-tag">Enraged</span>{% endif %}</p>
+            <div class="health-bar">
+                <div class="health-bar-fill" style="width: {{ (monster.hp / monster.max_hp * 100) | int if monster.max_hp else 0 }}%"></div>
+            </div>
+            <div class="hud-foot">
+                <span class="hp-text">HP <span data-hp-now>{{ monster.hp }}</span> / {{ monster.max_hp }}</span>
+            </div>
+            {% if monster_effects %}
+            <div class="effect-badges">
+                {% for eff in monster_effects %}
+                <span class="effect-badge effect-{{ eff.kind }}" title="{{ eff.title }}">{{ eff.label }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="battle-stage"
+         data-battle-key="{{ monster.name }}|{{ monster.max_hp }}|{{ character.max_hit_points }}"
+         data-turn-seq="{{ turn.seq }}" data-turn-events='{{ turn.events | tojson }}'
+         {% if finale %}data-finale="{{ finale }}"{% endif %}>
+        {% if sprites.backdrop %}
+        <img class="stage-backdrop" src="{{ sprites.backdrop }}" alt="">
+        {% endif %}
+
+        <div class="actor actor-player" data-actor="player">
+            {% if sprites.player %}
+            <div class="sprite" data-sheet="{{ sprites.player.sheet }}" style="--scale: {{ sprites.player.scale }}" role="img" aria-label="{{ character.name }}"></div>
+            {% elif character.portrait %}
+            <img src="{{ character.portrait }}" alt="{{ character.name }}" class="actor-portrait player-portrait">
+            {% endif %}
+        </div>
+
+        <div class="actor actor-monster" data-actor="monster">
+            {% if monster.taunt %}
+            <div class="monster-taunt">
+                <p class="monster-taunt-text">"{{ monster.taunt }}"</p>
+            </div>
+            {% endif %}
+            {% if sprites.monster %}
+            <div class="sprite" data-sheet="{{ sprites.monster.sheet }}" style="--scale: {{ sprites.monster.scale }}" role="img" aria-label="{{ monster.name }}"></div>
+            {% else %}
+            <img src="{{ monster.portrait }}" alt="{{ monster.race }}" class="actor-portrait monster-portrait">
+            {% endif %}
+        </div>
+
+        <div class="stage-banner" aria-live="polite"></div>
+        <canvas class="stage-fx" aria-hidden="true"></canvas>
+    </div>
+</div>

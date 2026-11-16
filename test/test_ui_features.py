@@ -132,6 +132,7 @@ class TestBattleScreen:
 
     def test_victory_rewards_survive_a_refresh(self, client):
         goto(client, 1, "Whispering Woods", "clearing")
+        patch(client, char_current_hit_points=10_000, char_max_hit_points=10_000)
         client.get("/battle/start")
         data = load(client)
         data["battle"]["monster"]["hp"] = 1

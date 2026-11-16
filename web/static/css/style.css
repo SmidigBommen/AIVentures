@@ -3332,20 +3332,7 @@ button.map-node-box:focus-visible {
     30% { transform: translate(-50%, -12px) scale(1); }
     100% { opacity: 0; transform: translate(-50%, -64px) scale(1); }
 }
-.combatant.took-hit { animation: tookHit 0.45s ease-out; }
-.combatant.took-heal { animation: tookHeal 0.7s ease-out; }
-@keyframes tookHit {
-    0% { background-color: rgba(198, 40, 40, 0.5); transform: translateX(0); }
-    25% { transform: translateX(-6px); }
-    50% { transform: translateX(5px); }
-    75% { transform: translateX(-3px); }
-    100% { transform: translateX(0); }
-}
-@keyframes tookHeal {
-    0% { background-color: rgba(46, 125, 50, 0.45); }
-}
 @media (prefers-reduced-motion: reduce) {
-    .combatant.took-hit, .combatant.took-heal { animation: none; }
     .float-number { animation-duration: 2.2s; }
     .xp-bar-fill, .health-bar-fill { transition: none; }
 }
@@ -3426,4 +3413,195 @@ button.map-node-box:focus-visible {
 .health-bar-fill.hp-low {
     background: linear-gradient(90deg, #8e0000, var(--danger-light));
     box-shadow: 0 0 12px rgba(198, 40, 40, 0.8);
+}
+
+
+/* ===== Battle stage ===== */
+.battle-scene { margin-bottom: var(--sp-md); }
+
+.stage-hud {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-md);
+    margin-bottom: var(--sp-sm);
+}
+.hud-plate { padding: var(--sp-sm) var(--sp-md); text-align: left; }
+.hud-plate.monster { text-align: right; }
+.hud-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-sm); }
+.hud-plate.monster .hud-head, .hud-plate.monster .hud-foot { flex-direction: row-reverse; }
+.hud-plate h2 { font-size: 1.15rem; margin: 0; }
+.hud-plate .ac { margin: 0; color: var(--text-muted); font-size: 0.8rem; white-space: nowrap; }
+.hud-plate .info { margin: 0 0 var(--sp-xs); font-size: 0.78rem; }
+.hud-plate .health-bar { height: 14px; margin: 0; }
+.hud-foot { display: flex; justify-content: space-between; gap: var(--sp-sm); margin-top: 0.25rem; }
+.hud-plate .hp-text, .hud-plate .pp-text { margin: 0; font-size: 0.8rem; }
+.hud-plate .pp-text { color: var(--info-light); }
+.hud-plate .effect-badges { margin-top: var(--sp-xs); }
+.hud-plate.monster .effect-badges { justify-content: flex-end; }
+
+.battle-stage {
+    --px: 4;                       /* screen pixels per sprite pixel */
+    --lunge: 34%;
+    position: relative;
+    height: 300px;
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--r-lg);
+    background: linear-gradient(#1b1f4a 0%, #433372 45%, #3a3326 66%, #2e281e 100%);
+}
+.stage-backdrop {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center bottom;
+    image-rendering: pixelated;
+}
+.stage-fx {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.actor {
+    position: absolute;
+    bottom: 9%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    --dir: 1;
+}
+.actor-player { left: 10%; }
+.actor-monster { right: 10%; --dir: -1; }
+
+.sprite {
+    width: calc(64px * var(--px) * var(--scale, 1));
+    height: calc(48px * var(--px) * var(--scale, 1));
+    background-repeat: no-repeat;
+    background-size: 400% 400%;
+    image-rendering: pixelated;
+}
+.actor-monster .sprite { transform: scaleX(-1); }
+
+.actor-portrait {
+    width: calc(30px * var(--px));
+    height: calc(30px * var(--px));
+    margin: 0 calc(17px * var(--px)) calc(4px * var(--px));
+    border-radius: var(--r-md);
+    box-shadow: 0 10px 18px rgba(0, 0, 0, 0.55);
+}
+.actor .monster-taunt {
+    position: absolute;
+    bottom: 100%;
+    width: max-content;
+    max-width: 240px;
+    margin-bottom: calc(-6px * var(--px));
+    z-index: 2;
+}
+.actor:has(.actor-portrait) .monster-taunt { margin-bottom: var(--sp-xs); }
+
+/* Poses: sprites change frame in JS; these move the whole actor */
+.pose-lunge { animation: actorLunge 0.46s ease-in-out; }
+.pose-cast { animation: actorCast 0.52s ease-out; }
+.pose-dodge { animation: actorDodge 0.38s ease-out; }
+.is-hit { animation: actorHit 0.3s linear; }
+.pose-attack:not(.pose-lunge):not(.pose-cast) { animation: none; }
+.is-dead:has(.actor-portrait) { animation: portraitDeath 1s ease-in forwards; }
+.is-dead:has(.sprite) { animation: spriteFade 1.6s ease-in 0.7s forwards; }
+.is-dead-still { animation-duration: 0.01s !important; animation-delay: 0s !important; }
+
+@keyframes actorLunge {
+    0% { transform: translateX(0); }
+    20% { transform: translateX(calc(var(--dir) * -12px)); }
+    50% { transform: translateX(calc(var(--dir) * var(--lunge-px, 150px))); }
+    100% { transform: translateX(0); }
+}
+@keyframes actorCast {
+    0% { transform: translateY(0); filter: none; }
+    35% { transform: translateY(-10px); filter: brightness(1.5) drop-shadow(0 0 10px rgba(255, 255, 255, 0.7)); }
+    100% { transform: translateY(0); filter: none; }
+}
+@keyframes actorDodge {
+    0% { transform: translate(0, 0); }
+    40% { transform: translate(calc(var(--dir) * -22px), -8px); }
+    100% { transform: translate(0, 0); }
+}
+@keyframes actorHit {
+    0% { transform: translateX(0); filter: brightness(3) saturate(0); }
+    30% { transform: translateX(calc(var(--dir) * -10px)); filter: brightness(2.2) saturate(0.2); }
+    60% { transform: translateX(calc(var(--dir) * 5px)); filter: none; }
+    100% { transform: translateX(0); }
+}
+@keyframes portraitDeath {
+    to { transform: translateY(24px) rotate(calc(var(--dir) * -14deg)); filter: grayscale(1) brightness(0.5); opacity: 0; }
+}
+@keyframes spriteFade {
+    to { opacity: 0.35; filter: grayscale(0.8) brightness(0.7); }
+}
+
+.stage-banner {
+    position: absolute;
+    top: 8%;
+    left: 50%;
+    transform: translate(-50%, -8px);
+    padding: 0.2rem 0.9rem;
+    border: 1px solid var(--gold-dim);
+    border-radius: var(--r-sm);
+    background: rgba(10, 14, 26, 0.85);
+    color: var(--gold-light);
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    pointer-events: none;
+}
+.stage-banner.is-shown { opacity: 1; transform: translate(-50%, 0); }
+.stage-banner.from-monster { color: var(--danger-light); border-color: rgba(198, 40, 40, 0.5); }
+
+.battle-stage.is-shaking { animation: stageShake 0.42s linear; }
+@keyframes stageShake {
+    0%, 100% { transform: translate(0, 0); }
+    20% { transform: translate(-6px, 3px); }
+    40% { transform: translate(6px, -3px); }
+    60% { transform: translate(-4px, -2px); }
+    80% { transform: translate(4px, 2px); }
+}
+.battle-stage::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+}
+.battle-stage.flash-white::after { background: #fff; animation: stageFlash 0.26s ease-out; }
+.battle-stage.flash-dark::after { background: #12081c; animation: stageFlash 0.26s ease-out; }
+@keyframes stageFlash {
+    0% { opacity: 0.55; }
+    100% { opacity: 0; }
+}
+
+.actor .float-number { top: 4%; }
+.float-number.float-crit { color: var(--gold-light); font-size: 2.6rem; }
+.float-number.float-miss { color: var(--text); font-size: 1.2rem; }
+
+.battle-arena .battle-log { max-height: 132px; }
+.result-screen .battle-scene { max-width: 760px; margin: var(--sp-lg) auto; text-align: left; }
+.result-screen .battle-stage { height: 240px; --px: 3; }
+
+@media (max-width: 768px) {
+    .stage-hud { gap: var(--sp-sm); }
+    .hud-plate h2 { font-size: 0.95rem; }
+    .battle-stage, .result-screen .battle-stage { height: 190px; --px: 2.5; }
+    .actor-player { left: 0; }
+    .actor-monster { right: 0; }
+    .actor .monster-taunt { max-width: 150px; }
+    .stage-banner { font-size: 0.8rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .pose-lunge, .pose-cast, .pose-dodge, .is-hit, .battle-stage.is-shaking { animation: none; }
 }

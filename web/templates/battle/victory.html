@@ -5,6 +5,13 @@
     <h1>Victory!</h1>
     <p class="page-subtitle">You have defeated {{ monster_name }}!</p>
 
+    {% if stage and character %}
+    {% with monster=stage.monster, player_ac=stage.player_ac, player_effects=[], monster_effects=[],
+            turn=stage.turn, sprites=stage.sprites, finale="victory" %}
+    {% include "battle/_stage.html" %}
+    {% endwith %}
+    {% endif %}
+
     {% if rewards and rewards.boss %}
     <div class="boss-defeat-panel">
         <p class="boss-defeat-text">{{ rewards.boss.defeat_text }}</p>
@@ -103,4 +110,8 @@
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/battle.js"></script>
 {% endblock %}

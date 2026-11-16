@@ -60,6 +60,18 @@ def resolve_player_ability(char, ability, monster, player_effects, primary_mod):
     Returns:
         list of battle-log lines, or None if the character can't afford the ability.
     """
+    detail = resolve_player_ability_detail(char, ability, monster, player_effects, primary_mod)
+    return detail["log"] if detail else None
+
+
+def resolve_player_ability_detail(char, ability, monster, player_effects, primary_mod):
+    """Like resolve_player_ability, but also says how it went.
+
+    Returns:
+        None if the character can't afford the ability, otherwise a dict:
+        log (list[str]), outcome ("hit" | "crit" | "miss" | "half", or None for a
+        self-targeted ability).
+    """
     if char.power_points < ability["cost"]:
         return None
     char.power_points -= ability["cost"]
@@ -150,4 +162,7 @@ def resolve_player_ability(char, ability, monster, player_effects, primary_mod):
         player_effects.append(eff)
         log.append(f"  {char.name}: {describe_effect(eff)}")
 
-    return log
+    outcome = None
+    if target == "enemy":
+        outcome = "crit" if crit else "hit" if landed else "half" if half else "miss"
+    return {"log": log, "outcome": outcome}

@@ -26,6 +26,7 @@ pytest -k "test_name"           # single test by name
 ```bash
 python tools/ui_tour.py OUT_DIR --mobile      # all screens, desktop + 390px
 python tools/ui_tour.py OUT_DIR --only battle,battle-hit,location
+python tools/make_sprites.py --preview OUT_DIR   # redraw the sprite sheets, with 4x previews
 ```
 Plays a scripted game through the routes with a temp session folder and captures each screen with headless Chrome (flatpak by default, `--chrome` to override). Run it after changing templates or CSS. Key hints (`<kbd>`) are hidden in these captures because headless Chrome reports no hover.
 
@@ -118,7 +119,11 @@ Combat is handled via `web/routes/battle.py` with game logic in `engine/`:
 - **Effects**: `engine/effects.py` — `tick_effects()` per round, `get_effect_bonus()` for stat queries
 - **Battle actions**: `POST /battle/attack`, `POST /battle/defend`, `POST /battle/ability` (with `ability_id` form field), `POST /battle/item`, `POST /battle/flee`
 - **Battle screen**: abilities are cards (`.ability-card`) with cost, description and stat lines; identical items share one button. Hotkeys via `data-hotkey`: A/D/F, 1–5 abilities, Q/W/E/R items
-- **Hit feedback**: the page reloads after every action, so `initBattleFeedback()` keeps the previous HP in `sessionStorage` (keyed by `data-battle-key` + round) and shows floating damage numbers and an animated HP bar from the difference. Combatants carry `data-combatant`, `data-hp`, `data-max-hp`
+- **Turn events**: every turn is recorded as a list of event dicts (`engine/turn_events.py`: actor, kind, name, outcome, fx, ranged, HP change per side) in `BattleState.turn_events`, with `turn_seq` going up each turn. Routes call `begin_turn(session)` before a player action and `record(session, actor, kind, ...)` after each step; HP changes are measured between steps, not passed in. A rejected action (no PP, bad item) must not call `begin_turn`
+- **Battle stage** (`web/templates/battle/_stage.html`, `web/static/js/battle.js`): status plates, two actors on a backdrop and an effects canvas. `battle.js` rewinds the HP bars to before the turn and plays the events in order (actor animation, effect on the target, floating number, bar step). Each `turn_seq` plays once per browser tab (`sessionStorage`), so a refresh shows the result without replaying. `stage_context(session)` builds the template data; the victory and defeat pages include the same partial with `finale` set, so the final blow and the loser's death are shown there
+- **Effects**: `FX` in `battle.js` has one particle effect per key in `FX_KEYS` (every damage type plus heal, buff, debuff, shield, stun, rage, bleed, burn, regen). `ability_fx()` picks the key for an ability; a new damage type needs an entry in both places
+- **Sprites**: `json/battle_sprites.json` maps player portraits, monster races and boss ids to `{sheet, scale}` (sheets in `web/static/images/sprites/`; `scale` enlarges big creatures on the stage). Unmapped races and portraits use `default_monster` / `default_player`; a test requires a sprite for every campaign race and every boss. Sheets are 4x4 frames of 64x48, facing right: rows idle, attack, hurt, death
+- **Drawing sprites**: `tools/make_sprites.py` draws every sheet in code (needs Pillow). Two-legged and floating creatures are entries in `FIGURES`: a pose style (`swing`, `thrust`, `cast`, `punch`) and a spec dict (build, colours, head, weapon, extras) for the shared rig `draw_figure()`. The Knight, Goblin, Sea Serpent and Fire Salamander have their own draw functions. To add a creature: add a `FIGURES` entry, run the tool with `--preview DIR` and check `overview.png`, then map it in the JSON. A sheet from Aseprite or a pack works if it keeps the layout
 - **Victory**: `battle_rewards` stays in the session until the next battle ends, so the victory page survives a refresh
 - **Monster data**: Taunts in `json/monster_taunts.json`, portraits in `json/monster_portraits.json`
 - **Player portraits**: Selected during character creation (3 options: Knight, Berserker, Wizard). Stored in `CharacterCreationState.portrait`
@@ -158,7 +163,7 @@ Class kits, boss and monster numbers were tuned with `tools/balance_sim.py`, whi
 - **Nav**: XP progress bar under the level (`xp_to_next_level` in the serialized character)
 - **Routes** use server-side rendering with Jinja2 templates and POST/Redirect/GET pattern (303 redirects)
 - **Templates** are rendered with `templates.TemplateResponse(request, "name.html", {...})` (request first — required by current Starlette)
-- **Templates** in `web/templates/` extend `base.html` — all styling in `web/static/css/style.css`, all JS in `web/static/js/main.js` (no inline styles/scripts in templates)
+- **Templates** in `web/templates/` extend `base.html` — all styling in `web/static/css/style.css`, JS in `web/static/js/main.js` plus `battle.js` for the battle stage (no inline scripts in templates; inline `style` only for computed values such as bar widths)
 
 ### Session / Save System
 
@@ -195,9 +200,9 @@ Consolidated CSS design system with:
 - Events: `.event-card`, `.event-choice`, `.outcome-chip`; reuses `.haggle-roll-result` for the d20 breakdown
 - Journal/travel: `.journal-act`, `.shard-row`, `.travel-act`, `.loc-tag`
 - Area map: `.area-map`, `.map-node`, `.map-edge`, `.map-tag`, `.map-danger-*`
-- Battle feedback: `.ability-card`, `.float-number`, `.took-hit`/`.took-heal`; HP bar colour via `.hp-mid`/`.hp-low`
+- Battle: `.ability-card`, `.float-number`; HP bar colour via `.hp-mid`/`.hp-low`
+- Battle stage: `.battle-scene`, `.stage-hud`/`.hud-plate`, `.battle-stage` (`--px` = screen pixels per sprite pixel), `.actor`, `.sprite`, `.actor-portrait`, `.stage-banner`, poses `.pose-lunge`/`.pose-cast`/`.pose-dodge`/`.is-hit`/`.is-dead`
 - `kbd` key hints (hidden on touch devices), `.xp-bar`, `.item-compare`, `.char-preview`, `.class-abilities`
-- On phones the two combatants stay side by side
 - Responsive breakpoints at 768px and 480px
 
 ### JavaScript (`web/static/js/main.js`)
@@ -208,7 +213,8 @@ Consolidated CSS design system with:
 - `initShopTabs()`: Tab switching with URL param auto-select (`?tab=quests`)
 - `initHotkeys()`: pressing a key clicks the enabled element with that `data-hotkey`; ignored while typing in a field
 - `initSubmitGuard()`: a POST form can only be submitted once per page load
-- `initBattleFeedback()`, `initFillBars()` (`data-fill` bars animate on load), `initArmorPreview()`
+- `initFillBars()` (`data-fill` bars animate on load), `initArmorPreview()`
+- `battle.js` is a second file, loaded only by the arena, victory and defeat templates (after `main.js`, whose `SFX` it uses)
 - Selection card handler, skill counter, battle log auto-scroll, health bar coloring, active nav link detection
 
 ### Game World (`json/campaign.json`)

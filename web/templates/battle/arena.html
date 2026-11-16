@@ -3,9 +3,9 @@
 {% block body_class %}battle-page{% endblock %}
 
 {% block content %}
-<div class="battle-wrapper{% if monster.is_boss %} boss-battle{% endif %}"{% if had_crit %} data-screen-shake{% endif %}>
+<div class="battle-wrapper{% if monster.is_boss %} boss-battle{% endif %}">
     <div class="battle-overlay">
-        <div class="battle-arena" data-battle-key="{{ monster.name }}|{{ monster.max_hp }}|{{ character.max_hit_points }}" data-round="{{ round }}">
+        <div class="battle-arena">
             {% if monster.is_boss %}
             <div class="boss-banner">
                 <span class="boss-banner-label">Boss Battle</span>
@@ -14,60 +14,7 @@
             {% endif %}
             <div class="round-badge">Round {{ round }}</div>
 
-            <div class="combatants">
-                <div class="combatant player" data-combatant="player" data-hp="{{ character.current_hit_points }}" data-max-hp="{{ character.max_hit_points }}">
-                    {% if character.portrait %}
-                    <img src="{{ character.portrait }}" alt="{{ character.name }}" class="player-portrait">
-                    {% endif %}
-                    <h2>{{ character.name }}</h2>
-                    <p class="info">{{ character.race }} {{ character.class_name }} - Lvl {{ character.level }}</p>
-                    <div class="health-bar">
-                        <div class="health-bar-fill" style="width: {{ (character.current_hit_points / character.max_hit_points * 100) | int }}%"
-                             data-hp-percent="{{ (character.current_hit_points / character.max_hit_points * 100) | int }}"></div>
-                    </div>
-                    <p class="hp-text">HP: {{ character.current_hit_points }} / {{ character.max_hit_points }}</p>
-                    <div class="pp-bar-row">
-                        <span class="pp-text">PP: {{ character.power_points }} / {{ character.max_power_points }}</span>
-                        <div class="pp-bar">
-                            <div class="pp-bar-fill" style="width: {{ (character.power_points / character.max_power_points * 100) | int if character.max_power_points > 0 else 0 }}%"></div>
-                        </div>
-                    </div>
-                    <p class="ac">AC: {{ player_ac }}</p>
-                    {% if player_effects %}
-                    <div class="effect-badges">
-                        {% for eff in player_effects %}
-                        <span class="effect-badge effect-{{ eff.kind }}" title="{{ eff.title }}">{{ eff.label }}</span>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-
-                <div class="vs-badge">VS</div>
-
-                <div class="combatant monster{% if monster.is_boss %} boss{% endif %}{% if monster.enraged %} enraged{% endif %}" data-combatant="monster" data-hp="{{ monster.hp }}" data-max-hp="{{ monster.max_hp }}">
-                    {% if monster.taunt %}
-                    <div class="monster-taunt">
-                        <p class="monster-taunt-text">"{{ monster.taunt }}"</p>
-                    </div>
-                    {% endif %}
-                    <img src="{{ monster.portrait }}" alt="{{ monster.race }}" class="monster-portrait">
-                    <h2>{{ monster.name }}</h2>
-                    <p class="info">{{ monster.race }} - Lvl {{ monster.level }}{% if monster.enraged %} <span class="enraged-tag">Enraged</span>{% endif %}</p>
-                    <div class="health-bar">
-                        <div class="health-bar-fill" style="width: {{ (monster.hp / monster.max_hp * 100) | int }}%"
-                             data-hp-percent="{{ (monster.hp / monster.max_hp * 100) | int }}"></div>
-                    </div>
-                    <p class="hp-text">HP: {{ monster.hp }} / {{ monster.max_hp }}</p>
-                    <p class="ac">AC: {{ monster.ac }}</p>
-                    {% if monster_effects %}
-                    <div class="effect-badges">
-                        {% for eff in monster_effects %}
-                        <span class="effect-badge effect-{{ eff.kind }}" title="{{ eff.title }}">{{ eff.label }}</span>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
+            {% include "battle/_stage.html" %}
 
             <div class="battle-log">
                 {% for entry in battle_log %}
@@ -148,4 +95,8 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/battle.js"></script>
 {% endblock %}
